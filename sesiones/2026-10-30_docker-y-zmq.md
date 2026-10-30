@@ -24,3 +24,10 @@ Entorno de RF, celulares, SIM y entregable.
 El gNB acepta n78, 20 MHz, 30 kHz, 3489,42 MHz por ZMQ sin UE y sin red (`evidencia/01_sincronizacion/2026-10-30_gnb_n78_tdd_config.log`). Solo valida la configuración: sin N2 no hay celda activa.
 
 Pista: esta corrida imprime `==== gNB started ===` y la de n3 con AMF conectado nunca lo imprimió. Hay que mirar si el gNB se bloquea al activar la celda, antes de culpar al UE.
+
+## Última corrida con srsUE (autorizada por el usuario)
+Con PLMN 001/01 (`config/open5gs/open5gs-5gc-zmq.yml`, activada con `OPEN5GS_CONFIG=open5gs-5gc-zmq.yml`) el síntoma es igual: unos 90 bytes en 5 s y sin búsqueda de celda. Se descarta el PLMN como causa de este bloqueo.
+
+El gNB completa NG Setup y F1 Setup y activa la celda, pero nunca imprime `gNB started` ni hay actividad de radio. Su radio está en `hrtimer_nanosleep`; el resto de los hilos, en espera. `radio_session_zmq_impl.cpp` limita el log de radio a info, así que `radio_level: debug` no aporta. Falta capturar stacks (requiere `SYS_PTRACE`). No se resolvió.
+
+La corrección de claves funcionó: no aparecen en los logs de srsUE.

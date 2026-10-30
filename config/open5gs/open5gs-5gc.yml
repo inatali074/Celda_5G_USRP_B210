@@ -113,11 +113,6 @@ nrf:
   - plmn_id:
       mcc: '722'
       mnc: '999'
-  # srsUE fija MNC de 2 dígitos fuera de los MCC de EE. UU. (usim.cc, get_mnc_str): su SUCI llega como 722/99.
-  # Solo para la prueba ZMQ; quitar si no hace falta con la SIM real.
-  - plmn_id:
-      mcc: '722'
-      mnc: '99'
 scp:
   sbi:
     server:

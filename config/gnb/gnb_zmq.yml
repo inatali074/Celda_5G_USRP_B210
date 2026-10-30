@@ -8,7 +8,7 @@ cu_cp:
     supported_tracking_areas:
     - tac: 7
       plmn_list:
-      - plmn: '722999'
+      - plmn: '00101'
         tai_slice_support_list:
         - sst: 1
 ru_sdr:
@@ -23,7 +23,7 @@ cell_cfg:
   band: 3
   channel_bandwidth_MHz: 20
   common_scs: 15
-  plmn: '722999'
+  plmn: '00101'
   tac: 7
   pdcch:
     dedicated:
@@ -40,8 +40,9 @@ cell_cfg:
     mcs_table: qam64
   pci: 1
 log:
-  filename: /tmp/gnb.log
+  filename: stdout
   all_level: info
+  radio_level: debug
 pcap:
   mac_enable: false
   ngap_enable: false

@@ -63,7 +63,7 @@ Desplegar desde cero una celda 5G NR Standalone (Opción 2, Release 15) en un en
 Según `Prueba_configuracion_Drive_5G.docx` (29/10): ZMQ + srsUE funcionó de punta a punta; por aire en n78 un celular de Personal llegó al AMF; n3 no tuvo ningún PRACH real; DFT-s-OFDM y NEA2 quedaron sin validar con celular; B210 serie 31677B2 con `clock_ppm` −1,87 medido.
 
 ## Estado actual
-Imágenes construidas. El núcleo arranca, el abonado se carga y **N2/NG Setup funciona**. La prueba ZMQ con srsUE **está bloqueada**: el intercambio de muestras no avanza y no hubo registro, sesión PDU ni ping. Contenedores detenidos. Nada transmitido. Falta `gnb_b210.yml`.
+Imágenes construidas. El núcleo arranca, el abonado se carga y **N2/NG Setup funciona**. La prueba ZMQ con srsUE **está bloqueada**: el intercambio de muestras no avanza y no hubo registro, sesión PDU ni ping. También falló con PLMN 001/01, en la última corrida autorizada. Sigue pendiente decidir si se abandona. Contenedores detenidos. Nada transmitido. Falta `gnb_b210.yml`.
 
 ## Próximos pasos
 Ver `sesiones/2026-10-30_docker-y-zmq.md`.

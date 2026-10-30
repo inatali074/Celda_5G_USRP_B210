@@ -1,0 +1,8 @@
+Cell pci=1, bw=20 MHz, 1T1R, dl_arfcn=368500 (n3), dl_freq=1842.5 MHz, dl_ssb_arfcn=368410, ul_freq=1747.5 MHz
+N2: Connection to AMF on 10.53.1.2:38412 completed
+2026-10-30T16:26:50.108567 [CU-CP   ] [I] N2: Connection to AMF on 10.53.1.2:38412 was established
+2026-10-30T16:26:50.108643 [NGAP    ] [I] "NG Setup Procedure" started...
+2026-10-30T16:26:50.111109 [NGAP    ] [I] "NG Setup Procedure" finished successfully
+2026-10-30T16:26:50.142333 [DU-F1   ] [I] F1 Setup: Sending F1 Setup Request to CU-CP...
+2026-10-30T16:26:50.142552 [DU-F1   ] [I] F1 Setup: Procedure completed successfully.
+2026-10-30T16:26:50.142560 [SCHED   ] [I] [     0.0] cell=0: Cell scheduling was activated.

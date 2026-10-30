@@ -30,6 +30,7 @@ services:
     # Referencia: pool UE 10.45.0.0/16, ogstun 10.45.0.1/16; valores reales en config/.
     env_file:
       - ./config/open5gs/network.env
+    command: ["5gc", "-c", "/config/${OPEN5GS_CONFIG:-open5gs-5gc.yml}"]
     # Espera al NRF (SBI :7777), como el compose oficial, para que el gNB no corra antes que el núcleo.
     healthcheck:
       test: ["CMD-SHELL", "ss -ltn | grep -q ':7777'"]
