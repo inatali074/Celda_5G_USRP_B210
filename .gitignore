@@ -1,0 +1,18 @@
+# Secretos y contexto local: nunca versionar
+*.local.*
+.env
+config/secretos/
+*.key
+
+# Material previo de referencia (pesado, de terceros o con claves de SIM de laboratorio)
+Teoria/
+drive-download-*/
+grabador/
+*.pdf
+*.docx
+*.zip
+
+# Generados
+.codex.err
+__pycache__/
+*.pyc

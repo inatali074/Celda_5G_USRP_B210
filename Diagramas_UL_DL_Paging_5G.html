@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagramas 5G UL/DL/Paging</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --panel: #ffffff; --text: #1c2230; --muted: #5d6676; --border: #dde1e8;
+    --accent: #2f5bd3; --code: #eef1f6; --quote: #eef3ff; --hover: #fff7d6;
+    --ue: #e6f4ea; --ue-b: #34a853; --b210: #fdf0e1; --b210-b: #e8710a; --gnb: #e8f0fe; --gnb-b: #3367d6;
+    --core: #f3e8fd; --core-b: #9334e6; --net: #eceff1; --net-b: #607d8b;
+    --nota: #fff8c4; --nota-b: #c9a800; --linea: #8a94a6;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #12151b; --panel: #1b1f27; --text: #e4e7ed; --muted: #9aa3b2; --border: #2e3440;
+    --accent: #7aa2ff; --code: #242a35; --quote: #1f2635; --hover: #3a3420;
+    --ue: #1b3324; --ue-b: #5bc77a; --b210: #3a2a18; --b210-b: #f29b4b; --gnb: #1d2a44; --gnb-b: #7aa2ff;
+    --core: #2e2140; --core-b: #b98af5; --net: #262b33; --net-b: #90a4ae;
+    --nota: #3b3618; --nota-b: #d9bd2b; --linea: #6b7486; } }
+  :root[data-theme="dark"] {
+    --bg: #12151b; --panel: #1b1f27; --text: #e4e7ed; --muted: #9aa3b2; --border: #2e3440;
+    --accent: #7aa2ff; --code: #242a35; --quote: #1f2635; --hover: #3a3420;
+    --ue: #1b3324; --ue-b: #5bc77a; --b210: #3a2a18; --b210-b: #f29b4b; --gnb: #1d2a44; --gnb-b: #7aa2ff;
+    --core: #2e2140; --core-b: #b98af5; --net: #262b33; --net-b: #90a4ae;
+    --nota: #3b3618; --nota-b: #d9bd2b; --linea: #6b7486; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); min-height: 100vh; }
+  nav { position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 20px 14px;
+        background: var(--panel); border-right: 1px solid var(--border); }
+  nav h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; }
+  nav a { display: block; padding: 4px 8px; border-radius: 6px; color: var(--text); text-decoration: none; font-size: 14px; }
+  nav a.h3 { padding-left: 20px; font-size: 13px; color: var(--muted); }
+  nav a.h4 { padding-left: 34px; font-size: 12px; color: var(--muted); }
+  h4 { margin: 26px 0 8px; font-size: 16px; }
+  pre { background: var(--code); padding: 12px 14px; border-radius: 8px; overflow-x: auto; font-size: 13px; line-height: 1.45; }
+  pre code { background: none; padding: 0; }
+  .conceptos { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 4px 20px 16px; }
+  nav a:hover { background: var(--quote); color: var(--accent); }
+  .tema { margin-top: 16px; width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--border);
+          background: var(--bg); color: var(--text); cursor: pointer; font-size: 13px; }
+  main { padding: 28px 36px 80px; min-width: 0; }
+  h1 { font-size: 26px; line-height: 1.25; margin: 0 0 12px; }
+  h2 { margin-top: 48px; padding-bottom: 6px; border-bottom: 2px solid var(--border); }
+  h3 { margin-top: 30px; color: var(--accent); }
+  code { background: var(--code); padding: 1px 5px; border-radius: 4px; font-size: .9em; }
+  blockquote { margin: 14px 0; padding: 8px 14px; background: var(--quote); border-left: 4px solid var(--accent); border-radius: 0 8px 8px 0; }
+  blockquote p { margin: 6px 0; }
+  .tabla { overflow-x: auto; margin: 14px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; background: var(--panel); }
+  th, td { border: 1px solid var(--border); padding: 6px 10px; vertical-align: top; text-align: left; }
+  th { background: var(--code); }
+  .resumen { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin: 12px 0; }
+  .leyenda { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 14px; font-size: 13px; color: var(--muted); }
+  .chip { padding: 2px 10px; border-radius: 999px; border: 1px solid; }
+
+  /* ---------- Diagrama de cadena (flujo) ---------- */
+  .cadena { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .cab { display: grid; grid-template-columns: minmax(260px, 380px) 1fr; background: var(--code);
+         font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .cab div { padding: 8px 14px; }
+  .fila { display: grid; grid-template-columns: minmax(260px, 380px) 1fr; border-top: 1px solid var(--border); }
+  .fila:hover { background: var(--hover); }
+  .fila .izq { padding: 10px 14px 18px; position: relative; display: flex; flex-direction: column; align-items: center; }
+  .fila .der { padding: 12px 16px; border-left: 1px dashed var(--border); }
+  .caja { width: 100%; border: 2px solid; border-radius: 10px; padding: 7px 10px; text-align: center; position: relative; }
+  .caja .t { font-weight: 600; }
+  .caja .d { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .flechaAbajo::after { content: "▼"; position: absolute; left: 50%; bottom: -17px; transform: translateX(-50%);
+                        font-size: 11px; color: var(--linea); }
+  .num { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 6px;
+         border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; margin-right: 8px; }
+  .der .num { float: left; margin-top: 1px; }
+  .der p { margin: 0; overflow: hidden; }
+  .etapa { border-top: 1px solid var(--border); padding: 8px 14px; font-weight: 700; font-size: 14px; border-left: 6px solid; }
+  .aire { border-top: 1px solid var(--border); display: grid; grid-template-columns: minmax(260px, 380px) 1fr; }
+  .aire .izq { text-align: center; padding: 10px; font-size: 13px; color: var(--muted); }
+  .aire .onda { font-size: 20px; letter-spacing: 4px; color: var(--accent); }
+  .aire .der { padding: 10px 16px; border-left: 1px dashed var(--border); font-size: 14px; }
+  .decision .caja { border-style: double; border-width: 4px; }
+  .rama { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+  .ue { background: var(--ue); border-color: var(--ue-b); } .b210 { background: var(--b210); border-color: var(--b210-b); }
+  .gnb { background: var(--gnb); border-color: var(--gnb-b); } .core { background: var(--core); border-color: var(--core-b); }
+  .net { background: var(--net); border-color: var(--net-b); }
+
+  /* ---------- Diagrama de secuencia ---------- */
+  .secuencia { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow-x: auto; }
+  .sec-int { min-width: var(--minw); }
+  .sfila { display: grid; grid-template-columns: minmax(0, 1fr) 340px; border-top: 1px solid var(--border); }
+  .sfila:hover { background: var(--hover); }
+  .sfila.cabecera { border-top: none; position: sticky; top: 0; z-index: 2; background: var(--panel); }
+  .sfila.cabecera:hover { background: var(--panel); }
+  .carriles { position: relative; padding: 10px 0; min-height: 58px; display: flex; flex-direction: column; justify-content: center; }
+  .vida { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px dotted var(--linea); opacity: .55; }
+  .participantes { display: grid; padding: 10px 0; }
+  .part { margin: 0 4px; border: 2px solid; border-radius: 8px; padding: 6px 4px; text-align: center; font-size: 12px; font-weight: 700; }
+  .msg { position: relative; z-index: 1; }
+  .etq { position: relative; left: 50%; transform: translateX(-50%); width: max(100%, 210px); text-align: center;
+         font-size: 12.5px; line-height: 1.35; padding: 0 4px 3px; }
+  .etq span { background: var(--panel); padding: 0 3px; border-radius: 4px; }
+  .sfila:hover .etq span { background: var(--hover); }
+  .linea { position: relative; height: 0; border-top: 2px solid var(--text); }
+  .linea.punteada { border-top-style: dashed; }
+  .linea.haciaDer::after, .linea.haciaIzq::after { content: ""; position: absolute; top: -7px; border: 6px solid transparent; }
+  .linea.haciaDer::after { right: -2px; border-left: 10px solid var(--text); border-right: 0; }
+  .linea.haciaIzq::after { left: -2px; border-right: 10px solid var(--text); border-left: 0; }
+  .snota { position: relative; z-index: 1; background: var(--nota); border: 1px solid var(--nota-b); border-radius: 6px;
+           font-size: 12.5px; padding: 5px 8px; text-align: center; }
+  .salt { position: relative; z-index: 1; margin: 0 6px; border-top: 2px dashed var(--muted); font-size: 12px; font-weight: 700;
+          color: var(--muted); padding-top: 3px; }
+  .sfila .der { padding: 10px 14px; border-left: 1px dashed var(--border); font-size: 14px; }
+  .sfila.cabecera .der { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); display: flex; align-items: center; }
+
+  #buscar { width: 100%; max-width: 420px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);
+            background: var(--panel); color: var(--text); font-size: 14px; }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    nav { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    main { padding: 18px 16px 60px; }
+    .cab { display: none; }
+    .fila, .aire { grid-template-columns: 1fr; }
+    .fila .der, .aire .der { border-left: none; border-top: 1px dashed var(--border); }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <nav>
+    <h2>Contenido</h2>
+    <div id="indice"></div>
+    <button class="tema" id="btnTema">Cambiar tema claro / oscuro</button>
+  </nav>
+  <main id="contenido"></main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script>
+const T = {"titulo": "Diagramas de Uplink, Downlink y Paging — Celda 5G SA n3 FDD con USRP B210", "intro": "**Configuración de la celda:** banda n3 FDD · DL 1842.5 MHz (NR-ARFCN 368500) · UL 1747.5 MHz (NR-ARFCN 349500) · Δ dúplex 95 MHz ·\nμ = 0 (SCS 15 kHz, slot de 1 ms, 14 símbolos) · 20 MHz → 106 PRB = 1272 subportadoras · `srate` 23.04 MS/s · SISO 1×1 · PLMN 722/999 · PCI 1\n**Normativa:** 3GPP Release 15: TS 38.211 (canales y modulación), 38.212 (codificación), 38.213 (control de capa física), 38.214 (datos),\n38.321 (MAC), 38.331 (RRC), 38.304 (paging en IDLE), 38.101-1 (RF del UE), 23.502 (procedimientos del core).", "analisis": "| Aspecto | Estado | Qué le faltaba (y cubre este documento) |\n| :--- | :--- | :--- |\n| Dominios RAN / Core / Internet | ✅ Bien separados: los métodos de acceso solo existen en la RAN | — |\n| Recuadros \"Métodos de acceso UL/DL\" | ⚠️ Listan parámetros pero no muestran el procesamiento | Cadena TX → canal → RX bloque por bloque (§1 y §2) |\n| Potencias y sensibilidad | ❌ No aparecen | Presupuesto de enlace (link budget) DL y UL (§2.3) |\n| Puertos de la B210 en FDD | ❌ No se indica | TX por el puerto **TX/RX** (1842.5 MHz) y RX por **RX2** (1747.5 MHz), con las antenas separadas para aislar |\n| Celular sin recursos asignados | ❌ No contemplado | RRC_IDLE + DRX + paging (§3) |\n| Notas pendientes del draw.io | \"sensibilidad DL/UL\", \"si el teléfono no pide PRBs\" | §2.3 y §3 |\n\n**Idea clave para la defensa:** el celular **nunca usa PRBs por su cuenta**. En UL siempre los **pide** (SR/BSR) y la gNB se los **concede** (DCI 0_x).\nEn DL la gNB **decide** y **avisa** (DCI 1_x) dónde van los datos. Si el celular está en IDLE, la red primero lo **despierta** con paging.", "ul_notas": "> **Si el celular no pide recursos:** no transmite nada en PUSCH. Solo puede usar sus recursos periódicos de PUCCH (SR, CSI, HARQ-ACK).\n> Si además está en IDLE, no tiene ni PUCCH y tiene que volver a entrar por **PRACH** (RACH de 4 pasos, ya documentado en el PNG del RACH).\n> **En FDD n3 el PRACH usa preámbulo largo formato 0** (Zadoff-Chu L = 839, Δf_RA = 1.25 kHz).\n\n> **Nota sobre la norma:** Rel-15 permite en UL tanto **CP-OFDM** como **DFT-s-OFDM** (se habilita con `transformPrecoder` / `msg3-transformPrecoder`).\n> El diagrama de la cátedra usa DFT-s-OFDM. Hay que verificar en el `gnb.yml` o en el log que *transform precoding* esté habilitado. Si no lo está, el UL sale en CP-OFDM.", "conceptos": "#### A. ¿Qué es un código LDPC? (pasos 3 y 21)\n\n**LDPC** (*Low-Density Parity-Check*, chequeo de paridad de baja densidad) es un **código corrector de errores**. Antes de transmitir se agregan bits de paridad calculados a partir de los datos. Si en el aire se dañan algunos bits, el receptor los puede **reconstruir sin pedir un reenvío**.\n\n**La idea, con un ejemplo de juguete.** Se mandan 3 bits de datos (b1 b2 b3 = 1 0 1) y 3 bits de paridad calculados con XOR (⊕):\n\n```\nb4 = b1 ⊕ b2 = 1        Ecuaciones de paridad (todas deben dar 0):\nb5 = b2 ⊕ b3 = 1          C1: b1 ⊕ b2 ⊕ b4 = 0\nb6 = b1 ⊕ b3 = 0          C2: b2 ⊕ b3 ⊕ b5 = 0\nSe transmite: 1 0 1 1 1 0 C3: b1 ⊕ b3 ⊕ b6 = 0\n```\nSi en el aire se invierte b3 (llega 1 0 **0** 1 1 0), fallan C2 y C3. El único bit que está en **las dos** ecuaciones que fallan es b3, así que el receptor sabe que es el que se dañó y lo corrige.\n\n**Lo que tiene de especial el LDPC de 5G:**\n- **\"Baja densidad\":** cada ecuación de paridad involucra **muy pocos bits** de entre miles. La matriz de paridad H (cada fila es una ecuación) es casi toda ceros. Por eso decodificar es barato aunque el bloque sea enorme.\n- **Decodificación iterativa** (*belief propagation*):\n  - Los bits y las ecuaciones intercambian \"opiniones\" (LLR, ver el punto D) durante varias vueltas, unas 5 a 10 iteraciones.\n  - En cada vuelta, los bits dudosos se corrigen con la ayuda de los confiables.\n  - Se termina cuando todas las ecuaciones dan 0 y el CRC cierra.\n  - Muchas ecuaciones se procesan **en paralelo**, que es justo lo que aceleran las instrucciones AVX-512 del CPU de la gNB.\n- **Cuasi-cíclico (QC-LDPC, TS 38.212 §5.3.2):** la matriz se arma a partir de una **matriz base** chica. Cada elemento de la base se reemplaza por una submatriz identidad desplazada de tamaño Z_c × Z_c, con un \"factor de expansión\" Z_c de 2 a 384.\n\n| | **BG1** (bloques grandes) | **BG2** (bloques chicos) |\n| :--- | :--- | :--- |\n| Matriz base | 46 × 68 | 42 × 52 |\n| Bits de datos por bloque | hasta 22·384 = **8448** | hasta 10·384 = **3840** |\n| Tasa de código mínima | 1/3 | 1/5 (más redundancia, más robusto) |\n| Cuándo se usa (TS 38.212 §7.2.2) | Bloques grandes y tasas altas | Bloques ≤ 292 bits, o ≤ 3824 bits con R ≤ 0.67, o R ≤ 0.25 (por ejemplo un `ping`) |\n\n- **Segmentación:** si el bloque es más grande que 8448 bits, se corta en varios *code blocks*, cada uno con su propio CRC de 24 bits.\n- **Relación con HARQ:** la salida del LDPC se guarda en un **buffer circular**. El *rate matching* lee de ese buffer justo los bits que entran en los PRB. Cada retransmisión arranca a leer en otro punto (las versiones RV0, RV2, RV3 y RV1), así que **cada reenvío trae bits de paridad nuevos**.\n- **Por qué reemplazó al código Turbo de 4G:** decodifica más rápido y en paralelo (el Turbo es secuencial) y funciona muy cerca del límite de Shannon. Así se alcanzan los Gbit/s de 5G. Para el control (DCI, MIB, UCI), 5G usa **códigos Polares**, que rinden mejor con bloques chicos.\n\n#### B. Scrambling: qué hace exactamente (pasos 5 y 20)\n\nEl scrambling (aleatorización) hace un **XOR bit a bit** entre los bits codificados y una **secuencia pseudoaleatoria** que conocen el celular y la gNB (TS 38.211 §6.3.1.1 para PUSCH y §7.3.1.1 para PDSCH):\n\n```\nb̃(i) = b(i) ⊕ c(i)\n\nbits codificados  b : 1 0 1 1 0 0 0 0\nsecuencia         c : 0 1 1 0 1 0 1 1\ntransmitido       b̃ : 1 1 0 1 1 0 1 1     ← en el receptor se aplica el mismo XOR y vuelve a b\n```\n\n**De dónde sale c(i):** es una **secuencia Gold** de longitud 31. Se forma combinando dos generadores de registro de desplazamiento, x1 y x2, y se descartan los primeros 1600 bits. El generador x2 arranca con una \"semilla\":\n\n```\nc_init = n_RNTI · 2^15 + n_ID\n  n_RNTI = C-RNTI del celular (en el Msg3: el TC-RNTI)\n  n_ID   = dataScramblingIdentityPUSCH si está configurado; si no, el PCI de la celda (en tu celda: 1)\n```\nPor eso cada celular, y cada celda, tiene **su propia secuencia**. En el PDSCH se suma además el índice de palabra de código q·2^14.\n\n**Para qué sirve:**\n1. **Que la interferencia parezca ruido:** si otro celular, o una celda vecina, transmite en los mismos PRB, al hacerle el XOR con **mi** secuencia sus bits quedan aleatorios. Mi decodificador los ve como ruido, no como datos con estructura que lo confundan.\n2. **Romper patrones repetitivos:** bloques llenos de ceros (relleno) o datos repetidos generarían una señal con patrones fijos. Con el scrambling, los bits quedan \"balanceados\" (50 % de ceros y 50 % de unos).\n3. **\"Personalizar\" la transmisión:** si un celular intentara decodificar con un RNTI equivocado, obtendría basura y el CRC fallaría.\n\n> **Ojo: el scrambling NO es cifrado.** La secuencia se puede calcular a partir de datos públicos (RNTI y PCI). La **seguridad** la da el PDCP, con los algoritmos NEA/NIA y claves derivadas de la autenticación 5G-AKA.\n\n**En la recepción** no se hace un XOR sobre bits \"duros\". Se trabaja sobre los LLR (ver el punto D): donde c(i) = 1, simplemente **se le cambia el signo** al LLR. No se pierde información.\n\n#### C. ¿La frecuencia de muestreo coincide con la IFFT? (pasos 9, 14 y 16)\n\n**Sí, coincide exactamente.** Para que cada salida de la IFFT sea una muestra que la B210 convierte sin re-muestrear, tiene que cumplirse **f_s = N_FFT × Δf**:\n\n| Verificación | Cálculo | Resultado |\n| :--- | :--- | :--- |\n| Tasa de muestreo | 1536 × 15 kHz | **23.04 MHz = `srate`** ✅ |\n| Duración de 1 muestra | 1 / 23.04 MHz | 43.4 ns |\n| Símbolo útil | 1536 muestras × 43.4 ns | **66.67 µs = 1/15 kHz** ✅ (el período de la subportadora) |\n| CP normal | 108 muestras / 23.04 MHz | **4.6875 µs** = 144·κ·T_c de TS 38.211 §5.3.1 ✅ |\n| CP largo (símbolos 0 y 7) | 120 muestras / 23.04 MHz | **5.208 µs** = (144+16)·κ·T_c ✅ |\n| Slot (14 símbolos) | 2·(1536+120) + 12·(1536+108) | **23 040 muestras = 1.000 ms** ✅ |\n| Nyquist (muestras complejas I/Q) | Ancho representable = f_s = 23.04 MHz (±11.52 MHz) | La señal ocupa ±9.54 MHz: ✅ sobran ~2 MHz por lado |\n| Bins usados de la IFFT | 1272 de 1536 | 82.8 % con datos; los 264 restantes en cero (guarda + margen del filtro) |\n\n- **Por qué 1536 y no 2048:** 3GPP define las duraciones con una IFFT de referencia de 2048 a 30.72 MHz. srsRAN usa **1536 = 3 × 512** a 23.04 MHz, que es 3/4 de esa referencia. Los CP siguen dando una cantidad **entera** de muestras (144 × 3/4 = 108, 160 × 3/4 = 120), así que es igual de válido y se procesa un 25 % menos de muestras. El CPU y el USB lo agradecen.\n- **Qué pasaría si no coincidiera:** por ejemplo, con f_s = 25 MHz la IFFT no tendría un tamaño entero de muestras por símbolo. Habría que agregar un **re-muestreador** (filtro + interpolación), con más CPU y más error. Por eso `srate` se elige siempre como múltiplo de 15 kHz × 2^μ y UHD ajusta el reloj del AD9361 para lograrlo exactamente.\n- **La FFT del receptor (pasos 14 y 16)** usa el mismo tamaño y la misma tasa. El receptor solo tiene que **ubicar dónde empieza cada símbolo** (con el sincronismo y el TA) y saltear las 108 o 120 muestras del CP.\n\n#### D. LLR y decisión \"soft\" (paso 20)\n\nDespués de ecualizar, el receptor tiene un número complejo **y** por cada símbolo, que llegó con ruido. Hay dos formas de convertirlo en bits:\n\n- **Decisión \"dura\" (*hard*):** \"y está a la derecha del eje → el bit es 0\". Se queda **solo con 0 o 1** y tira la información de **qué tan cerca del límite** cayó el punto.\n- **Decisión \"blanda\" (*soft*):** en vez de decidir, calcula un número que dice **qué bit es más probable y con cuánta seguridad**. Es el **LLR** (*Log-Likelihood Ratio*, logaritmo de la razón de verosimilitudes):\n\n```\nLLR(b) = ln [ P(b = 0 | y) / P(b = 1 | y) ]\n\n  signo   → qué bit es más probable (+ = 0, − = 1)\n  tamaño  → cuánta confianza (cerca de 0 = \"ni idea\")\n```\n\n**Ejemplo con QPSK** (en NR, el bit 0 corresponde a +1/√2 y el bit 1 a −1/√2 en cada eje). En ruido gaussiano queda **LLR = 2√2 · Re{y} / σ²**. Con σ² = 0.1:\n\n| Re{y} recibido | Decisión dura | LLR (soft) | Qué le dice al LDPC |\n| :---: | :---: | :---: | :--- |\n| +0.68 | 0 | **+19.2** | \"Es un 0, casi seguro\" |\n| +0.05 | 0 | **+1.4** | \"Quizás un 0, pero no confíes mucho\" |\n| −0.60 | 1 | **−17.0** | \"Es un 1, casi seguro\" |\n\n**Por qué importa:**\n- **El LDPC necesita LLR.** En la decodificación iterativa, los bits con LLR alto \"ayudan\" a corregir a los de LLR bajo. Con decisiones duras perdería esa información: el soft da **~2 dB** de ganancia, que equivale a la misma tasa de error con un 37 % menos de potencia.\n- **HARQ se hace sumando LLR:** LLR_total = LLR_1.er envío + LLR_reenvío. Dos copias \"dudosas\" del mismo bit suman confianza (*soft combining*).\n- **El descrambling es gratis:** donde c(i) = 1 se invierte el signo del LLR.\n- **Para 16/64/256-QAM** se usa la aproximación *max-log*: LLR ≈ (distancia² al punto más cercano con b=1 − distancia² al más cercano con b=0) / σ².\n- **En DFT-s-OFDM**, el σ² que se usa es el ruido **después** del ecualizador MMSE y de la IDFT, que la gNB estima con el DM-RS.\n- **En srsRAN**, los LLR se guardan como enteros de 8 bits para ahorrar memoria y ganar velocidad.\n\n#### E. DFT-s-OFDM, la PAPR y qué gana el celular (paso 7)\n\n**1) Qué es la PAPR.** Es la relación entre la potencia **pico** y la potencia **promedio** de la señal: PAPR = max|x|² / promedio|x|², en dB. Una senoidal pura tiene 3 dB. Una señal con PAPR de 10 dB tiene picos **10 veces más potentes** que su promedio.\n\n**2) Por qué OFDM tiene la PAPR alta.**\n- Cada muestra en el tiempo es la **suma de cientos de subportadoras**, cada una con un símbolo QAM independiente.\n- Por el teorema central del límite, esa suma se comporta como ruido gaussiano. Casi siempre es moderada, pero cada tanto muchas subportadoras se suman en fase y aparece un **pico**.\n- En el peor caso teórico, el pico llega a 10·log₁₀(M) sobre el promedio: unos 28 dB con 600 subportadoras.\n\n**3) Cómo lo arregla la DFT.**\n- La DFT antes de la IFFT hace que la señal sea **la secuencia de símbolos QAM uno detrás de otro**, interpolada. Es una portadora única: en cada instante \"suena\" básicamente **un** símbolo, no cientos sumados.\n- Entonces la amplitud de la señal sigue a la de la constelación y casi no aparecen picos.\n- La explicación detallada, con animación, está en `DFT-s-OFDM_explicacion.html`.\n\n**4) Cuánto baja** (medido con 50 PRB, 2000 símbolos, sobremuestreo ×4; PAPR que se supera solo el 0.1 % de las veces):\n\n| Modulación | CP-OFDM | DFT-s-OFDM | Ahorro |\n| :--- | :---: | :---: | :---: |\n| π/2-BPSK | 11.3 dB | **6.2 dB** | ≈ 5 dB |\n| QPSK | 11.6 dB | **7.8 dB** | ≈ 4 dB |\n| 16-QAM | 11.2 dB | **8.9 dB** | ≈ 2.3 dB |\n| 64-QAM | 11.6 dB | **9.2 dB** | ≈ 2.4 dB |\n| 256-QAM | 11.5 dB | **9.4 dB** | ≈ 2 dB |\n\nLa ventaja es **mayor con modulaciones bajas**. Por eso DFT-s-OFDM se combina con QPSK o π/2-BPSK en el borde de la celda: las constelaciones grandes ya tienen picos propios, porque sus puntos exteriores están lejos del promedio.\n\n**5) Cómo influye en el celular: el amplificador de potencia (PA).**\n```\nP_salida\n   ▲            ┌───────── saturación (el PA ya no da más: recorta)\n   │          ╱\n   │        ╱   ← zona lineal: la señal sale sin deformarse\n   │      ╱\n   │    ╱\n   └──────────────────► P_entrada\n          │←back-off→│\n       promedio     pico\n```\n- El PA solo es **lineal** hasta cierto nivel. Si un pico lo supera, **se recorta** (*clipping*).\n  - Eso **deforma la constelación**: sube el EVM y aumentan los errores.\n  - Además **ensucia los canales vecinos** (*spectral regrowth*), y la norma lo limita con el ACLR (TS 38.101-1 §6.5.2.4).\n- Para evitarlo, el celular trabaja con **back-off**: pone su potencia **promedio** tantos dB por debajo del máximo como picos tenga la señal. **Más PAPR significa más back-off.**\n- **Batería:** un PA es más **eficiente** cerca de su máximo. Con un ejemplo ilustrativo de un PA clase AB ideal (eficiencia máxima del 50 %), para entregar los mismos 200 mW de RF:\n  - **CP-OFDM** con 8 dB de back-off tiene ≈ 20 % de eficiencia y consume **≈ 1 W** de la batería.\n  - **DFT-s-OFDM** con 5 dB de back-off tiene ≈ 28 % de eficiencia y consume **≈ 0.7 W**: **~30 % menos** consumo del PA.\n- **Cobertura:** con el mismo PA, el celular puede transmitir más potencia promedio.\n  - La norma lo refleja en el **MPR** (*Maximum Power Reduction*, TS 38.101-1 §6.2.2): con CP-OFDM el celular puede bajar su potencia máxima unos 3 dB o más; con DFT-s-OFDM QPSK, del orden de 1 dB o menos.\n  - Son **~2 dB más de potencia en el borde de la celda**. En espacio libre, 3 dB más equivalen a **×1.4 de distancia**.\n- **El precio:**\n  - **solo PRB contiguos**;\n  - **una sola capa** (sin MIMO en UL);\n  - un receptor que tiene que ecualizar con MMSE (el ruido de una subportadora mala se reparte en todos los símbolos);\n  - con señal muy buena, un rendimiento algo menor que CP-OFDM.\n- **Quién decide:** la gNB, por RRC (`transformPrecoder`). La regla práctica es **CP-OFDM cuando el celular está cerca** (más velocidad) y **DFT-s-OFDM cuando está lejos o al límite de potencia** (más alcance).\n\n> **En tu laboratorio, a 2 m:** el celular transmite unos −25 dBm, **muy lejos** de su máximo de +23 dBm. Su PA trabaja en la zona lineal con muchísimo margen, así que la ventaja de PAPR **no se nota en las mediciones**.\n> Sí es la razón de diseño por la que 3GPP la incluyó, y es lo que hace funcionar el UL en una celda real de varios km.", "link_budget": "| Parámetro | **Downlink** (B210 → celular) | **Uplink** (celular → B210) |\n| :--- | :--- | :--- |\n| Frecuencia | 1842.5 MHz | 1747.5 MHz |\n| Potencia TX | ≈ −5 dBm (B210, `tx_gain` 75, estimado\\*) | ≈ −25 dBm (definida por el control de potencia, ver abajo) |\n| Pérdida de cables y conectores | −1 dB | (incluida del lado de la B210: −1 dB) |\n| Ganancia de antena TX | +3 dBi | ≈ 0 dBi (antena interna del celular) |\n| FSPL a 2 m: 20log d + 20log f − 27.55 | 43.8 dB | 43.3 dB |\n| Ganancia de antena RX | ≈ 0 dBi | +3 dBi |\n| **Potencia recibida** | **≈ −46.8 dBm** (20 MHz) | **≈ −66 dBm** (en 10 PRB) |\n| RSRP (por RE): P_rx − 10log(1272) | ≈ −78 dBm (excelente, > −80) | — |\n| Ruido kTB + NF | −101.2 dBm + 9 dB = **−92.2 dBm** (19.08 MHz) | −111.5 dBm + 8 dB = **−103.5 dBm** (1.8 MHz) |\n| SNR | ≈ 45 dB (en la práctica limitada a ~30 dB por el EVM de la B210) | ≈ 37 dB |\n| **Sensibilidad** | **REFSENS = −91.0 dBm** (TS 38.101-1, n3, 20 MHz, QPSK) | ≈ −104 dBm (SNR ≈ −1 dB, QPSK de tasa baja, 10 PRB) |\n| **Margen** | **≈ 44 dB** | **≈ 38 dB** |\n\n\\* La potencia real de la B210 depende de la frecuencia y del *backoff* digital de srsRAN. Conviene **verificarla con el RSRP** que muestra el celular\n(`*#*#4636#*#*` o una app como Network Signal Guru) y despejar P_tx = RSRP + 31 + 43.8 − 3 + 1.\n\n**Control de potencia del UL (TS 38.213 §7.1):**\nP_PUSCH = min{ P_CMAX ; P0 + 10·log10(2^μ·M_RB) + α·PL + Δ_TF + f(i) }.\nCon P0 = −76 dBm, α = 1, M_RB = 10 y PL ≈ 41 dB, resulta P ≈ −25 dBm. A 2 m el celular transmite **muy por debajo** de sus +23 dBm, y los comandos TPC del DCI lo corrigen en lazo cerrado.\n\n> **Detalle para la defensa:** el celular estima PL = *ss-PBCH-BlockPower* (anunciado en el SIB1) − RSRP medido. Si la potencia que se anuncia en el SIB1 no coincide con la que realmente\n> irradia la B210 (algo común en SDR), el celular calcula mal la PL. Entonces el control de potencia en lazo abierto se equivoca y los TPC tienen que compensarlo.", "estados": "| Estado | RRC | Core (CM) | ¿Tiene PRBs, PUCCH o C-RNTI? | Cómo se entera de que tiene datos |\n| :--- | :--- | :--- | :--- | :--- |\n| Transfiriendo datos | CONNECTED | CM-CONNECTED | Sí | DCI en el PDCCH (§2.2) |\n| **Sin actividad (este caso)** | **IDLE** | **CM-IDLE (sigue REGISTRADO)** | **No** (conserva 5G-GUTI, IP 10.45.0.2 y la sesión PDU en el SMF) | **Paging** |\n\nLlega a IDLE cuando vence el temporizador de inactividad de la gNB (`inactivity_timer` en `cu_cp` de `gnb.yml`):\nla gNB pide la liberación, la AMF responde con *UE Context Release*, la gNB envía **RRCRelease**, la UPF **desactiva el túnel N3** y desde ahí guarda en buffer los paquetes de bajada.\n\n**DRX en IDLE (TS 38.304 §7.1):** el celular duerme y se despierta solo en su **Paging Frame/Paging Occasion**:\n(SFN + PF_offset) mod T = (T div N)·(UE_ID mod N), con **UE_ID = 5G-S-TMSI mod 1024** y T = ciclo DRX (32 a 256 tramas = **0.32 a 2.56 s**).\nPor eso una notificación puede tardar hasta un ciclo DRX más el tiempo de reconexión (~100–300 ms).", "paging_cierre": "**Tiempo total:** hasta un ciclo DRX de espera (≤ 2.56 s) más ~100–300 ms de reconexión. Por eso a veces un mensaje \"tarda\" en llegar a un celular en reposo.\n\n**Para responder rápido en la defensa:**\n- **¿Quién decide despertar al celular?** El **core**, no la antena: la UPF detecta el paquete, el SMF avisa a la AMF y la AMF ordena el paging a todas las gNB del área de seguimiento (TA).\n- **¿Cómo lo encuentra sin conocer su C-RNTI?** Con la identidad temporal **5G-S-TMSI** (nunca con el IMSI) y en el instante que fija su DRX.\n- **¿Qué método de acceso usa para volver?** El mismo **RACH por contienda** del acceso inicial, pero con causa `mt-Access` y un **Service Request**, no un Registration.\n  No repite el registro ni cambia la IP.\n- **¿Por qué no queda siempre en CONNECTED?** Para ahorrar batería y recursos: en IDLE el celular no ocupa PUCCH ni C-RNTI y solo escucha el PDCCH unos milisegundos por ciclo DRX.\n- **Llamada real 3GPP (VoNR):** seguiría el mismo paging, pero el paquete sería un SIP INVITE de un IMS y usaría un flujo QoS con 5QI = 1. En este laboratorio no hay IMS,\n  así que la llamada de WhatsApp viaja como datos (5QI = 9).", "glosario": "| Sigla | Término en inglés | Significado / rol en este documento |\n| :--- | :--- | :--- |\n| **3GPP** | 3rd Generation Partnership Project | Organismo que redacta las normas de 5G (aquí, Release 15). |\n| **5G-GUTI** | 5G Globally Unique Temporary Identifier | Identidad temporal que la AMF asigna al celular para no transmitir el IMSI. |\n| **5G-S-TMSI** | 5G Shortened Temporary Mobile Subscriber Identity | Versión corta del 5G-GUTI; con ella se pagina al celular y se calcula su UE_ID. |\n| **5QI** | 5G QoS Identifier | Identificador de calidad de servicio (9 = datos best-effort, 1 = voz VoNR). |\n| **ACLR** | Adjacent Channel Leakage Ratio | Cuánta potencia se \"escapa\" al canal vecino; los picos recortados por el PA la empeoran (TS 38.101-1 §6.5.2.4). |\n| **ACK / NACK** | Acknowledgement / Negative Acknowledgement | Confirmación de recepción correcta / errónea de un bloque (HARQ). |\n| **ADC** | Analog-to-Digital Converter | Conversor analógico-digital de 12 bits del AD9361 (recepción). |\n| **AMF** | Access and Mobility Management Function | Función del core que gestiona el registro, la movilidad y ordena el paging. |\n| **ARFCN / NR-ARFCN** | (New Radio) Absolute Radio Frequency Channel Number | Número de canal normalizado: 368500 = 1842.5 MHz y 349500 = 1747.5 MHz. |\n| **AVX-512** | Advanced Vector Extensions 512 | Instrucciones vectoriales del CPU que aceleran el decodificador LDPC. |\n| **BG1 / BG2** | Base Graph 1 / 2 | Matrices base del código LDPC: BG1 para bloques grandes y BG2 para chicos. |\n| **BPSK (π/2-BPSK)** | Binary Phase Shift Keying | Modulación de 1 bit/símbolo con rotación de π/2, de PAPR mínima (solo UL con DFT-s-OFDM). |\n| **BSR** | Buffer Status Report | MAC CE con el que el celular informa cuántos bytes tiene para enviar en UL. |\n| **CE (MAC CE)** | MAC Control Element | Mensaje de control dentro de la capa MAC (BSR, PHR, TA Command, etc.). |\n| **CM-IDLE / CM-CONNECTED** | Connection Management Idle / Connected | Estado de la conexión de señalización entre el celular y el core (AMF). |\n| **CORESET** | Control Resource Set | Región de PRBs y símbolos donde se transmite el PDCCH. |\n| **CP** | Cyclic Prefix | Prefijo cíclico: copia del final del símbolo OFDM (4.69 µs) que absorbe los ecos. |\n| **CP-OFDM / CP-OFDMA** | Cyclic Prefix OFDM / OFDM Access | Forma de onda y método de acceso multiusuario del DL (y opcional en UL). |\n| **CPU** | Central Processing Unit | Procesador de la PC donde corre la gNB por software. |\n| **CQI** | Channel Quality Indicator | Índice de calidad del canal que reporta el celular; define el MCS del DL. |\n| **CRC** | Cyclic Redundancy Check | Código de 24 bits que detecta si un bloque llegó con errores. |\n| **CSI / CSI-RS** | Channel State Information / CSI Reference Signal | Información del estado del canal (CQI, RI) y piloto de DL que se usa para medirla. |\n| **C-RNTI** | Cell Radio Network Temporary Identifier | Identificador del celular dentro de la celda en RRC_CONNECTED. |\n| **CU-CP** | Central Unit – Control Plane | Parte de la gNB que maneja RRC y la conexión N2 (sección `cu_cp` de `gnb.yml`). |\n| **DAC** | Digital-to-Analog Converter | Conversor digital-analógico de 12 bits del AD9361 (transmisión). |\n| **DCI** | Downlink Control Information | Mensaje en el PDCCH que asigna recursos: 0_x para UL y 1_x para DL. |\n| **DDC / DUC** | Digital Down / Up Converter | Filtrado y cambio de tasa digital en la FPGA de la B210 (RX / TX). |\n| **DFT / IDFT** | (Inverse) Discrete Fourier Transform | Transformada que dispersa (y recupera) los símbolos en el UL con DFT-s-OFDM. |\n| **DFT-s-OFDM** | DFT-spread OFDM | Forma de onda de UL de baja PAPR (equivale al SC-FDMA de 4G); exige PRBs contiguos. |\n| **DL** | Downlink | Enlace descendente: gNB → celular (1842.5 MHz). |\n| **DM-RS** | Demodulation Reference Signal | Piloto dentro del PDSCH/PUSCH para estimar el canal y ecualizar. |\n| **DRB1** | Data Radio Bearer 1 | Portador de radio para datos de usuario. |\n| **DRX** | Discontinuous Reception | Recepción discontinua: el celular duerme y escucha el PDCCH solo en instantes fijos. |\n| **EIRP** | Effective Isotropic Radiated Power | Potencia irradiada equivalente: P_tx − pérdidas + ganancia de antena. |\n| **EVM** | Error Vector Magnitude | Error de la constelación; limita la SNR real de la B210 (~30 dB). |\n| **FDD** | Frequency Division Duplex | Duplexación por frecuencia: DL y UL en portadoras distintas separadas 95 MHz. |\n| **FDMA** | Frequency Division Multiple Access | Acceso múltiple por frecuencia: reparto de PRBs entre usuarios. |\n| **FFT / IFFT** | (Inverse) Fast Fourier Transform | Transformada de 1536 puntos que demodula / genera los símbolos OFDM. |\n| **FPGA** | Field Programmable Gate Array | Chip Spartan-6 de la B210 (buffers, timestamps, DUC/DDC). |\n| **FSPL** | Free Space Path Loss | Pérdida en espacio libre: 20log d + 20log f − 27.55 (≈ 43.8 dB a 2 m). |\n| **gNB** | Next Generation Node B | Estación base 5G (srsRAN/OCUDU en la PC + B210). |\n| **GTP-U** | GPRS Tunnelling Protocol – User Plane | Túnel UDP 2152 que lleva los paquetes IP entre la gNB y la UPF (N3). |\n| **HARQ** | Hybrid Automatic Repeat Request | Retransmisión rápida con combinación soft de las copias recibidas. |\n| **I/Q** | In-phase / Quadrature | Muestra compleja de la señal en banda base (23.04 MS/s). |\n| **IMS** | IP Multimedia Subsystem | Subsistema para voz sobre IP del operador (VoNR); no está en el laboratorio. |\n| **IMSI** | International Mobile Subscriber Identity | Identidad permanente de la SIM (722999000000001). |\n| **IP** | Internet Protocol | Protocolo de los paquetes de usuario (el celular usa 10.45.0.2). |\n| **K0 / K1 / K2** | Slot offsets (TS 38.214 / 38.213) | Retardos en slots: DCI→PDSCH (K0), PDSCH→HARQ-ACK (K1) y DCI→PUSCH (K2). |\n| **kTB** | Boltzmann constant × Temperature × Bandwidth | Potencia de ruido térmico: −174 dBm/Hz + 10log B. |\n| **LDPC** | Low-Density Parity-Check | Código corrector de errores de los canales de datos (PDSCH/PUSCH). |\n| **LLR** | Log-Likelihood Ratio | Valor \"soft\" de confianza de cada bit que entra al decodificador. |\n| **LNA** | Low Noise Amplifier | Primer amplificador del receptor. |\n| **LO** | Local Oscillator | Oscilador que sube o baja la señal a 1842.5 / 1747.5 MHz. |\n| **MAC** | Medium Access Control | Capa 2 con el scheduler, el HARQ y el RACH: el \"árbitro\" del método de acceso. |\n| **MCS** | Modulation and Coding Scheme | Combinación de modulación y tasa de código elegida por la gNB. |\n| **MPR** | Maximum Power Reduction | Reducción de potencia máxima que la norma permite al celular según la forma de onda (mayor en CP-OFDM que en DFT-s-OFDM). |\n| **MS/s** | Mega Samples per second | Millones de muestras I/Q por segundo (srate). |\n| **N2 / N3 / N4** | Reference points 5G | Interfaces gNB–AMF (NGAP), gNB–UPF (GTP-U) y SMF–UPF (PFCP). |\n| **NAS** | Non-Access Stratum | Señalización directa celular ↔ core (Registration, Service Request). |\n| **NAT** | Network Address Translation | Traducción de la IP del celular a la IP de la PC para salir a Internet. |\n| **NDI** | New Data Indicator | Bit del DCI: si se invierte, es dato nuevo (ACK implícito en UL); si no, es retransmisión. |\n| **NF** | Noise Figure | Figura de ruido del receptor (≈ 9 dB en el celular, ≈ 8 dB en la B210). |\n| **NGAP** | Next Generation Application Protocol | Protocolo de control gNB ↔ AMF sobre SCTP 38412. |\n| **NR** | New Radio | Nombre de la interfaz de radio de 5G. |\n| **OFDM** | Orthogonal Frequency Division Multiplexing | Modulación multiportadora con subportadoras ortogonales cada 15 kHz. |\n| **PA** | Power Amplifier | Amplificador de potencia del transmisor. |\n| **PAPR** | Peak-to-Average Power Ratio | Relación pico/promedio; DFT-s-OFDM la reduce para ahorrar batería. |\n| **PBCH** | Physical Broadcast Channel | Canal del SSB que lleva el MIB. |\n| **PCI** | Physical Cell Identity | Identidad física de la celda (PCI = 1). |\n| **PDCCH** | Physical Downlink Control Channel | Canal que transporta los DCI. |\n| **PDCP** | Packet Data Convergence Protocol | Capa que cifra y protege la integridad de los datos. |\n| **PDSCH** | Physical Downlink Shared Channel | Canal de datos de DL (también lleva SIB1, RAR y Paging). |\n| **PDU** | Protocol Data Unit | Sesión PDU: la \"conexión de datos\" con IP que crea el SMF. |\n| **PF / PO** | Paging Frame / Paging Occasion | Trama y momento en que el celular en IDLE se despierta a escuchar paging. |\n| **PFCP** | Packet Forwarding Control Protocol | Protocolo SMF ↔ UPF (N4) para crear y modificar túneles. |\n| **PHICH** | Physical HARQ Indicator Channel | Canal de ACK de UL de 4G que **no existe** en 5G NR. |\n| **PHR** | Power Headroom Report | MAC CE con el margen de potencia que le queda al celular. |\n| **PHY** | Physical Layer | Capa física (modulación, codificación, OFDM). |\n| **PL** | Path Loss | Pérdida de trayecto que estima el celular para su control de potencia. |\n| **PLMN** | Public Land Mobile Network | Identidad de la red: MCC 722 + MNC 999. |\n| **PRACH** | Physical Random Access Channel | Canal de UL del preámbulo de acceso aleatorio (Msg1). |\n| **PRB** | Physical Resource Block | 12 subportadoras = 180 kHz; unidad de asignación en frecuencia (106 en 20 MHz). |\n| **PSS / SSS** | Primary / Secondary Synchronization Signal | Señales del SSB para sincronizar y obtener el PCI. |\n| **P-RNTI** | Paging RNTI (0xFFFE) | Identificador común con el que se marca el DCI del paging. |\n| **PUCCH** | Physical Uplink Control Channel | Canal de UL para SR, HARQ-ACK y CSI. |\n| **PUSCH** | Physical Uplink Shared Channel | Canal de datos de UL (más BSR/PHR). |\n| **QC-LDPC** | Quasi-Cyclic LDPC | LDPC de 5G armado con una matriz base expandida en bloques desplazados de tamaño Z_c (hasta 384). |\n| **QAM** | Quadrature Amplitude Modulation | Modulación 16/64/256-QAM (4, 6 u 8 bits/símbolo). |\n| **QoS** | Quality of Service | Calidad de servicio de cada flujo. |\n| **QPSK** | Quadrature Phase Shift Keying | Modulación de 2 bits/símbolo, la más robusta. |\n| **RACH** | Random Access Channel | Procedimiento de acceso aleatorio de 4 pasos (Msg1–Msg4). |\n| **RAN** | Radio Access Network | Red de acceso radio (celular + B210 + gNB). |\n| **RAR** | Random Access Response | Msg2: TA, UL grant y TC-RNTI. |\n| **RBG** | Resource Block Group | Grupo de PRBs para la asignación tipo 0 (bitmap) en DL. |\n| **RE** | Resource Element | 1 subportadora × 1 símbolo OFDM; unidad mínima de la grilla. |\n| **REFSENS** | Reference Sensitivity | Sensibilidad mínima normada del celular (−91 dBm en n3, 20 MHz). |\n| **RF** | Radio Frequency | Radiofrecuencia. |\n| **RI** | Rank Indicator | Cantidad de capas MIMO que soporta el canal (1 en SISO). |\n| **RIV** | Resource Indication Value | Número que codifica el primer PRB y la cantidad de PRBs contiguos. |\n| **RLC** | Radio Link Control | Capa que segmenta y reensambla paquetes. |\n| **RNTI** | Radio Network Temporary Identifier | Familia de identificadores de radio (C-, TC-, P-, RA-, SI-RNTI). |\n| **RRC** | Radio Resource Control | Control de la conexión de radio (estados IDLE / CONNECTED). |\n| **RSRP** | Reference Signal Received Power | Potencia recibida por RE del SSB (≈ −78 dBm a 2 m). |\n| **RV** | Redundancy Version | Versión de los bits redundantes enviada en cada (re)transmisión HARQ. |\n| **RX / TX** | Receive / Transmit | Recepción / transmisión; puertos TX/RX y RX2 de la B210. |\n| **SA** | Standalone | 5G autónomo, sin depender de 4G. |\n| **SCS** | Subcarrier Spacing | Separación entre subportadoras (15 kHz, μ = 0). |\n| **SDAP** | Service Data Adaptation Protocol | Capa que mapea los flujos QoS a portadores de radio. |\n| **SDR** | Software Defined Radio | Radio definida por software (USRP B210). |\n| **SFN** | System Frame Number | Número de trama de 10 ms (0–1023); se usa para calcular el PF. |\n| **SIB1** | System Information Block 1 | Información de la celda: PLMN, TAC, PRACH y potencia del SSB. |\n| **SIP** | Session Initiation Protocol | Señalización de llamadas VoIP/IMS (INVITE). |\n| **SISO** | Single Input Single Output | Una antena de TX y una de RX (1×1). |\n| **SLIV** | Start and Length Indicator Value | Símbolo de inicio y duración de la asignación dentro del slot. |\n| **SMF** | Session Management Function | Función del core que maneja la sesión PDU y avisa que hay datos pendientes. |\n| **SNR** | Signal-to-Noise Ratio | Relación señal/ruido. |\n| **SR** | Scheduling Request | Pedido de recursos de UL por PUCCH. |\n| **SRB1** | Signalling Radio Bearer 1 | Portador de radio para la señalización RRC/NAS. |\n| **SSB** | Synchronization Signal Block | Bloque PSS + SSS + PBCH emitido periódicamente (cada 20 ms). |\n| **TA** | Timing Advance | Adelanto de la transmisión de UL para compensar la distancia. |\n| **TAI** | Tracking Area Identity | Área de seguimiento (PLMN + TAC) donde se pagina al celular. |\n| **TB** | Transport Block | Bloque de datos que entrega la MAC a la PHY en cada slot. |\n| **TC-RNTI** | Temporary C-RNTI | Identificador temporal durante el RACH. |\n| **TDMA** | Time Division Multiple Access | Acceso múltiple por tiempo: reparto de slots y símbolos entre usuarios. |\n| **TEID** | Tunnel Endpoint Identifier | Identificador de cada extremo del túnel GTP-U. |\n| **TPC** | Transmit Power Control | Comando de ajuste de potencia en lazo cerrado dentro del DCI. |\n| **TS** | Technical Specification | Especificación técnica de 3GPP (TS 38.xxx, 23.xxx). |\n| **UDP** | User Datagram Protocol | Transporte del túnel GTP-U (puerto 2152). |\n| **UE** | User Equipment | Equipo de usuario: el celular. |\n| **UE_ID** | UE Identity for paging | 5G-S-TMSI mod 1024; define en qué PO se despierta el celular. |\n| **UHD** | USRP Hardware Driver | Driver que conecta la gNB con la B210 por USB. |\n| **UL** | Uplink | Enlace ascendente: celular → gNB (1747.5 MHz). |\n| **UPF** | User Plane Function | Función del core que transporta los datos y los guarda en buffer cuando el celular está en IDLE. |\n| **USB** | Universal Serial Bus | Bus USB 3.0 entre la PC y la B210 (fronthaul digital). |\n| **USRP** | Universal Software Radio Peripheral | Familia de SDR de Ettus; aquí, el modelo B210. |\n| **VoNR** | Voice over New Radio | Voz nativa sobre 5G mediante IMS. |\n| **XOR (⊕)** | Exclusive OR | Suma de bits módulo 2 (0⊕0=0, 1⊕0=1, 1⊕1=0); la usan el LDPC y el scrambling. |"};
+
+/* =====================================================================
+   DIAGRAMAS (cada paso con su explicación al costado)
+   ===================================================================== */
+const CADENA_UL = [
+  { etapa: "📱 CELULAR — transmite (TS 38.212 / 38.211 §6.3)", c: "ue" },
+  { n: 1, c: "ue", t: "Transport Block (MAC)", d: "datos IP + BSR/PHR",
+    e: "La MAC junta en un bloque de bits todo lo que se manda en este slot: los datos IP y los reportes BSR/PHR." },
+  { n: 2, c: "ue", t: "CRC 24 bits", d: "TS 38.212 §6.2.1",
+    e: "Agrega 24 bits de control para que el receptor pueda saber si el bloque llegó **bien o mal**." },
+  { n: 3, c: "ue", t: "Codificación LDPC", d: "BG1 bloques grandes / BG2 chicos",
+    e: "Agrega bits redundantes para **corregir errores** sin tener que retransmitir. *Qué es un LDPC: ver 1.3-A.*" },
+  { n: 4, c: "ue", t: "Rate matching + RV", d: "versión de redundancia HARQ",
+    e: "Recorta o repite bits para que entren **justo** en los PRBs concedidos. Si hay un reenvío, se manda otra \"parte\" de los bits (otra RV)." },
+  { n: 5, c: "ue", t: "Scrambling", d: "secuencia con el C-RNTI",
+    e: "Hace un XOR con una secuencia Gold propia del celular (C-RNTI) y de la celda (PCI). Así la interferencia de otro usuario se ve como ruido. **No es cifrado.** *Ver 1.3-B.*" },
+  { n: 6, c: "ue", t: "Modulación", d: "π/2-BPSK · QPSK · 16/64/256-QAM",
+    e: "Agrupa bits en símbolos complejos: QPSK = 2 bits, 64-QAM = 6 bits. Con **mejor señal** se usan más bits por símbolo." },
+  { n: 7, c: "ue", t: "DFT (transform precoding)", d: "M = 12·N_PRB puntos → baja PAPR",
+    e: "Reparte cada símbolo sobre todas las subportadoras asignadas. La señal queda con **menos picos** (PAPR) y el amplificador gasta menos batería. **Este paso convierte el UL en DFT-s-OFDM.** *PAPR y efecto en el celular: ver 1.3-E.*" },
+  { n: 8, c: "ue", t: "Mapeo en PRBs contiguos + DM-RS", d: "asignación tipo 1 (RIV)",
+    e: "Ubica los datos en los PRBs que concedió la gNB, que tienen que ser **contiguos** por la DFT, y suma pilotos DM-RS (valores conocidos) para medir el canal." },
+  { n: 9, c: "ue", t: "IFFT 1536 + CP", d: "CP 108 muestras (120 en símbolos 0 y 7)",
+    e: "Pasa de frecuencia a tiempo (genera la señal OFDM) y copia el final de cada símbolo al principio. Ese **prefijo cíclico** absorbe los ecos. 1536 × 15 kHz = 23.04 MS/s: *ver 1.3-C.*" },
+  { n: 10, c: "ue", t: "Timing Advance", d: "adelanta el slot N_TA",
+    e: "Transmite un poco antes para compensar la distancia y llegar **alineado** al slot de la gNB." },
+  { n: 11, c: "ue", t: "DAC → LO 1747.5 MHz → PA", d: "≤ +23 dBm (Power Class 3)",
+    e: "Pasa la señal a analógico, la sube a la frecuencia de UL y la amplifica con la potencia que fija el control de potencia (≈ −25 dBm a 2 m)." },
+  { aire: "Interfaz Uu · FSPL a 2 m ≈ 43.3 dB",
+    e: "La señal viaja por el aire y pierde ≈ 43 dB en 2 m (espacio libre a 1747.5 MHz)." },
+  { etapa: "📡 USRP B210 — recibe (Radio Unit, split 8)", c: "b210" },
+  { n: 12, c: "b210", t: "Antena en puerto RX2", d: "",
+    e: "Recibe por **RX2**. El puerto TX/RX queda libre para transmitir el DL a 1842.5 MHz al mismo tiempo (FDD)." },
+  { n: 13, c: "b210", t: "LNA + mezclador 1747.5 MHz", d: "rx_gain ≈ 45 dB",
+    e: "Amplifica la señal débil agregando poco ruido y la baja a banda base." },
+  { n: 14, c: "b210", t: "ADC 12 bits · 23.04 MS/s", d: "FPGA: DDC + timestamps",
+    e: "Digitaliza 23.04 millones de muestras I/Q por segundo y la FPGA les pone marca de tiempo." },
+  { n: 15, c: "b210", t: "USB 3.0 → PC", d: "muestras I/Q",
+    e: "Manda las muestras a la PC. La B210 **no entiende de PRBs ni de bits**: solo convierte la señal." },
+  { etapa: "🖥️ gNB srsRAN/OCUDU — decodifica (PHY → MAC)", c: "gnb" },
+  { n: 16, c: "gnb", t: "Quitar CP + FFT 1536", d: "",
+    e: "Descarta el CP (donde cayeron los ecos) y pasa de tiempo a frecuencia para recuperar cada subportadora." },
+  { n: 17, c: "gnb", t: "Extraer los PRBs concedidos", d: "",
+    e: "Se queda solo con los PRBs que le había asignado a este celular." },
+  { n: 18, c: "gnb", t: "Estimación de canal + ecualización", d: "con DM-RS, 1 tap",
+    e: "Compara los DM-RS recibidos con los conocidos, mide cuánto **deformó el canal** la señal y lo corrige con una división por subportadora." },
+  { n: 19, c: "gnb", t: "IDFT", d: "transform de-precoding",
+    e: "Deshace la DFT del paso 7." },
+  { n: 20, c: "gnb", t: "Demodulación (LLR) + descrambling", d: "",
+    e: "Calcula para cada bit **qué tan seguro** está de que es 0 o 1 (un valor \"soft\" llamado LLR) y quita el scrambling (invirtiendo el signo del LLR). *Ver 1.3-D.*" },
+  { n: 21, c: "gnb", t: "HARQ + decodificación LDPC", d: "AVX-512",
+    e: "Si es un reenvío, suma la copia anterior (más energía) y el decodificador LDPC corrige los errores." },
+  { decision: true, n: 22, c: "gnb", t: "¿CRC OK?", e: "Verifica el CRC del paso 2." },
+  { rama: "Sí", n: 23, c: "core", t: "MAC → RLC → PDCP → SDAP → GTP-U → UPF", d: "",
+    e: "El paquete IP sube por las capas y va al core por el túnel GTP-U (N3)." },
+  { rama: "No", n: 24, c: "gnb", t: "Retransmisión", d: "nuevo DCI 0_x con el mismo NDI", ultimo: true,
+    e: "Pide reenviar con un nuevo DCI que tiene el **mismo NDI**." },
+];
+
+const CADENA_DL = [
+  { etapa: "🖥️ gNB srsRAN/OCUDU — transmite (TS 38.212 / 38.211 §7.3)", c: "gnb" },
+  { n: 1, c: "gnb", t: "Capas superiores + scheduler", d: "UPF → GTP-U → SDAP → PDCP → RLC → MAC",
+    e: "El paquete llega del core, el PDCP lo cifra y el RLC lo segmenta. La MAC decide **a quién** le transmite, **cuántos PRBs** le da y **qué MCS** usa, según el CQI del celular." },
+  { n: 2, c: "gnb", t: "CRC 24 bits + segmentación", d: "",
+    e: "Agrega el CRC y, si el bloque es muy grande, lo corta en pedazos para el LDPC." },
+  { n: 3, c: "gnb", t: "LDPC (datos) · Polar (control)", d: "",
+    e: "Los datos se protegen con LDPC. El control (DCI, MIB) usa **código Polar**, que funciona mejor con bloques chicos. *Ver 1.3-A.*" },
+  { n: 4, c: "gnb", t: "Rate matching + RV + scrambling", d: "",
+    e: "Ajusta la cantidad de bits a los PRBs elegidos y los mezcla con una secuencia de la celda y del celular. *Ver 1.3-B.*" },
+  { n: 5, c: "gnb", t: "Modulación QPSK → 256-QAM", d: "",
+    e: "Con buen canal usa 256-QAM (8 bits por símbolo). Con canal malo usa QPSK (2 bits), que es más robusta." },
+  { n: 6, c: "gnb", t: "Mapeo en la grilla + señales de referencia", d: "PRBs tipo 0 (RBG) o tipo 1 · DM-RS · CSI-RS · SSB cada 20 ms",
+    e: "Los PRBs pueden **no ser contiguos**, porque en DL no hay DFT. Suma pilotos: DM-RS (para demodular), CSI-RS (para que el celular mida el canal) y SSB (para que los celulares encuentren la celda)." },
+  { n: 7, c: "gnb", t: "IFFT 1536 + CP 4.69 µs", d: "",
+    e: "Genera la señal OFDM. **En DL no hay DFT:** la gNB está enchufada y tolera más picos de potencia (PAPR), por eso es CP-OFDMA puro." },
+  { n: 8, c: "gnb", t: "UHD → USB 3.0", d: "23.04 MS/s",
+    e: "Envía 23.04 millones de muestras I/Q por segundo a la B210." },
+  { etapa: "📡 USRP B210 — irradia", c: "b210" },
+  { n: 9, c: "b210", t: "FPGA DUC → DAC 12 bits", d: "",
+    e: "La FPGA interpola las muestras y el DAC las pasa a analógico." },
+  { n: 10, c: "b210", t: "Mezclador LO 1842.5 MHz + tx_gain", d: "tx_gain ≈ 75 dB → P_tx ≈ −5 dBm (estimado)",
+    e: "Sube la señal a la frecuencia de DL y la amplifica." },
+  { n: 11, c: "b210", t: "Puerto TX/RX → antena +3 dBi", d: "EIRP ≈ −3 dBm",
+    e: "Irradia la señal. La potencia irradiada equivalente es −5 − 1 (cables) + 3 (antena) ≈ **−3 dBm**." },
+  { aire: "Aire · FSPL a 2 m ≈ 43.8 dB",
+    e: "La señal pierde ≈ 43.8 dB en 2 m a 1842.5 MHz." },
+  { etapa: "📱 CELULAR — recibe", c: "ue" },
+  { n: 12, c: "ue", t: "Antena → LNA → mezclador → ADC", d: "P_rx ≈ −46.8 dBm · RSRP ≈ −78 dBm",
+    e: "Llegan ≈ −47 dBm, muy por encima de la **sensibilidad de −91 dBm** (TS 38.101-1): ≈ 44 dB de margen. La señal se amplifica, se baja y se digitaliza." },
+  { n: 13, c: "ue", t: "Sincronismo con SSB", d: "PSS/SSS → PCI = 1",
+    e: "Con PSS y SSS el celular alinea su reloj y su frecuencia y confirma que es la celda PCI 1." },
+  { n: 14, c: "ue", t: "Quitar CP + FFT", d: "",
+    e: "Igual que en la gNB: descarta el CP y separa las subportadoras." },
+  { decision: true, n: 15, c: "ue", t: "¿Hay un DCI 1_1 con mi C-RNTI en el PDCCH?", d: "búsqueda ciega en su CORESET",
+    e: "No sabe dónde está su mensaje de control, así que **prueba varias posiciones** del CORESET. Si el CRC cierra con su C-RNTI, el DCI es para él." },
+  { rama: "No", n: "—", c: "ue", t: "Duerme hasta el próximo monitoreo", d: "",
+    e: "No hay nada para él: apaga el receptor y ahorra batería." },
+  { rama: "Sí", n: 16, c: "ue", t: "Lee el DCI", d: "PRBs · MCS · K0 · K1",
+    e: "El DCI le dice **dónde** están sus datos (PRBs), **cómo** vienen (MCS) y **cuándo** responder (K1)." },
+  { n: 17, c: "ue", t: "PDSCH: DM-RS → ecualización → LLR", d: "",
+    e: "Corrige el canal con los DM-RS y calcula los LLR, igual que la gNB en el UL. *Ver 1.3-D.*" },
+  { n: 18, c: "ue", t: "HARQ + LDPC + CRC", d: "",
+    e: "Si es un reenvío suma las copias, después decodifica el LDPC y verifica el CRC." },
+  { n: 19, c: "ue", t: "HARQ-ACK/NACK + CQI por PUCCH", d: "K1 slots después", ultimo: true,
+    e: "Avisa si llegó bien (ACK) o mal (NACK) y reporta la calidad del canal (CQI). **La gNB usa ese CQI en el paso 1.**" },
+];
+
+const SEC_UL = {
+  p: [["UE", "📱 Celular (CONNECTED)", "ue"], ["B", "📡 B210", "b210"], ["G", "🖥️ gNB (scheduler)", "gnb"], ["C", "☁️ UPF", "core"]],
+  f: [
+    { nota: ["UE"], t: "Llega un paquete IP a enviar. NO tiene PRBs asignados.",
+      e: "Punto de partida: el celular está conectado, pero **sin permiso** para transmitir datos." },
+    { de: "UE", a: "G", t: "SR (Scheduling Request) por PUCCH formato 0/1, en su ocasión sr_period",
+      e: "Avisa \"tengo algo para mandar\". Solo puede hacerlo en sus momentos reservados del PUCCH. Es como **levantar la mano**." },
+    { nota: ["G"], t: "El scheduler decide cuánto y dónde (FDMA: PRBs · TDMA: slot)",
+      e: "Acá actúa el **método de acceso**: la gNB reparte frecuencia y tiempo entre los usuarios." },
+    { de: "G", a: "UE", t: "PDCCH · DCI 0_1 (C-RNTI): RIV · MCS · K2 · SLIV · NDI · RV · HARQ id · TPC",
+      e: "El **permiso (grant)**: qué PRBs (RIV), en qué slot (K2) y en qué símbolos (SLIV), qué modulación (MCS), si es dato nuevo (NDI) y un ajuste de potencia (TPC). Solo este celular lo puede leer." },
+    { nota: ["UE"], t: "Espera K2 slots (≥ 4 ms por defecto en srsRAN)", e: "Tiempo para preparar la transmisión." },
+    { de: "UE", a: "B", t: "PUSCH (DFT-s-OFDM, 1747.5 MHz): BSR + primeros datos",
+      e: "Transmite en los PRBs concedidos. Suma un **BSR** que dice cuántos bytes le faltan enviar." },
+    { de: "B", a: "G", t: "Muestras I/Q por USB 3.0", e: "La B210 solo digitaliza y pasa las muestras a la PC." },
+    { de: "G", a: "C", t: "Paquete IP por túnel GTP-U (N3)", e: "La gNB decodifica, recupera el paquete IP y lo manda al core." },
+    { nota: ["G"], t: "En NR no hay PHICH: el ACK del UL es implícito",
+      e: "El canal de ACK de 4G (PHICH) **no existe** en 5G." },
+    { de: "G", a: "UE", t: "DCI 0_1 con NDI invertido = ACK + nuevo grant según el BSR",
+      e: "Si el NDI cambia, significa \"lo anterior llegó bien, mandá lo nuevo\". El tamaño del nuevo permiso sale del BSR." },
+    { de: "UE", a: "G", t: "PUSCH con el resto de los datos", e: "Termina de enviar." },
+    { de: "G", a: "UE", punt: true, t: "TA Command (MAC CE) + TPC",
+      e: "Corrección periódica del adelanto de tiempo (si el celular se movió) y de la potencia." },
+  ]
+};
+
+const SEC_DL = {
+  p: [["I", "🌐 Internet", "net"], ["C", "☁️ UPF", "core"], ["G", "🖥️ gNB (scheduler)", "gnb"], ["B", "📡 B210", "b210"], ["UE", "📱 Celular (CONNECTED)", "ue"]],
+  f: [
+    { de: "UE", a: "G", t: "CSI report por PUCCH (CQI, RI) medido sobre CSI-RS",
+      e: "El celular informa qué tan bueno es el canal (**CQI** 0–15) y cuántas capas soporta (**RI**, 1 en SISO)." },
+    { de: "I", a: "C", t: "Paquete IP hacia 10.45.0.2", e: "Llega un paquete de Internet para el celular." },
+    { de: "C", a: "G", t: "GTP-U (N3, UDP 2152) con el TEID de la sesión",
+      e: "La UPF lo mete en el túnel N3. El **TEID** identifica de qué celular y de qué sesión es." },
+    { nota: ["G"], t: "Adaptación de enlace: CQI alto → MCS alto. Elige PRBs (FDMA) y slot (TDMA)",
+      e: "El scheduler decide frecuencia, tiempo y modulación." },
+    { de: "G", a: "B", t: "Slot n: PDCCH (DCI 1_1, C-RNTI) + PDSCH (K0 = 0, mismo slot)",
+      e: "En el **mismo slot** manda el aviso (PDCCH) y los datos (PDSCH)." },
+    { de: "B", a: "UE", t: "RF 1842.5 MHz", e: "La B210 lo irradia." },
+    { nota: ["UE"], t: "Decodifica el PDSCH", e: "Cadena de recepción (pasos 12–18 del diagrama anterior)." },
+    { alt: "Si el CRC es correcto" },
+    { de: "UE", a: "G", t: "HARQ-ACK por PUCCH (slot n+K1, ≥ 4 ms por defecto)", e: "Confirma que llegó bien." },
+    { alt: "Si el CRC es erróneo" },
+    { de: "UE", a: "G", t: "HARQ-NACK", e: "Avisa que hay que reenviar." },
+    { de: "G", a: "UE", t: "Retransmisión (mismo HARQ id, otra RV) → combinación soft",
+      e: "La gNB reenvía otra versión de los datos y el celular la **suma** a la anterior: es más probable que decodifique bien." },
+    { de: "G", a: "UE", punt: true, t: "Si bajó la calidad (nuevo CQI) → baja el MCS",
+      e: "**Adaptación de enlace:** menos velocidad, pero menos errores." },
+  ]
+};
+
+const SEC_PAGING = {
+  p: [["W", "🌐 WhatsApp", "net"], ["N", "🐧 NAT / ogstun", "net"], ["U", "UPF", "core"], ["S", "SMF", "core"],
+      ["A", "AMF", "core"], ["G", "🖥️ gNB + B210", "gnb"], ["UE", "📱 Celular (IDLE)", "ue"]],
+  f: [
+    { nota: ["UE"], t: "Duerme con DRX y se despierta solo en su Paging Occasion",
+      e: "Está **registrado pero dormido**: no tiene recursos y escucha el PDCCH solo unos ms por ciclo (0.32–2.56 s)." },
+    { de: "W", a: "N", t: "Mensaje o llamada WhatsApp (paquete IP)", e: "Llega por Internet a la IP pública de la PC." },
+    { de: "N", a: "U", t: "Destino 10.45.0.2", e: "La NAT y `ogstun` lo entregan a la UPF." },
+    { nota: ["U"], t: "Túnel N3 desactivado → guarda el paquete en buffer",
+      e: "En IDLE no hay túnel hacia la gNB, así que la UPF guarda el paquete." },
+    { de: "U", a: "S", t: "PFCP Session Report (Downlink Data Report, N4)", e: "Avisa \"tengo datos para este usuario\"." },
+    { de: "S", a: "A", t: "Namf_Communication_N1N2MessageTransfer", e: "La AMF es la que sabe cómo ubicar al celular." },
+    { de: "A", a: "G", t: "NGAP Paging (5G-S-TMSI, lista de TAI)",
+      e: "Ordena buscar al celular por su identidad temporal **5G-S-TMSI** (nunca el IMSI) en su área de seguimiento." },
+    { nota: ["G"], t: "Espera la Paging Occasion del celular (calculada con UE_ID)",
+      e: "Solo puede llamarlo cuando el celular está despierto." },
+    { de: "G", a: "UE", t: "PDCCH DCI 1_0 con P-RNTI (0xFFFE) → PDSCH: RRC Paging (ng-5G-S-TMSI)",
+      e: "El P-RNTI es común a todos los celulares. Dentro del mensaje va la identidad buscada." },
+    { nota: ["UE"], t: "Reconoce su identidad → despierta", e: "Ve su 5G-S-TMSI en la lista." },
+    { de: "UE", a: "G", t: "Msg1 PRACH: preámbulo Zadoff-Chu (1747.5 MHz)",
+      e: "No tiene recursos, así que vuelve a entrar por **acceso aleatorio**." },
+    { de: "G", a: "UE", t: "Msg2 RAR (TA + grant + TC-RNTI)", e: "Respuesta con el adelanto de tiempo, el permiso para el Msg3 y un ID temporal." },
+    { de: "UE", a: "G", t: "Msg3 RRCSetupRequest (causa: mt-Access)",
+      e: "Pide conexión con causa **mt-Access**, que significa \"me llamaron\" (terminada en el móvil)." },
+    { de: "G", a: "UE", t: "Msg4 RRCSetup (resolución de contienda → C-RNTI, SRB1)",
+      e: "Confirma que ganó el acceso, le da su C-RNTI y abre la señalización (SRB1)." },
+    { de: "UE", a: "G", t: "RRCSetupComplete + NAS Service Request",
+      e: "**No se vuelve a registrar:** pide reactivar sus datos y conserva la misma IP." },
+    { de: "G", a: "A", t: "NGAP InitialUEMessage (Service Request)", e: "La gNB pasa el pedido a la AMF." },
+    { de: "A", a: "S", t: "Nsmf_PDUSession_UpdateSMContext", e: "Reactivar el plano de usuario de la sesión PDU." },
+    { de: "A", a: "G", t: "NGAP InitialContextSetupRequest (TEID de la UPF + claves)",
+      e: "Le da a la gNB las claves de seguridad y a dónde mandar los datos de subida." },
+    { de: "G", a: "UE", t: "RRC SecurityModeCommand + RRCReconfiguration (DRB1)",
+      e: "Activa el cifrado en radio y crea el portador de datos **DRB1**." },
+    { de: "UE", a: "G", t: "SecurityModeComplete + RRCReconfigurationComplete", e: "El celular confirma." },
+    { de: "G", a: "A", t: "InitialContextSetupResponse (TEID de la gNB)", e: "La gNB informa a dónde mandarle los datos de bajada." },
+    { de: "A", a: "S", t: "Actualiza el túnel N3", e: "" },
+    { de: "S", a: "U", t: "PFCP Session Modification (TEID de la gNB)", e: "El túnel N3 queda armado en ambos sentidos." },
+    { de: "U", a: "G", t: "Libera el buffer → GTP-U", e: "Sale el paquete que estaba guardado." },
+    { de: "G", a: "UE", t: "DCI 1_1 (C-RNTI) + PDSCH (CP-OFDMA, 1842.5 MHz)", e: "Entrega por radio, igual que en el DL normal." },
+    { nota: ["UE"], t: "🔔 Suena la notificación o la llamada de WhatsApp",
+      e: "Demora total: hasta un ciclo DRX (≤ 2.56 s) más ~100–300 ms de reconexión." },
+  ]
+};
+
+/* =====================================================================
+   RENDER
+   ===================================================================== */
+const md = s => marked.parse(s || "");
+const inl = s => marked.parseInline(s || "");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function cadena(pasos) {
+  let h = '<div class="cadena"><div class="cab"><div>Bloque</div><div>Qué hace</div></div>';
+  pasos.forEach((p, i) => {
+    if (p.etapa) { h += `<div class="etapa ${p.c}">${esc(p.etapa)}</div>`; return; }
+    if (p.aire) {
+      h += `<div class="aire"><div class="izq"><div class="onda">〰〰〰</div>${esc(p.aire)}</div><div class="der">${inl(p.e)}</div></div>`;
+      return;
+    }
+    const sig = pasos[i + 1];
+    const flecha = !p.ultimo && sig && !sig.etapa && !sig.aire && !sig.rama ? " flechaAbajo" : "";
+    const rama = p.rama ? `<div class="rama">${p.rama === "Sí" ? "✔ Sí" : "✘ No"}</div>` : "";
+    h += `<div class="fila${p.decision ? " decision" : ""}"><div class="izq">${rama}
+            <div class="caja ${p.c}${flecha}"><div class="t">${p.decision ? "◆ " : ""}${esc(p.t)}</div>${p.d ? `<div class="d">${esc(p.d)}</div>` : ""}</div></div>
+          <div class="der"><span class="num">${p.n}</span><p>${inl(p.e)}</p></div></div>`;
+  });
+  return h + "</div>";
+}
+
+function secuencia(def) {
+  const N = def.p.length, idx = {};
+  def.p.forEach((p, i) => idx[p[0]] = i);
+  const centro = i => (i + 0.5) / N * 100;
+  const vidas = def.p.map((_, i) => `<div class="vida" style="left:${centro(i)}%"></div>`).join("");
+  let h = `<div class="secuencia"><div class="sec-int" style="--minw:${N * 120 + 340}px">`;
+  h += `<div class="sfila cabecera"><div class="participantes" style="grid-template-columns:repeat(${N},1fr)">` +
+       def.p.map(p => `<div class="part ${p[2]}">${esc(p[1])}</div>`).join("") +
+       `</div><div class="der">Explicación</div></div>`;
+  let n = 0;
+  def.f.forEach(f => {
+    let izq = "", der = "";
+    if (f.alt) {
+      izq = `<div class="salt">${esc(f.alt)}</div>`;
+    } else if (f.nota) {
+      const a = Math.min(...f.nota.map(k => idx[k])), b = Math.max(...f.nota.map(k => idx[k]));
+      const ancho = Math.max((b - a + 1) / N * 100, 0);
+      let izqPct = a / N * 100;
+      // notas de una sola columna: se ensanchan un poco centradas en el participante
+      const extra = b === a ? Math.min(100 / N * 0.6, 12) : 0;
+      izqPct = Math.max(0, Math.min(100 - ancho - 2 * extra, izqPct - extra));
+      izq = `<div class="snota" style="margin-left:${izqPct}%;width:${ancho + 2 * extra}%">${esc(f.t)}</div>`;
+      der = f.e ? `<p>${inl(f.e)}</p>` : "";
+    } else {
+      n++;
+      const a = idx[f.de], b = idx[f.a];
+      const L = centro(Math.min(a, b)), W = Math.abs(b - a) / N * 100;
+      const dir = b > a ? "haciaDer" : "haciaIzq";
+      izq = `<div class="msg" style="margin-left:${L}%;width:${W}%"><div class="etq"><span><b>${n}.</b> ${esc(f.t)}</span></div>
+             <div class="linea ${dir}${f.punt ? " punteada" : ""}"></div></div>`;
+      der = `<span class="num">${n}</span><p>${inl(f.e) || "&nbsp;"}</p>`;
+    }
+    h += `<div class="sfila"><div class="carriles">${vidas}${izq}</div><div class="der">${der}</div></div>`;
+  });
+  return h + "</div></div>";
+}
+
+function leyenda() {
+  return `<div class="leyenda">
+    <span class="chip ue">Celular</span><span class="chip b210">USRP B210</span><span class="chip gnb">gNB</span>
+    <span class="chip core">Core 5G</span><span class="chip net">Internet / NAT</span>
+    <span>· Pasá el mouse sobre una fila para resaltar el paso y su explicación</span></div>`;
+}
+
+const html = `
+<h1>${esc(T.titulo)}</h1>
+${md(T.intro)}
+
+<h2>0. Análisis del diagrama de bloques actual</h2>
+${md(T.analisis)}
+
+<h2>1. UPLINK (celular → gNB): DFT-s-OFDM sobre FDD</h2>
+<h3>1.1 Cadena de transmisión y recepción</h3>
+${leyenda()}
+${cadena(CADENA_UL)}
+<div class="resumen">${inl("**En resumen:** el celular convierte bits en una señal de radio robusta (1–11), la B210 solo la digitaliza (12–15) y la gNB deshace cada paso en orden inverso (16–24). Lo propio del **método de acceso UL** está en los pasos 7–8 (DFT + PRBs contiguos = DFT-s-OFDM / FDMA) y 10 (todos llegan alineados al mismo slot = TDMA).")}</div>
+
+<h3>1.2 Método de acceso en el tiempo: cómo pide y obtiene recursos</h3>
+${leyenda()}
+${secuencia(SEC_UL)}
+${md(T.ul_notas)}
+
+<h3>1.3 Conceptos clave de la cadena</h3>
+<div class="conceptos">${md(T.conceptos)}</div>
+
+<h2>2. DOWNLINK (gNB → celular): CP-OFDMA sobre FDD</h2>
+<h3>2.1 Cadena de transmisión y recepción</h3>
+${leyenda()}
+${cadena(CADENA_DL)}
+<div class="resumen">${inl("**En resumen:** la gNB elige y arma la transmisión (1–8), la B210 la irradia (9–11) y el celular la recibe (12–19). Diferencias con el UL: en DL **no hay DFT** (CP-OFDMA puro, PRBs que pueden estar separados) y el celular **no pide nada**: revisa el PDCCH para ver si la gNB le asignó algo.")}</div>
+
+<h3>2.2 Interacción de mensajes en DL</h3>
+${leyenda()}
+${secuencia(SEC_DL)}
+
+<h3>2.3 Presupuesto de enlace y sensibilidad (aula, d = 2 m, SISO)</h3>
+${md(T.link_budget)}
+
+<h2>3. Celular registrado pero sin usar recursos: le llega un WhatsApp</h2>
+<h3>3.1 Estados del celular</h3>
+${md(T.estados)}
+<h3>3.2 Diagrama de comunicación (paging iniciado por la red, TS 23.502 §4.2.3.3)</h3>
+${leyenda()}
+${secuencia(SEC_PAGING)}
+${md(T.paging_cierre)}
+
+<h2>4. Glosario de siglas</h2>
+<p><input id="buscar" type="search" placeholder="Buscar una sigla o palabra (ej.: HARQ, potencia)…"></p>
+<div id="glosario">${md(T.glosario)}</div>
+`;
+
+const main = document.getElementById("contenido");
+main.innerHTML = html;
+
+main.querySelectorAll("table").forEach(t => {
+  const w = document.createElement("div"); w.className = "tabla";
+  t.parentNode.insertBefore(w, t); w.appendChild(t);
+});
+
+// Índice lateral
+const indice = document.getElementById("indice");
+main.querySelectorAll("h2, h3, .conceptos h4").forEach((h, i) => {
+  h.id = "sec" + i;
+  const a = document.createElement("a");
+  a.href = "#" + h.id; a.textContent = h.textContent; a.className = h.tagName.toLowerCase();
+  indice.appendChild(a);
+});
+
+// Buscador del glosario
+document.getElementById("buscar").addEventListener("input", e => {
+  const q = e.target.value.trim().toLowerCase();
+  document.querySelectorAll("#glosario tbody tr").forEach(tr => {
+    tr.style.display = !q || tr.textContent.toLowerCase().includes(q) ? "" : "none";
+  });
+});
+
+// Tema claro / oscuro
+const raiz = document.documentElement;
+try { const t = localStorage.getItem("tema5g"); if (t) raiz.dataset.theme = t; } catch (e) {}
+document.getElementById("btnTema").onclick = () => {
+  const oscuro = raiz.dataset.theme === "dark" || (!raiz.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+  raiz.dataset.theme = oscuro ? "light" : "dark";
+  try { localStorage.setItem("tema5g", raiz.dataset.theme); } catch (e) {}
+};
+</script>
+</body>
+</html>

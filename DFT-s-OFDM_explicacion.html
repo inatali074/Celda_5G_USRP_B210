@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DFT-s-OFDM en 5G NR</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --panel: #ffffff; --text: #1c2230; --muted: #5d6676; --border: #dde1e8;
+    --accent: #2f5bd3; --code: #eef1f6; --quote: #eef3ff; --hover: #fff7d6;
+    --ofdm: #d93025; --dfts: #1a73e8; --ok: #188038; --warn: #b06000;
+    --c-bits: #f1f3f4; --c-bits-b: #80868b; --c-mod: #e6f4ea; --c-mod-b: #34a853;
+    --c-dft: #fce8e6; --c-dft-b: #d93025; --c-map: #fef7e0; --c-map-b: #f9ab00;
+    --c-ifft: #e8f0fe; --c-ifft-b: #1a73e8; --c-rf: #f3e8fd; --c-rf-b: #9334e6;
+    --guard: #e3e6eb; --used: #cfe0fc; --alloc: #1a73e8; --dmrs: #f9ab00;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #12151b; --panel: #1b1f27; --text: #e4e7ed; --muted: #9aa3b2; --border: #2e3440;
+    --accent: #7aa2ff; --code: #242a35; --quote: #1f2635; --hover: #3a3420;
+    --ofdm: #ff7b72; --dfts: #6ea8ff; --ok: #5bc77a; --warn: #f2a65a;
+    --c-bits: #262b33; --c-bits-b: #9aa0a6; --c-mod: #1b3324; --c-mod-b: #5bc77a;
+    --c-dft: #3b1f1d; --c-dft-b: #ff7b72; --c-map: #3a3218; --c-map-b: #f9c74f;
+    --c-ifft: #1d2a44; --c-ifft-b: #6ea8ff; --c-rf: #2e2140; --c-rf-b: #b98af5;
+    --guard: #2a2f38; --used: #24385c; --alloc: #6ea8ff; --dmrs: #f9c74f; } }
+  :root[data-theme="dark"] {
+    --bg: #12151b; --panel: #1b1f27; --text: #e4e7ed; --muted: #9aa3b2; --border: #2e3440;
+    --accent: #7aa2ff; --code: #242a35; --quote: #1f2635; --hover: #3a3420;
+    --ofdm: #ff7b72; --dfts: #6ea8ff; --ok: #5bc77a; --warn: #f2a65a;
+    --c-bits: #262b33; --c-bits-b: #9aa0a6; --c-mod: #1b3324; --c-mod-b: #5bc77a;
+    --c-dft: #3b1f1d; --c-dft-b: #ff7b72; --c-map: #3a3218; --c-map-b: #f9c74f;
+    --c-ifft: #1d2a44; --c-ifft-b: #6ea8ff; --c-rf: #2e2140; --c-rf-b: #b98af5;
+    --guard: #2a2f38; --used: #24385c; --alloc: #6ea8ff; --dmrs: #f9c74f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 16px 80px; }
+  header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+  h1 { font-size: 26px; margin: 0 0 6px; line-height: 1.25; }
+  h2 { margin: 44px 0 10px; padding-bottom: 6px; border-bottom: 2px solid var(--border); }
+  h3 { margin: 22px 0 8px; color: var(--accent); }
+  p { margin: 8px 0; }
+  .sub { color: var(--muted); margin: 0; }
+  .tema { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel);
+          color: var(--text); cursor: pointer; font-size: 13px; }
+  .idea { background: var(--quote); border-left: 4px solid var(--accent); border-radius: 0 10px 10px 0;
+          padding: 12px 16px; margin: 16px 0; font-size: 16px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  .chip { background: var(--panel); border: 1px solid var(--border); border-radius: 999px; padding: 3px 12px; font-size: 13px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin: 12px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  code, .mono { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: .92em; }
+  code { background: var(--code); padding: 1px 5px; border-radius: 4px; }
+  .eq { background: var(--code); border-radius: 8px; padding: 10px 14px; overflow-x: auto; font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 14px; white-space: pre; line-height: 1.6; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; background: var(--panel); }
+  th, td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--code); }
+  .tabla { overflow-x: auto; }
+
+  /* Cadena con explicación al costado */
+  .cadena { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .cab, .fila { display: grid; grid-template-columns: minmax(240px, 330px) 170px 1fr; }
+  .cab { background: var(--code); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .cab div { padding: 8px 14px; }
+  .fila { border-top: 1px solid var(--border); }
+  .fila:hover { background: var(--hover); }
+  .fila > div { padding: 10px 14px; }
+  .fila .izq { padding-bottom: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .fila .tam { border-left: 1px dashed var(--border); font-size: 13px; display: flex; align-items: center; }
+  .fila .der { border-left: 1px dashed var(--border); }
+  .caja { width: 100%; border: 2px solid; border-radius: 10px; padding: 7px 10px; text-align: center; position: relative; }
+  .caja .t { font-weight: 650; }
+  .caja .d { font-size: 12px; color: var(--muted); }
+  .fila:not(:last-child) .caja::after { content: "▼"; position: absolute; left: 50%; bottom: -19px; transform: translateX(-50%);
+                                          font-size: 11px; color: var(--muted); }
+  .num { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; border-radius: 999px;
+         background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; margin-right: 8px; float: left; }
+  .der p { margin: 0; overflow: hidden; }
+  .k-bits { background: var(--c-bits); border-color: var(--c-bits-b); } .k-mod { background: var(--c-mod); border-color: var(--c-mod-b); }
+  .k-dft { background: var(--c-dft); border-color: var(--c-dft-b); } .k-map { background: var(--c-map); border-color: var(--c-map-b); }
+  .k-ifft { background: var(--c-ifft); border-color: var(--c-ifft-b); } .k-rf { background: var(--c-rf); border-color: var(--c-rf-b); }
+  .clave { outline: 3px solid var(--c-dft-b); outline-offset: 2px; }
+
+  /* Controles */
+  .controles { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: flex-end; }
+  .controles label { display: flex; flex-direction: column; font-size: 13px; color: var(--muted); gap: 4px; }
+  select, input[type=number] { padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg);
+                               color: var(--text); font-size: 14px; min-width: 110px; }
+  input[type=range] { width: 170px; }
+  button.prim { padding: 8px 14px; border-radius: 8px; border: none; background: var(--accent); color: #fff; cursor: pointer; font-size: 14px; }
+  .stats { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+  .stat { background: var(--code); border-radius: 8px; padding: 6px 12px; font-size: 13px; }
+  .stat b { font-size: 15px; }
+  svg { display: block; width: 100%; height: auto; }
+  svg text { fill: var(--muted); font-size: 11px; font-family: system-ui, sans-serif; }
+  .leg { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin: 4px 0 0; }
+  .leg i { display: inline-block; width: 18px; height: 3px; vertical-align: middle; margin-right: 6px; border-radius: 2px; }
+  .nota { font-size: 13px; color: var(--muted); }
+
+  /* Sección de la celda */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 10px; margin: 12px 0; }
+  .kpi { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+  .kpi b { display: block; font-size: 22px; color: var(--accent); line-height: 1.2; }
+  .kpi span { font-size: 12.5px; color: var(--muted); }
+  #figPRBs rect[data-prb] { cursor: pointer; }
+  #figPRBs rect[data-prb]:hover { opacity: .65; }
+  .tsub { font-size: 12.5px; }
+  .tsub td, .tsub th { padding: 3px 7px; }
+  .tsub tr.sel td { font-weight: 700; }
+  .resaltada td { background: var(--hover); font-weight: 600; }
+  .anim-ctrl { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+  .boton { padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; font-size: 13px; }
+  .aire-ahora { font-size: 13px; font-weight: 600; text-align: center; min-height: 20px; margin: 4px 0; }
+
+  @media (max-width: 860px) {
+    .grid2 { grid-template-columns: 1fr; }
+    .cab { display: none; }
+    .fila { grid-template-columns: 1fr; }
+    .fila .tam, .fila .der { border-left: none; border-top: 1px dashed var(--border); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <h1>DFT-s-OFDM: cómo transmite el celular en el uplink 5G</h1>
+    <p class="sub">Celda n3 FDD · UL 1747.5 MHz · μ = 0 (SCS 15 kHz) · 20 MHz = 106 PRB · IFFT/FFT 1536 · 23.04 MS/s · TS 38.211 §6.3.1.4</p>
+  </div>
+  <button class="tema" id="btnTema">Tema claro / oscuro</button>
+</header>
+
+<div class="idea">
+  <b>La idea en una frase:</b> DFT-s-OFDM es OFDM con <b>un paso extra antes de la IFFT: una DFT</b>. Esa DFT "esparce" cada símbolo QAM sobre
+  todas las subportadoras asignadas, y entonces la IFFT devuelve una señal que se comporta como <b>una sola portadora</b>.
+  Resultado: muchos menos picos de potencia (PAPR baja), así que el amplificador del celular trabaja más eficiente y llega más lejos con menos batería.
+</div>
+
+<div class="chips" id="chipsResumen"></div>
+
+<!-- ============================================================ -->
+<h2>0. Tu celda 5G: cuántos PRB y cuántas subportadoras</h2>
+<p>En 5G NR, un <b>PRB (Physical Resource Block)</b> son siempre <b>12 subportadoras consecutivas</b> (TS 38.211 §4.4.4.1). Cuánto mide en Hz depende de la numerología:
+   con <b>μ = 0 → SCS = 15 kHz → 1 PRB = 12 × 15 kHz = 180 kHz</b>. Tu canal de 20 MHz entra <b>106 PRB</b> (TS 38.101-1, Tabla 5.3.2-1).</p>
+<div class="kpis" id="kpis"></div>
+
+<div class="card">
+  <h3 style="margin-top:0">Los 106 PRB de tu canal de UL (20 MHz centrado en 1747.5 MHz)</h3>
+  <p class="nota">Hacé clic en cualquier PRB para ver sus 12 subportadoras. Los PRB en azul fuerte son los que tenés asignados en el <a href="#lab">laboratorio</a>: si cambiás la asignación allá, se actualiza acá.</p>
+  <div id="figPRBs"></div>
+  <div class="leg"><span><i style="background:var(--guard)"></i>Banda de guarda (≈ 0.46 MHz por lado)</span><span><i style="background:var(--used)"></i>PRB del canal</span>
+    <span><i style="background:var(--alloc)"></i>PRB asignados al celular (laboratorio)</span><span><i style="background:var(--text)"></i>Centro de la portadora</span></div>
+  <div class="idea" style="font-size:14px; margin-bottom:0">
+    <b>Ojo con el PUCCH:</b> en el UL, los PRB de los <b>bordes</b> del canal normalmente quedan reservados para el PUCCH (SR, HARQ-ACK, CSI de todos los celulares).
+    Por eso el PUSCH de un celular <b>no usa los 106</b>: usa los que quedan en el medio. Además, con DFT-s-OFDM la cantidad tiene que cumplir 2<sup>a</sup>·3<sup>b</sup>·5<sup>c</sup>, así que el <b>máximo teórico es 100 PRB</b>.
+    Cuántos PRB reserva realmente el PUCCH depende de la configuración de PUCCH de tu <code>gnb.yml</code> (srsRAN/OCUDU); conviene verificarlo en el log de la gNB.
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">Zoom al PRB <span id="lblPRB"></span>: sus 12 subportadoras de 15 kHz</h3>
+  <div class="grid2">
+    <div>
+      <div id="figZoom"></div>
+      <p class="nota">Cada curva es el espectro de una subportadora (forma de sinc). Están <b>superpuestas</b>, pero cada una vale cero justo en el centro de las demás:
+         eso es la <b>ortogonalidad</b> de OFDM, que permite separarlas sin bandas de guarda entre ellas. Las curvas grises son las subportadoras de los PRB vecinos.</p>
+    </div>
+    <div class="tabla" id="tablaSub"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">Cómo se acomodan 12 símbolos QAM dentro de 1 PRB (1 símbolo OFDM = 66.7 µs)</h3>
+  <div class="anim-ctrl">
+    <button class="boton" id="btnPlay">⏸ Pausar</button>
+    <button class="boton" id="btnSimb">🎲 Otros 12 símbolos</button>
+    <span class="nota">Cada color es un símbolo QAM distinto (d1 … d12). La línea vertical recorre el tiempo y marca qué está "en el aire" en cada instante.</span>
+  </div>
+  <div class="grid2">
+    <div><h3 style="margin:4px 0; color:var(--ofdm)">CP-OFDM: en paralelo</h3><div id="anOFDM"></div><div class="aire-ahora" id="aireOFDM"></div></div>
+    <div><h3 style="margin:4px 0; color:var(--dfts)">DFT-s-OFDM: en fila</h3><div id="anDFT"></div><div class="aire-ahora" id="aireDFT"></div></div>
+  </div>
+  <p class="nota">Abajo de cada grilla está la amplitud real de la señal, calculada con la DFT y la IFFT de 1536. En CP-OFDM los 12 símbolos suenan juntos y la amplitud tiene picos.
+     En DFT-s-OFDM sale un símbolo por vez (≈ 5.6 µs cada uno, ocupando los 180 kHz del PRB) y la amplitud queda casi pareja.
+     <b>La cantidad de datos es la misma:</b> 12 símbolos por símbolo OFDM en los dos casos.</p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">Comparación con otras configuraciones 5G (TS 38.101-1, Tabla 5.3.2-1) y con 4G</h3>
+  <div class="tabla" id="tablaComp"></div>
+  <p class="nota">"Ocupación" es qué porcentaje del canal llenan las subportadoras útiles (el resto es guarda). 5G llena ~95 %, contra el 90 % de 4G, gracias a filtros mejores.
+     La columna "máx. DFT-s" es el mayor N<sub>PRB</sub> que cumple 2<sup>a</sup>·3<sup>b</sup>·5<sup>c</sup>. Con 30 kHz cada PRB mide 360 kHz, así que en el mismo canal entran la mitad de PRB.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>1. ¿Por qué hace falta? El problema de los picos (PAPR)</h2>
+<div class="grid2">
+  <div class="card">
+    <h3 style="margin-top:0">En OFDM normal (CP-OFDM)</h3>
+    <p>Cada muestra en el tiempo es la <b>suma de cientos de subportadoras</b>, cada una con un símbolo QAM distinto. A veces muchas se suman en fase y aparece un <b>pico</b> mucho mayor que el promedio.</p>
+    <p>El amplificador de potencia (PA) tiene que dejar margen (<i>back-off</i>) para no recortar esos picos. Eso implica <b>menos potencia útil y más consumo</b>.</p>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">En DFT-s-OFDM</h3>
+    <p>Gracias a la DFT, cada muestra en el tiempo depende <b>principalmente de un solo símbolo QAM</b> (y un poco de sus vecinos). La señal "pasa" por los símbolos QAM uno tras otro, como una portadora única.</p>
+    <p>La amplitud varía poco, la <b>PAPR baja ~2–4 dB</b> y el PA puede trabajar cerca de su máximo. Esto es clave para el celular, que tiene batería y potencia limitadas (≤ 23 dBm).</p>
+  </div>
+</div>
+<p class="nota">La gNB está enchufada y tiene amplificadores grandes, por eso el DL usa CP-OFDM puro. El celular puede elegir entre CP-OFDM y DFT-s-OFDM en UL, y la red lo configura por RRC.</p>
+
+<!-- ============================================================ -->
+<h2>2. Cadena de TRANSMISIÓN (celular)</h2>
+<p class="nota">La columna "Tamaño" se actualiza con los PRB y la modulación que elijas en el <a href="#lab">laboratorio interactivo</a>. El bloque con borde rojo es lo que distingue a DFT-s-OFDM de OFDM.</p>
+<div class="cadena" id="cadenaTX"></div>
+
+<!-- ============================================================ -->
+<h2>3. Cadena de RECEPCIÓN (gNB)</h2>
+<div class="cadena" id="cadenaRX"></div>
+
+<!-- ============================================================ -->
+<h2>4. La relación entre la DFT y la IFFT (el "truco")</h2>
+<div class="grid2">
+  <div class="card">
+    <h3 style="margin-top:0">Dos transformadas de distinto tamaño</h3>
+    <p>La <b>DFT es chica</b> (M = 12 × N<sub>PRB</sub> puntos) y la <b>IFFT es grande</b> (N = 1536 puntos, todo el canal más la guarda).</p>
+    <p>Las M salidas de la DFT se colocan en las <b>M subportadoras contiguas</b> que la gNB asignó. Las otras 1536 − M entradas de la IFFT van en cero (son de otros usuarios o de la guarda).</p>
+    <p><b>Caso extremo:</b> si M fuera igual a N, la DFT y la IFFT se cancelarían y saldrían directamente los símbolos QAM en el tiempo: una portadora única "pura".
+       Con M &lt; N, lo que sale es esa misma secuencia de símbolos, pero <b>interpolada</b> (sobremuestreada N/M veces) y corrida en frecuencia hasta el lugar de los PRB asignados.</p>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">En ecuaciones (TS 38.211 §6.3.1.4)</h3>
+<div class="eq">DFT (transform precoding), por símbolo OFDM l:
+  y(k) = 1/√M · Σ<sub>i=0..M−1</sub> d(i) · e<sup>−j2π·i·k/M</sup>     k = 0..M−1
+
+IFFT de 1536 con las M salidas en k₀..k₀+M−1:
+  x(n) = 1/√N · Σ<sub>k=0..M−1</sub> y(k) · e<sup>+j2π·(k+k₀)·n/N</sup>
+
+Juntando las dos:
+  x(n) = e<sup>j2πk₀n/N</sup> · Σ<sub>i</sub> d(i) · D(n/N − i/M)
+
+D(·) es un núcleo tipo sinc con un pico en n = i·N/M.
+⇒ cerca de n = i·N/M, la muestra x(n) ≈ d(i).</div>
+    <p class="nota">e<sup>j2πk₀n/N</sup> solo corre la señal en frecuencia hasta los PRB asignados y no cambia la amplitud. Por eso la PAPR no depende de en qué PRB te toque transmitir.</p>
+  </div>
+</div>
+<div class="card">
+  <h3 style="margin-top:0">Dónde caen los PRB dentro de la IFFT de 1536</h3>
+  <div id="figMapa"></div>
+  <div class="leg"><span><i style="background:var(--guard)"></i>Guarda (264 bins en cero)</span><span><i style="background:var(--used)"></i>Canal útil: 106 PRB = 1272 subportadoras</span>
+    <span><i style="background:var(--alloc)"></i>PRB asignados a este celular (M subportadoras)</span><span><i style="background:var(--text)"></i>Centro de la portadora (1747.5 MHz)</span></div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="lab">5. Laboratorio interactivo (cálculo real en tu navegador)</h2>
+<div class="card">
+  <div class="controles">
+    <label>PRB asignados (N<sub>PRB</sub>)<select id="selPRB"></select></label>
+    <label>PRB inicial<input type="number" id="inStart" min="0" value="0"></label>
+    <label>Modulación<select id="selMod">
+      <option value="pi2bpsk">π/2-BPSK</option><option value="qpsk" selected>QPSK</option>
+      <option value="16qam">16-QAM</option><option value="64qam">64-QAM</option><option value="256qam">256-QAM</option></select></label>
+    <label>Canal<select id="selCanal"><option value="plano">Plano (sin ecos)</option><option value="selectivo" selected>Selectivo (eco a 1.7 µs)</option></select></label>
+    <label>SNR: <span id="lblSNR">20 dB</span><input type="range" id="inSNR" min="0" max="35" value="20"></label>
+    <button class="prim" id="btnNueva">🎲 Otra muestra aleatoria</button>
+  </div>
+  <div class="stats" id="stats"></div>
+  <p class="nota">Solo se permiten cantidades de PRB que sean producto de 2, 3 y 5 (regla de 3GPP, ver sección 6). Por eso la lista salta valores como 7, 11, 13… y no llega a 106.</p>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <h3 style="margin-top:0">5.1 Señal en el tiempo de 1 símbolo OFDM (|x(n)|)</h3>
+    <div id="figTiempo"></div>
+    <div class="leg"><span><i style="background:var(--ofdm)"></i>CP-OFDM (mismos PRB, sin DFT)</span><span><i style="background:var(--dfts)"></i>DFT-s-OFDM</span><span>● símbolos QAM d(i) en n = i·N/M</span></div>
+    <p class="nota">Las dos curvas están normalizadas a su valor eficaz (RMS = 1). La azul pasa cerca de los puntos, porque cada instante "lleva" un símbolo QAM. La roja tiene picos mucho más altos.</p>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">5.2 Distribución de la PAPR (CCDF, 500 símbolos)</h3>
+    <div id="figCCDF"></div>
+    <div class="leg"><span><i style="background:var(--ofdm)"></i>CP-OFDM</span><span><i style="background:var(--dfts)"></i>DFT-s-OFDM</span></div>
+    <p class="nota">Se lee así: "probabilidad de que un símbolo tenga una PAPR mayor que X dB". Cuanto más a la izquierda está la curva, menos picos tiene la señal. La distancia horizontal entre las dos curvas es el <b>back-off que se ahorra</b> el amplificador.</p>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">5.3 Grilla de recursos de 1 slot de PUSCH (1 ms = 14 símbolos)</h3>
+  <div id="figGrilla"></div>
+  <div class="leg"><span><i style="background:var(--alloc)"></i>Datos: cada columna es un bloque DFT de M símbolos</span><span><i style="background:var(--dmrs)"></i>DM-RS (secuencia Zadoff-Chu de baja PAPR, ocupa el símbolo entero)</span></div>
+  <p class="nota">Con transform precoding, el símbolo de DM-RS no lleva datos, para no romper la propiedad de portadora única. En el ejemplo, el DM-RS va en el símbolo 2 (PUSCH mapping type A, <code>dmrs-TypeA-Position = pos2</code>), y quedan <b>13 símbolos de datos = 13 DFT por slot</b>.</p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">5.4 Recepción: qué ve la gNB</h3>
+  <div class="grid2">
+    <div><div id="figCanal"></div><p class="nota">Respuesta del canal |H(k)| en las subportadoras asignadas. Con eco, algunas subportadoras se atenúan (desvanecimiento selectivo). La gNB la estima con el DM-RS.</p></div>
+    <div class="grid2" style="gap:8px">
+      <div><div id="figConstSin"></div><p class="nota" style="text-align:center">IDFT <b>sin</b> ecualizar</p></div>
+      <div><div id="figConstCon"></div><p class="nota" style="text-align:center">Ecualizador MMSE + IDFT</p></div>
+    </div>
+  </div>
+  <p class="nota">Una diferencia con OFDM: como cada símbolo QAM está repartido en todas las subportadoras, <b>una subportadora mala afecta un poco a todos los símbolos</b>, en vez de destruir solo uno. Por eso se usa un ecualizador MMSE, que no amplifica el ruido de las subportadoras débiles. Si subís el SNR o elegís un canal plano, la nube se cierra.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>6. Reglas de 3GPP Release 15 para DFT-s-OFDM</h2>
+<div class="tabla"><table>
+  <tr><th>Regla</th><th>Qué dice</th><th>Por qué</th><th>Norma</th></tr>
+  <tr><td><b>Cantidad de PRB</b></td><td>M<sub>RB</sub> = 2<sup>α2</sup>·3<sup>α3</sup>·5<sup>α5</sup>. Valores permitidos hasta 106: <span id="listaPRB" class="mono"></span></td>
+      <td>Así la DFT de M = 12·M<sub>RB</sub> puntos se puede calcular rápido (FFT de radix 2, 3 y 5). <b>En tu celda, el máximo con DFT-s-OFDM es 100 PRB</b>, porque 106 = 2·53 no está permitido.</td><td>TS 38.211 §6.3.1.4</td></tr>
+  <tr><td><b>PRB contiguos</b></td><td>Solo se usa la asignación tipo 1 (bloque contiguo indicado con el RIV); la tipo 0 (bitmap por RBG) no.</td>
+      <td>Si los PRB estuvieran separados, la señal perdería la forma de portadora única y volvería la PAPR alta.</td><td>TS 38.214 §6.1.2.2</td></tr>
+  <tr><td><b>Una sola capa</b></td><td>Transform precoding solo con 1 capa (sin MIMO espacial en UL).</td>
+      <td>Se usa cuando el celular está limitado en potencia, así que prioriza cobertura antes que capacidad.</td><td>TS 38.211 §6.3.1.3</td></tr>
+  <tr><td><b>π/2-BPSK</b></td><td>Modulación de 1 bit/símbolo que rota π/2 en cada símbolo. Solo existe con transform precoding (<code>tp-pi2BPSK</code>).</td>
+      <td>La señal nunca pasa por cero entre símbolos, así que la PAPR es todavía menor. Sirve para el borde de la celda.</td><td>TS 38.211 §5.1.1</td></tr>
+  <tr><td><b>DM-RS</b></td><td>Secuencias de baja PAPR (basadas en Zadoff-Chu), en símbolos sin datos.</td>
+      <td>El piloto también tiene que tener pocos picos.</td><td>TS 38.211 §6.4.1.1</td></tr>
+  <tr><td><b>PT-RS</b></td><td>Se insertan en grupos <b>antes</b> de la DFT (en el dominio del tiempo).</td>
+      <td>Así no se rompe la estructura de portadora única.</td><td>TS 38.211 §6.4.1.2</td></tr>
+  <tr><td><b>Cómo se activa</b></td><td><code>pusch-Config → transformPrecoder: enabled</code> y, para el Msg3 del RACH, <code>msg3-transformPrecoder</code> en <code>RACH-ConfigCommon</code>.</td>
+      <td>La red decide por RRC. En el DCI 0_0 (fallback) se usa lo configurado para el Msg3.</td><td>TS 38.331</td></tr>
+</table></div>
+
+<h3>CP-OFDM vs DFT-s-OFDM en el uplink</h3>
+<div class="tabla"><table>
+  <tr><th></th><th>CP-OFDM</th><th>DFT-s-OFDM</th></tr>
+  <tr><td>Paso extra antes de la IFFT</td><td>Ninguno</td><td>DFT de M puntos</td></tr>
+  <tr><td>PAPR</td><td>Alta (≈ 8–11 dB)</td><td>Baja (≈ 5–8 dB; menos con π/2-BPSK)</td></tr>
+  <tr><td>PRB asignables</td><td>Contiguos o separados (tipo 0 y 1)</td><td>Solo contiguos (tipo 1) y M<sub>RB</sub> = 2<sup>a</sup>3<sup>b</sup>5<sup>c</sup></td></tr>
+  <tr><td>MIMO en UL</td><td>Hasta 4 capas</td><td>1 capa</td></tr>
+  <tr><td>Cuándo conviene</td><td>Celular cerca, buena señal: más velocidad</td><td>Celular lejos o limitado en potencia: más cobertura</td></tr>
+  <tr><td>Ecualización en la gNB</td><td>Por subportadora, cada símbolo por separado</td><td>Por subportadora (MMSE) + IDFT; el ruido se reparte</td></tr>
+  <tr><td>Equivalente en 4G</td><td>— (no existía en UL)</td><td>SC-FDMA (obligatorio en LTE)</td></tr>
+</table></div>
+<p class="nota">En el laboratorio, verificá en el <code>gnb.yml</code> o en el log de srsRAN/OCUDU si el transform precoding está habilitado. Si no lo está, el UL de tu celda sale en CP-OFDM aunque la norma permita DFT-s-OFDM.</p>
+
+</div>
+
+<script>
+/* ================== Parámetros fijos de la celda ================== */
+const N = 1536, FS = 23.04e6, SCS = 15e3, NRB_CELDA = 106, NSC_CELDA = 1272, CENTRO = 636, CP = 108, CP0 = 120;
+const MODS = {
+  pi2bpsk: { nombre: "π/2-BPSK", qm: 1 }, qpsk: { nombre: "QPSK", qm: 2 }, "16qam": { nombre: "16-QAM", qm: 4 },
+  "64qam": { nombre: "64-QAM", qm: 6 }, "256qam": { nombre: "256-QAM", qm: 8 } };
+const PERMITIDOS = [];
+for (let n = 1; n <= NRB_CELDA; n++) { let m = n; for (const p of [2, 3, 5]) while (m % p === 0) m /= p; if (m === 1) PERMITIDOS.push(n); }
+
+/* ================== FFT de radix mixto (2, 3, 5 y cualquier primo) ================== */
+function menorFactor(n) { for (let p = 2; p * p <= n; p++) if (n % p === 0) return p; return n; }
+function fft(re, im, inversa) {
+  const n = re.length, sg = inversa ? 1 : -1;
+  if (n === 1) return [Float64Array.from(re), Float64Array.from(im)];
+  const p = menorFactor(n), Xr = new Float64Array(n), Xi = new Float64Array(n);
+  if (p === n) {
+    for (let k = 0; k < n; k++) { let ar = 0, ai = 0;
+      for (let t = 0; t < n; t++) { const a = sg * 2 * Math.PI * k * t / n, c = Math.cos(a), s = Math.sin(a);
+        ar += re[t] * c - im[t] * s; ai += re[t] * s + im[t] * c; }
+      Xr[k] = ar; Xi[k] = ai; }
+    return [Xr, Xi];
+  }
+  const m = n / p, sub = [];
+  for (let r = 0; r < p; r++) {
+    const sr = new Float64Array(m), si = new Float64Array(m);
+    for (let k = 0; k < m; k++) { sr[k] = re[r + p * k]; si[k] = im[r + p * k]; }
+    sub.push(fft(sr, si, inversa));
+  }
+  for (let q = 0; q < p; q++) for (let k = 0; k < m; k++) {
+    const idx = k + m * q; let ar = 0, ai = 0;
+    for (let r = 0; r < p; r++) { const a = sg * 2 * Math.PI * r * idx / n, c = Math.cos(a), s = Math.sin(a);
+      ar += sub[r][0][k] * c - sub[r][1][k] * s; ai += sub[r][0][k] * s + sub[r][1][k] * c; }
+    Xr[idx] = ar; Xi[idx] = ai;
+  }
+  return [Xr, Xi];
+}
+function escalar(v, f) { for (let i = 0; i < v[0].length; i++) { v[0][i] *= f; v[1][i] *= f; } return v; }
+
+/* ================== Modulación (TS 38.211 §5.1) ================== */
+function niveles(q) { const L = 2 ** (q / 2), a = []; for (let i = 0; i < L; i++) a.push(2 * i - L + 1); return a; }
+function simbolos(mod, M) {
+  const re = new Float64Array(M), im = new Float64Array(M);
+  if (mod === "pi2bpsk") {
+    for (let i = 0; i < M; i++) { const b = Math.random() < .5 ? 1 : -1, r = b / Math.SQRT2;
+      if (i % 2 === 0) { re[i] = r; im[i] = r; } else { re[i] = -r; im[i] = r; } }   // e^{jπ/2·(i mod 2)}·(1+j)b/√2
+    return [re, im];
+  }
+  const qm = MODS[mod].qm, lv = niveles(qm), norm = Math.sqrt(2 * (lv.length ** 2 - 1) / 3);
+  for (let i = 0; i < M; i++) {
+    re[i] = lv[Math.floor(Math.random() * lv.length)] / norm; im[i] = lv[Math.floor(Math.random() * lv.length)] / norm; }
+  return [re, im];
+}
+
+/* ================== Transmisor ================== */
+function binDe(kCelda) { return ((kCelda - CENTRO) % N + N) % N; }
+function txSimbolo(d, k0, conDFT) {
+  const M = d[0].length;
+  const y = conDFT ? escalar(fft(d[0], d[1], false), 1 / Math.sqrt(M)) : d;
+  const Xr = new Float64Array(N), Xi = new Float64Array(N);
+  for (let k = 0; k < M; k++) { const b = binDe(k0 + k); Xr[b] = y[0][k]; Xi[b] = y[1][k]; }
+  return escalar(fft(Xr, Xi, true), 1 / Math.sqrt(N));
+}
+function papr(x) { let mx = 0, s = 0; for (let i = 0; i < x[0].length; i++) { const p = x[0][i] ** 2 + x[1][i] ** 2; s += p; if (p > mx) mx = p; }
+  return 10 * Math.log10(mx / (s / x[0].length)); }
+
+/* ================== Utilidades SVG ================== */
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function svg(w, h, cont) { return `<svg viewBox="0 0 ${w} ${h}" role="img">${cont}</svg>`; }
+function ejes(o) {
+  const { w, h, m, x0, x1, y0, y1, xt, yt, xl, yl, logy } = o;
+  const X = v => m.l + (v - x0) / (x1 - x0) * (w - m.l - m.r);
+  const Y = v => logy ? m.t + (Math.log10(y1) - Math.log10(Math.max(v, y0))) / (Math.log10(y1) - Math.log10(y0)) * (h - m.t - m.b)
+                      : m.t + (y1 - v) / (y1 - y0) * (h - m.t - m.b);
+  let g = `<rect x="${m.l}" y="${m.t}" width="${w - m.l - m.r}" height="${h - m.t - m.b}" fill="none" stroke="${css("--border")}"/>`;
+  xt.forEach(v => g += `<line x1="${X(v)}" x2="${X(v)}" y1="${m.t}" y2="${h - m.b}" stroke="${css("--border")}" stroke-dasharray="2 3"/>
+                         <text x="${X(v)}" y="${h - m.b + 14}" text-anchor="middle">${v}</text>`);
+  yt.forEach(v => g += `<line x1="${m.l}" x2="${w - m.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="${css("--border")}" stroke-dasharray="2 3"/>
+                         <text x="${m.l - 5}" y="${Y(v) + 4}" text-anchor="end">${logy ? (v >= 1 ? v : v.toExponential(0).replace("e", "e")) : v}</text>`);
+  g += `<text x="${(m.l + w - m.r) / 2}" y="${h - 4}" text-anchor="middle">${xl}</text>
+        <text transform="translate(12 ${(m.t + h - m.b) / 2}) rotate(-90)" text-anchor="middle">${yl}</text>`;
+  return { g, X, Y };
+}
+function camino(xs, ys, X, Y) { let s = ""; for (let i = 0; i < xs.length; i++) s += (i ? "L" : "M") + X(xs[i]).toFixed(1) + " " + Y(ys[i]).toFixed(1); return s; }
+
+/* ================== Estado y render ================== */
+const st = { nprb: 10, start: 0, mod: "qpsk", canal: "selectivo", snr: 20 };
+const $ = id => document.getElementById(id);
+
+function tamanos() {
+  const M = 12 * st.nprb, qm = MODS[st.mod].qm;
+  return { M, qm, bitsSimb: M * qm, bitsSlot: M * qm * 13, bw: (M * SCS / 1e6).toFixed(2), k0: 12 * st.start };
+}
+
+function filas(lista) {
+  return `<div class="cab"><div>Bloque</div><div>Tamaño (ejemplo)</div><div>Qué hace</div></div>` +
+    lista.map((f, i) => `<div class="fila"><div class="izq"><div class="caja ${f.k}${f.clave ? " clave" : ""}"><div class="t">${f.t}</div>${f.d ? `<div class="d">${f.d}</div>` : ""}</div></div>
+      <div class="tam mono">${f.tam}</div><div class="der"><span class="num">${i + 1}</span><p>${f.e}</p></div></div>`).join("");
+}
+
+function renderCadenas() {
+  const z = tamanos(), mod = MODS[st.mod].nombre;
+  $("cadenaTX").innerHTML = filas([
+    { k: "k-bits", t: "Bits codificados", d: "LDPC + rate matching + scrambling",
+      tam: `${z.bitsSimb} bits / símbolo<br>${z.bitsSlot} bits / slot`,
+      e: "Llegan los bits ya protegidos con LDPC y ajustados al tamaño del permiso (grant). Se reparten en 13 símbolos OFDM de datos por slot." },
+    { k: "k-mod", t: "Modulación", d: mod,
+      tam: `${z.M} símbolos d(i)<br>(${z.qm} bit/símb.)`,
+      e: `Cada grupo de ${z.qm} bit(s) se convierte en un número complejo (un punto de la constelación). Se juntan <b>M = 12 × ${st.nprb} = ${z.M}</b> símbolos por cada símbolo OFDM.` },
+    { k: "k-dft", clave: true, t: "DFT de M puntos", d: "transform precoding · ÷√M",
+      tam: `${z.M} → ${z.M} valores<br>en frecuencia y(k)`,
+      e: "<b>El paso clave.</b> Transforma los M símbolos (\"en el tiempo\") en M valores \"en frecuencia\". Cada y(k) es una mezcla de <b>todos</b> los d(i): cada símbolo queda repartido en todas las subportadoras asignadas." },
+    { k: "k-map", t: "Mapeo a subportadoras", d: `contiguas desde k₀ = 12 × ${st.start} = ${z.k0}`,
+      tam: `${z.M} útiles + ${N - z.M} ceros<br>= ${N} entradas`,
+      e: `Coloca las M salidas en las subportadoras <b>contiguas</b> de los PRB asignados (${st.start} a ${st.start + st.nprb - 1}, ${z.bw} MHz). El resto de la IFFT (otros usuarios y la guarda) va en cero.` },
+    { k: "k-ifft", t: "IFFT de 1536 puntos", d: "÷√N",
+      tam: `${N} muestras<br>en el tiempo`,
+      e: `La misma IFFT del OFDM normal. Como antes hubo una DFT, la salida es la secuencia de símbolos QAM <b>interpolada</b> (${(N / z.M).toFixed(1)} muestras por símbolo) y corrida a la frecuencia de los PRB, es decir, una portadora única.` },
+    { k: "k-ifft", t: "Prefijo cíclico", d: "108 muestras (120 en símbolos 0 y 7)",
+      tam: `${N + CP} muestras<br>(${N + CP0} en 0 y 7)`,
+      e: "Copia el final del símbolo al principio (4.69 µs), igual que en OFDM, para absorber los ecos del canal." },
+    { k: "k-rf", t: "14 símbolos → DAC → 1747.5 MHz → PA", d: "1 DM-RS + 13 datos por slot",
+      tam: `23 040 muestras<br>por slot (1 ms)`,
+      e: "Se arma el slot (13 símbolos de datos + 1 de DM-RS), se convierte a analógico, se sube a la frecuencia de UL y se amplifica. <b>Con menos picos, el PA necesita menos back-off.</b>" },
+  ]);
+  $("cadenaRX").innerHTML = filas([
+    { k: "k-rf", t: "RF → ADC (B210, puerto RX2)", d: "23.04 MS/s",
+      tam: `23 040 muestras<br>por slot`,
+      e: "La B210 baja la señal de 1747.5 MHz y la digitaliza. Gracias al Timing Advance, el símbolo llega alineado con el slot de la gNB." },
+    { k: "k-ifft", t: "Quitar prefijo cíclico", d: "",
+      tam: `${N + CP} → ${N}`,
+      e: "Descarta las 108 (o 120) muestras del CP, donde cayeron los ecos del símbolo anterior." },
+    { k: "k-ifft", t: "FFT de 1536 puntos", d: "",
+      tam: `${N} bins<br>en frecuencia`,
+      e: "Pasa al dominio de la frecuencia. Separa las subportadoras de <b>todos</b> los celulares a la vez (la gNB hace una sola FFT para todos)." },
+    { k: "k-map", t: "Demapeo de subportadoras", d: `PRB ${st.start}…${st.start + st.nprb - 1}`,
+      tam: `${N} → ${z.M}`,
+      e: "Se queda con las M subportadoras que le había asignado a este celular." },
+    { k: "k-mod", t: "Estimación de canal con DM-RS", d: "Zadoff-Chu conocida",
+      tam: `Ĥ(k): ${z.M} valores`,
+      e: "Compara el DM-RS recibido con el que sabe que se envió y obtiene cuánto atenuó y giró el canal en cada subportadora." },
+    { k: "k-mod", t: "Ecualización en frecuencia (MMSE)", d: "1 operación por subportadora",
+      tam: `${z.M} valores<br>corregidos`,
+      e: "Corrige cada subportadora: Ŷ = Ĥ*·R / (|Ĥ|² + σ²). El término σ² evita amplificar el ruido donde el canal es débil. Es simple gracias al CP." },
+    { k: "k-dft", clave: true, t: "IDFT de M puntos", d: "deshace el transform precoding",
+      tam: `${z.M} → ${z.M} símbolos d̂(i)`,
+      e: "<b>El paso inverso al de la transmisión.</b> Recupera los M símbolos QAM. El ruido de cada subportadora queda repartido en todos los símbolos." },
+    { k: "k-bits", t: "Demodulación soft (LLR) → LDPC", d: "descrambling + HARQ",
+      tam: `${z.bitsSimb} LLR / símbolo`,
+      e: "Calcula para cada bit qué tan seguro está de que es 0 o 1, y se lo pasa al decodificador LDPC (con combinación HARQ si es un reenvío)." },
+  ]);
+}
+
+function renderMapa() {
+  const w = 1000, h = 92, x = b => 10 + b / N * (w - 20);
+  const ini = binDe(0), z = tamanos();
+  let g = `<rect x="10" y="22" width="${w - 20}" height="34" fill="${css("--guard")}" rx="4"/>`;
+  // canal útil: desde CENTRO-... (bins 900..1535 y 0..635)
+  g += `<rect x="${x(ini)}" y="22" width="${x(N) - x(ini)}" height="34" fill="${css("--used")}"/>`;
+  g += `<rect x="${x(0)}" y="22" width="${x(NSC_CELDA - CENTRO) - x(0)}" height="34" fill="${css("--used")}"/>`;
+  // asignación (puede partirse si cruza el centro)
+  for (let k = 0; k < z.M; k++) { const b = binDe(z.k0 + k); g += `<rect x="${x(b)}" y="22" width="${Math.max(x(b + 1) - x(b), .8)}" height="34" fill="${css("--alloc")}"/>`; }
+  g += `<line x1="${x(0)}" x2="${x(0)}" y1="14" y2="64" stroke="${css("--text")}" stroke-width="2"/>`;
+  g += `<text x="${x(0) + 4}" y="12">bin 0 = centro (DC)</text><text x="${x(ini)}" y="76" text-anchor="middle">bin ${ini} = PRB 0</text>
+        <text x="${x(NSC_CELDA - CENTRO)}" y="76" text-anchor="middle">bin ${NSC_CELDA - CENTRO - 1} = PRB 105</text>
+        <text x="${x(N) - 2}" y="12" text-anchor="end">bin 1535</text>
+        <text x="${w / 2}" y="90" text-anchor="middle">Entradas de la IFFT de 1536 (las frecuencias negativas están en la mitad superior): ${z.M} bins asignados, el resto en cero</text>`;
+  $("figMapa").innerHTML = svg(w, h + 4, g);
+}
+
+function renderTiempo(d, xO, xD) {
+  const w = 560, h = 260, m = { l: 40, r: 10, t: 10, b: 34 };
+  const rms = x => Math.sqrt(x[0].reduce((s, v, i) => s + v * v + x[1][i] ** 2, 0) / N);
+  const rO = rms(xO), rD = rms(xD), t = [...Array(N).keys()].map(n => n / FS * 1e6);
+  const aO = t.map((_, n) => Math.hypot(xO[0][n], xO[1][n]) / rO), aD = t.map((_, n) => Math.hypot(xD[0][n], xD[1][n]) / rD);
+  const ymax = Math.max(3.5, Math.ceil(Math.max(...aO, ...aD) * 2) / 2);
+  const E = ejes({ w, h, m, x0: 0, x1: 66.7, y0: 0, y1: ymax, xt: [0, 10, 20, 30, 40, 50, 60], yt: [0, 1, 2, 3].filter(v => v <= ymax),
+                   xl: "tiempo dentro del símbolo útil [µs]", yl: "|x| / RMS" });
+  let g = E.g + `<path d="${camino(t, aO, E.X, E.Y)}" fill="none" stroke="${css("--ofdm")}" stroke-width="1.1" opacity=".85"/>`
+              + `<path d="${camino(t, aD, E.X, E.Y)}" fill="none" stroke="${css("--dfts")}" stroke-width="1.4"/>`;
+  const M = d[0].length;
+  if (M <= 240) for (let i = 0; i < M; i++) {
+    const ti = i * N / M / FS * 1e6, a = Math.hypot(d[0][i], d[1][i]);
+    g += `<circle cx="${E.X(ti)}" cy="${E.Y(a)}" r="2.4" fill="${css("--text")}"/>`;
+  }
+  $("figTiempo").innerHTML = svg(w, h, g);
+}
+
+function renderCCDF(pO, pD) {
+  const w = 560, h = 260, m = { l: 48, r: 10, t: 10, b: 34 };
+  const E = ejes({ w, h, m, x0: 0, x1: 13, y0: 1e-3, y1: 1, xt: [0, 2, 4, 6, 8, 10, 12], yt: [1, .1, .01, .001], logy: true,
+                   xl: "PAPR [dB]", yl: "P(PAPR > X)" });
+  const curva = arr => { const xs = [], ys = []; for (let x = 0; x <= 13; x += .05) { const f = arr.filter(v => v > x).length / arr.length; if (f <= 0) break; xs.push(x); ys.push(f); } return [xs, ys]; };
+  const [xo, yo] = curva(pO), [xd, yd] = curva(pD);
+  $("figCCDF").innerHTML = svg(w, h, E.g + `<path d="${camino(xo, yo, E.X, E.Y)}" fill="none" stroke="${css("--ofdm")}" stroke-width="2"/>`
+                                      + `<path d="${camino(xd, yd, E.X, E.Y)}" fill="none" stroke="${css("--dfts")}" stroke-width="2"/>`);
+}
+
+function renderGrilla() {
+  const z = tamanos(), filasVis = Math.min(st.nprb, 20), w = 1000, cw = 58, ch = 16, x0 = 120, y0 = 24;
+  const h = y0 + filasVis * ch + 50;
+  let g = "";
+  for (let s = 0; s < 14; s++) {
+    g += `<text x="${x0 + s * cw + cw / 2}" y="${y0 - 8}" text-anchor="middle">${s}</text>`;
+    for (let r = 0; r < filasVis; r++) {
+      const dm = s === 2;
+      g += `<rect x="${x0 + s * cw + 1}" y="${y0 + r * ch + 1}" width="${cw - 2}" height="${ch - 2}" rx="2" fill="${dm ? css("--dmrs") : css("--alloc")}" opacity="${dm ? 1 : .8}"/>`;
+    }
+    g += `<text x="${x0 + s * cw + cw / 2}" y="${y0 + filasVis * ch + 14}" text-anchor="middle">${s === 2 ? "DM-RS" : "DFT " + (s < 2 ? s + 1 : s)}</text>`;
+    g += `<text x="${x0 + s * cw + cw / 2}" y="${y0 + filasVis * ch + 28}" text-anchor="middle">CP ${s === 0 || s === 7 ? CP0 : CP}</text>`;
+  }
+  g += `<text x="${x0 - 8}" y="${y0 + 10}" text-anchor="end">PRB ${st.start}</text>
+        <text x="${x0 - 8}" y="${y0 + filasVis * ch - 2}" text-anchor="end">PRB ${st.start + st.nprb - 1}</text>
+        <text x="${x0 - 60}" y="${y0 - 8}" text-anchor="middle">símbolo →</text>`;
+  if (st.nprb > filasVis) g += `<text x="${x0 - 8}" y="${y0 + filasVis * ch / 2}" text-anchor="end">(${st.nprb} PRB, se muestran ${filasVis})</text>`;
+  g += `<text x="${w / 2}" y="${h - 6}" text-anchor="middle">Por slot: 13 bloques DFT × ${z.M} símbolos = ${13 * z.M} símbolos ${MODS[st.mod].nombre} = ${z.bitsSlot} bits codificados</text>`;
+  $("figGrilla").innerHTML = svg(w, h, g);
+}
+
+function renderRX() {
+  const z = tamanos(), M = z.M, s2 = 10 ** (-st.snr / 10);
+  const D = 40, a = 0.7, fi = 1.1;   // eco: 40 muestras = 1.74 µs (< CP de 4.69 µs)
+  const H = [...Array(M).keys()].map(k => {
+    if (st.canal === "plano") return [1, 0];
+    const b = binDe(z.k0 + k), ang = -2 * Math.PI * b * D / N + fi;
+    return [1 + a * Math.cos(ang), a * Math.sin(ang)];
+  });
+  const gauss = () => Math.sqrt(-2 * Math.log(Math.random() || 1e-12)) * Math.cos(2 * Math.PI * Math.random());
+  const ptsSin = [], ptsCon = [], refs = [];
+  const bloques = Math.max(1, Math.min(13, Math.floor(1600 / M)));
+  for (let b = 0; b < bloques; b++) {
+    const d = simbolos(st.mod, M);
+    const Y = escalar(fft(d[0], d[1], false), 1 / Math.sqrt(M));
+    const Rr = new Float64Array(M), Ri = new Float64Array(M), Er = new Float64Array(M), Ei = new Float64Array(M);
+    for (let k = 0; k < M; k++) {
+      const [hr, hi] = H[k];
+      Rr[k] = hr * Y[0][k] - hi * Y[1][k] + gauss() * Math.sqrt(s2 / 2);
+      Ri[k] = hr * Y[1][k] + hi * Y[0][k] + gauss() * Math.sqrt(s2 / 2);
+      const den = hr * hr + hi * hi + s2;
+      Er[k] = (hr * Rr[k] + hi * Ri[k]) / den; Ei[k] = (hr * Ri[k] - hi * Rr[k]) / den;
+    }
+    const sin = escalar(fft(Rr, Ri, true), 1 / Math.sqrt(M)), con = escalar(fft(Er, Ei, true), 1 / Math.sqrt(M));
+    for (let i = 0; i < M; i++) { ptsSin.push([sin[0][i], sin[1][i]]); ptsCon.push([con[0][i], con[1][i]]); refs.push([d[0][i], d[1][i]]); }
+  }
+  let err = 0; ptsCon.forEach((p, i) => err += (p[0] - refs[i][0]) ** 2 + (p[1] - refs[i][1]) ** 2);
+  const evm = Math.sqrt(err / ptsCon.length);
+  // |H|
+  const w = 560, h = 200, m = { l: 40, r: 10, t: 10, b: 34 };
+  const f = [...Array(M).keys()].map(k => ((z.k0 + k - CENTRO) * SCS / 1e6));
+  const mag = H.map(([r, i]) => 20 * Math.log10(Math.hypot(r, i)));
+  const fx0 = f[0], fx1 = f[M - 1] + SCS / 1e6;
+  const E = ejes({ w, h, m, x0: fx0, x1: fx1 === fx0 ? fx0 + .2 : fx1, y0: -12, y1: 6, xt: [fx0, (fx0 + fx1) / 2, fx1].map(v => +v.toFixed(2)), yt: [-12, -6, 0, 6],
+                   xl: "frecuencia relativa a 1747.5 MHz [MHz]", yl: "|H| [dB]" });
+  $("figCanal").innerHTML = svg(w, h, E.g + `<path d="${camino(f, mag, E.X, E.Y)}" fill="none" stroke="${css("--accent")}" stroke-width="2"/>`);
+  const constel = pts => {
+    const s = 230, c = s / 2, k = s / 3.4;
+    let g = `<rect x="1" y="1" width="${s - 2}" height="${s - 2}" fill="none" stroke="${css("--border")}"/>
+             <line x1="${c}" x2="${c}" y1="4" y2="${s - 4}" stroke="${css("--border")}"/><line y1="${c}" y2="${c}" x1="4" x2="${s - 4}" stroke="${css("--border")}"/>`;
+    pts.forEach(([x, y]) => { if (Math.abs(x) < 1.65 && Math.abs(y) < 1.65) g += `<circle cx="${(c + x * k).toFixed(1)}" cy="${(c - y * k).toFixed(1)}" r="1.3" fill="${css("--dfts")}" opacity=".6"/>`; });
+    return svg(s, s, g);
+  };
+  $("figConstSin").innerHTML = constel(ptsSin);
+  $("figConstCon").innerHTML = constel(ptsCon);
+  return { evm, puntos: ptsCon.length };
+}
+
+function calcular() {
+  const z = tamanos();
+  const d = simbolos(st.mod, z.M);
+  const xD = txSimbolo(d, z.k0, true), xO = txSimbolo(d, z.k0, false);
+  renderTiempo(d, xO, xD);
+  const pO = [], pD = [];
+  for (let i = 0; i < 500; i++) { const s = simbolos(st.mod, z.M); pO.push(papr(txSimbolo(s, z.k0, false))); pD.push(papr(txSimbolo(s, z.k0, true))); }
+  renderCCDF(pO, pD);
+  const pct = (a, q) => { const s = [...a].sort((x, y) => x - y); return s[Math.floor(q * (s.length - 1))]; };
+  const rx = renderRX();
+  const evmDb = 20 * Math.log10(rx.evm);
+  $("stats").innerHTML = `
+    <div class="stat">M = 12 × ${st.nprb} = <b>${z.M}</b> subportadoras</div>
+    <div class="stat">Ancho ocupado: <b>${z.bw} MHz</b></div>
+    <div class="stat">Sobremuestreo N/M: <b>${(N / z.M).toFixed(1)}</b></div>
+    <div class="stat">PAPR (99 %) CP-OFDM: <b style="color:var(--ofdm)">${pct(pO, .99).toFixed(1)} dB</b></div>
+    <div class="stat">PAPR (99 %) DFT-s-OFDM: <b style="color:var(--dfts)">${pct(pD, .99).toFixed(1)} dB</b></div>
+    <div class="stat">Ahorro de back-off: <b style="color:var(--ok)">${(pct(pO, .99) - pct(pD, .99)).toFixed(1)} dB</b></div>
+    <div class="stat">EVM tras MMSE: <b>${(rx.evm * 100).toFixed(1)} %</b> (${evmDb.toFixed(1)} dB)</div>`;
+}
+
+/* ================== Sección 0: la celda 5G ================== */
+const FC_UL = 1747.5, FC_DL = 1842.5, BW_CANAL = 20;
+const fSub = (k, fc = FC_UL) => fc + (k - CENTRO) * SCS / 1e6;            // centro de la subportadora k [MHz]
+const prbLo = (i, fc = FC_UL) => fSub(12 * i, fc) - SCS / 2e6;             // borde inferior del PRB i
+const color = j => `hsl(${(j * 30) % 360} 70% 52%)`;
+st.sel = 53;
+
+function maxDFT(n) { for (let m = n; m >= 1; m--) { let r = m; for (const p of [2, 3, 5]) while (r % p === 0) r /= p; if (r === 1) return m; } return 1; }
+
+function renderKPIs() {
+  const g0 = prbLo(0) - (FC_UL - BW_CANAL / 2), g1 = (FC_UL + BW_CANAL / 2) - (prbLo(NRB_CELDA - 1) + .18);
+  $("kpis").innerHTML = [
+    ["106", "PRB en 20 MHz (μ = 0)"], ["12", "subportadoras por PRB (siempre)"], ["15 kHz", "separación entre subportadoras (SCS)"],
+    ["180 kHz", "ancho de 1 PRB = 12 × 15 kHz"], ["1272", "subportadoras útiles = 106 × 12"], ["19.08 MHz", "ocupados de los 20 MHz (95.4 %)"],
+    [`${(g0 * 1000).toFixed(1)} / ${(g1 * 1000).toFixed(1)} kHz`, "guarda inferior / superior"], ["168 RE", "1 PRB × 1 slot = 12 subp. × 14 símbolos"],
+    ["100", "máx. PRB para el PUSCH con DFT-s-OFDM"], [`${prbLo(0).toFixed(4)}–${(prbLo(105) + .18).toFixed(4)}`, "MHz ocupados en UL (DL: +95 MHz)"],
+  ].map(([b, s]) => `<div class="kpi"><b>${b}</b><span>${s}</span></div>`).join("");
+}
+
+function renderBarra() {
+  const w = 1000, h = 118, x = f => 20 + (f - (FC_UL - BW_CANAL / 2)) / BW_CANAL * (w - 40), y = 38, hh = 34;
+  let g = `<rect x="${x(FC_UL - 10)}" y="${y}" width="${x(prbLo(0)) - x(FC_UL - 10)}" height="${hh}" fill="${css("--guard")}"/>
+           <rect x="${x(prbLo(105) + .18)}" y="${y}" width="${x(FC_UL + 10) - x(prbLo(105) + .18)}" height="${hh}" fill="${css("--guard")}"/>`;
+  for (let i = 0; i < NRB_CELDA; i++) {
+    const asig = i >= st.start && i < st.start + st.nprb, sel = i === st.sel;
+    g += `<rect data-prb="${i}" x="${x(prbLo(i)) + .3}" y="${y}" width="${x(prbLo(i) + .18) - x(prbLo(i)) - .6}" height="${hh}"
+           fill="${asig ? css("--alloc") : css("--used")}" ${sel ? `stroke="${css("--text")}" stroke-width="2.5"` : ""}><title>PRB ${i}: ${prbLo(i).toFixed(4)}–${(prbLo(i) + .18).toFixed(4)} MHz</title></rect>`;
+  }
+  g += `<line x1="${x(FC_UL)}" x2="${x(FC_UL)}" y1="${y - 6}" y2="${y + hh + 6}" stroke="${css("--text")}" stroke-width="2"/>`;
+  [0, 26, 53, 79, 105].forEach(i => g += `<text x="${x(prbLo(i) + .09)}" y="${y - 10}" text-anchor="middle">PRB ${i}</text>`);
+  [-10, -5, 0, 5, 10].forEach(d => g += `<text x="${x(FC_UL + d)}" y="${y + hh + 18}" text-anchor="middle">${(FC_UL + d).toFixed(1)}</text>`);
+  const a0 = prbLo(st.start), a1 = prbLo(st.start + st.nprb - 1) + .18;
+  g += `<text x="${w / 2}" y="14" text-anchor="middle">Asignados en el laboratorio: PRB ${st.start}–${st.start + st.nprb - 1} = ${st.nprb} PRB = ${12 * st.nprb} subportadoras = ${(a1 - a0).toFixed(2)} MHz</text>
+        <text x="${w / 2}" y="${h - 4}" text-anchor="middle">Frecuencia de UL [MHz] — el DL usa exactamente la misma grilla 95 MHz más arriba (centro 1842.5 MHz)</text>`;
+  $("figPRBs").innerHTML = svg(w, h, g);
+  $("figPRBs").querySelectorAll("rect[data-prb]").forEach(r => r.addEventListener("click", () => { st.sel = +r.dataset.prb; renderBarra(); renderZoom(); iniciarAnimacion(); }));
+}
+
+function renderZoom() {
+  const p = st.sel, w = 520, h = 240, m = { l: 36, r: 10, t: 10, b: 36 };
+  $("lblPRB").textContent = `${p} (${prbLo(p).toFixed(4)}–${(prbLo(p) + .18).toFixed(4)} MHz)`;
+  const E = ejes({ w, h, m, x0: -30, x1: 210, y0: -.3, y1: 1.08, xt: [0, 45, 90, 135, 180], yt: [0, .5, 1],
+                   xl: `kHz desde el borde inferior del PRB ${p} (${prbLo(p).toFixed(4)} MHz)`, yl: "amplitud" });
+  let g = E.g + `<rect x="${E.X(0)}" y="${m.t}" width="${E.X(180) - E.X(0)}" height="${h - m.t - m.b}" fill="${css("--alloc")}" opacity=".07"/>`;
+  const sinc = v => Math.abs(v) < 1e-9 ? 1 : Math.sin(Math.PI * v) / (Math.PI * v);
+  for (let j = -2; j <= 13; j++) {
+    const c = 7.5 + 15 * j, xs = [], ys = [];
+    for (let f = -30; f <= 210; f += .75) { xs.push(f); ys.push(sinc((f - c) / 15)); }
+    const vecino = j < 0 || j > 11;
+    g += `<path d="${camino(xs, ys, E.X, E.Y)}" fill="none" stroke="${vecino ? css("--muted") : color(j)}" stroke-width="${vecino ? 1 : 1.6}" opacity="${vecino ? .35 : .95}"/>`;
+    if (!vecino) g += `<text x="${E.X(c)}" y="${E.Y(1) - 2}" text-anchor="middle" style="fill:${color(j)}">${j}</text>`;
+  }
+  $("figZoom").innerHTML = svg(w, h, g);
+  let t = `<table class="tsub"><tr><th>Subp. en el PRB</th><th>k en la celda</th><th>f UL [MHz]</th><th>f DL [MHz]</th><th>bin IFFT</th></tr>`;
+  for (let j = 0; j < 12; j++) {
+    const k = 12 * p + j;
+    t += `<tr><td><span style="color:${color(j)}">■</span> ${j}</td><td>${k}</td><td>${fSub(k).toFixed(4)}</td><td>${fSub(k, FC_DL).toFixed(4)}</td><td>${binDe(k)}</td></tr>`;
+  }
+  $("tablaSub").innerHTML = t + `</table><p class="nota">k = 12·PRB + subportadora. El "bin IFFT" es la entrada de la IFFT de 1536 donde se coloca esa subportadora (bin 0 = centro de la portadora).</p>`;
+}
+
+const anim = { t: 0, play: true, ultimo: 0, refs: null };
+function iniciarAnimacion() {
+  const M = 12, k0 = 12 * st.sel, d = simbolos("qpsk", M);
+  const xO = txSimbolo(d, k0, false), xD = txSimbolo(d, k0, true);
+  const env = x => { const a = [...Array(N).keys()].map(n => Math.hypot(x[0][n], x[1][n])); const r = Math.sqrt(a.reduce((s, v) => s + v * v, 0) / N); return a.map(v => v / r); };
+  const eO = env(xO), eD = env(xD), ymax = Math.max(3, Math.ceil(Math.max(...eO, ...eD)));
+  const panel = (id, modo, e, col) => {
+    const w = 480, gx = 44, gw = 424, cw = gw / 12, ch = 12, gy = 18, eh = 84, ey = gy + 12 * ch + 18, h = ey + eh + 26;
+    let g = "";
+    for (let r = 0; r < 12; r++) for (let c = 0; c < 12; c++)
+      g += `<rect class="celda" data-col="${c}" x="${gx + c * cw + .5}" y="${gy + (11 - r) * ch + .5}" width="${cw - 1}" height="${ch - 1}" fill="${color(modo === "ofdm" ? r : c)}"/>`;
+    for (let c = 0; c < 12; c++) g += `<text x="${gx + c * cw + cw / 2}" y="${gy - 5}" text-anchor="middle">${modo === "ofdm" ? "" : "d" + (c + 1)}</text>`;
+    g += `<text x="${gx - 4}" y="${gy + 8}" text-anchor="end">sub 11</text><text x="${gx - 4}" y="${gy + 12 * ch}" text-anchor="end">sub 0</text>`;
+    if (modo === "ofdm") g += `<text x="${gx + gw / 2}" y="${gy - 5}" text-anchor="middle">cada fila (subportadora) lleva un símbolo durante todo el tiempo</text>`;
+    const X = n => gx + n / N * gw, Y = v => ey + eh - v / ymax * eh;
+    let p = ""; for (let n = 0; n < N; n += 2) p += (n ? "L" : "M") + X(n).toFixed(1) + " " + Y(e[n]).toFixed(1);
+    g += `<rect x="${gx}" y="${ey}" width="${gw}" height="${eh}" fill="none" stroke="${css("--border")}"/>
+          <line x1="${gx}" x2="${gx + gw}" y1="${Y(1)}" y2="${Y(1)}" stroke="${css("--border")}" stroke-dasharray="3 3"/>
+          <text x="${gx - 4}" y="${Y(1) + 4}" text-anchor="end">RMS</text><text x="${gx - 4}" y="${ey + 10}" text-anchor="end">×${ymax}</text>
+          <path d="${p}" fill="none" stroke="${col}" stroke-width="1.5"/>
+          <line class="cursor" x1="${gx}" x2="${gx}" y1="${gy - 2}" y2="${ey + eh}" stroke="${css("--text")}" stroke-width="2"/>
+          <circle class="punto" cx="${gx}" cy="${Y(e[0])}" r="4" fill="${col}" stroke="${css("--panel")}" stroke-width="1.5"/>
+          <text x="${gx}" y="${h - 6}">0 µs</text><text x="${gx + gw}" y="${h - 6}" text-anchor="end">66.7 µs</text>
+          <text x="${gx + gw / 2}" y="${h - 6}" text-anchor="middle">amplitud |x(t)| / RMS</text>`;
+    $(id).innerHTML = svg(w, h, g);
+    const s = $(id).querySelector("svg");
+    return { celdas: [...s.querySelectorAll(".celda")], cursor: s.querySelector(".cursor"), punto: s.querySelector(".punto"), X, Y, e };
+  };
+  anim.refs = { o: panel("anOFDM", "ofdm", eO, css("--ofdm")), d: panel("anDFT", "dft", eD, css("--dfts")) };
+}
+function cuadro(ts) {
+  if (anim.play && anim.refs) {
+    if (anim.ultimo) anim.t = (anim.t + (ts - anim.ultimo) / 8000) % 1;
+    const col = Math.min(11, Math.floor(anim.t * 12)), n = Math.min(N - 1, Math.floor(anim.t * N));
+    for (const [clave, ref] of Object.entries(anim.refs)) {
+      ref.celdas.forEach(c => c.setAttribute("opacity", +c.dataset.col === col ? 1 : .28));
+      const xc = ref.X(n); ref.cursor.setAttribute("x1", xc); ref.cursor.setAttribute("x2", xc);
+      ref.punto.setAttribute("cx", xc); ref.punto.setAttribute("cy", ref.Y(ref.e[n]));
+    }
+    $("aireOFDM").textContent = `En el aire ahora: d1 + d2 + … + d12 sumados · amplitud = ${anim.refs.o.e[n].toFixed(2)} × RMS`;
+    $("aireDFT").textContent = `En el aire ahora: solo d${col + 1} · amplitud = ${anim.refs.d.e[n].toFixed(2)} × RMS`;
+  }
+  anim.ultimo = ts;
+  requestAnimationFrame(cuadro);
+}
+
+function renderComparacion() {
+  const FILAS = [[5, 25, 11], [10, 52, 24], [15, 79, 38], [20, 106, 51], [25, 133, 65], [30, 160, 78], [40, 216, 106], [50, 270, 133], [100, null, 273]];
+  const N3 = [5, 10, 15, 20, 25, 30], N78 = [10, 15, 20, 40, 50, 100];
+  const celdas = (n, scs, bw) => n == null ? `<td>—</td><td>—</td><td>—</td><td>—</td>`
+    : `<td><b>${n}</b></td><td>${n * 12}</td><td>${(n * 12 * scs / 1000 / bw * 100).toFixed(1)} %</td><td>${maxDFT(n)}</td>`;
+  let t = `<table><tr><th rowspan="2">Canal</th><th colspan="4">SCS 15 kHz (μ = 0) · 1 PRB = 180 kHz</th><th colspan="4">SCS 30 kHz (μ = 1) · 1 PRB = 360 kHz</th><th rowspan="2">Dónde se usa</th></tr>
+           <tr><th>PRB</th><th>Subp.</th><th>Ocupación</th><th>máx. DFT-s</th><th>PRB</th><th>Subp.</th><th>Ocupación</th><th>máx. DFT-s</th></tr>`;
+  FILAS.forEach(([bw, n15, n30]) => {
+    const uso = [];
+    if (bw === 20) uso.push("★ <b>tu celda</b> (n3, μ = 0)");
+    else if (N3.includes(bw)) uso.push("n3 (μ = 0)");
+    if (N78.includes(bw)) uso.push("n78 (μ = 1)");
+    if (bw === 5) uso.push("<span class='nota'>n78 no admite 5 MHz</span>");
+    t += `<tr class="${bw === 20 ? "resaltada" : ""}"><td>${bw} MHz</td>${celdas(n15, 15, bw)}${celdas(n30, 30, bw)}<td>${uso.join(" · ") || "otras bandas"}</td></tr>`;
+  });
+  t += `</table><h3>Y en 4G (LTE), para comparar</h3>
+        <table><tr><th>Canal</th><th>RB</th><th>Subportadoras</th><th>Ocupación</th><th>Comentario</th></tr>
+        <tr><td>3 MHz</td><td>15</td><td>180</td><td>90.0 %</td><td>Lo que usaron en el TP de 4G (n_prb = 15)</td></tr>
+        <tr><td>20 MHz</td><td>100</td><td>1200</td><td>90.0 %</td><td>LTE: SCS fijo de 15 kHz, RB = 12 subp. × 0.5 ms. En el mismo canal, 5G mete 6 PRB más (106).</td></tr></table>`;
+  $("tablaComp").innerHTML = t;
+}
+
+function renderCelda() { renderKPIs(); renderBarra(); renderZoom(); renderComparacion(); iniciarAnimacion(); }
+
+$("btnPlay").onclick = () => { anim.play = !anim.play; $("btnPlay").textContent = anim.play ? "⏸ Pausar" : "▶ Reproducir"; };
+$("btnSimb").onclick = () => iniciarAnimacion();
+requestAnimationFrame(cuadro);
+
+function renderTodo() {
+  st.start = Math.min(st.start, NRB_CELDA - st.nprb);
+  renderCelda();
+  $("inStart").max = NRB_CELDA - st.nprb; $("inStart").value = st.start;
+  const z = tamanos();
+  $("chipsResumen").innerHTML = [`PRB asignados: ${st.nprb} (${st.start}…${st.start + st.nprb - 1})`, `DFT de M = ${z.M} puntos`, `IFFT de N = ${N} puntos`,
+    `Modulación: ${MODS[st.mod].nombre}`, `${z.bitsSlot} bits codificados / slot`].map(t => `<span class="chip">${t}</span>`).join("");
+  renderCadenas(); renderMapa(); renderGrilla(); calcular();
+}
+
+/* ================== Controles ================== */
+$("selPRB").innerHTML = PERMITIDOS.map(n => `<option value="${n}"${n === st.nprb ? " selected" : ""}>${n} PRB (M = ${12 * n})</option>`).join("");
+$("listaPRB").textContent = PERMITIDOS.join(", ");
+$("selPRB").onchange = e => { st.nprb = +e.target.value; renderTodo(); };
+$("inStart").onchange = e => { st.start = Math.max(0, Math.round(+e.target.value) || 0); renderTodo(); };
+$("selMod").onchange = e => { st.mod = e.target.value; renderTodo(); };
+$("selCanal").onchange = e => { st.canal = e.target.value; calcular(); };
+$("inSNR").oninput = e => { st.snr = +e.target.value; $("lblSNR").textContent = st.snr + " dB"; };
+$("inSNR").onchange = () => calcular();
+$("btnNueva").onclick = () => calcular();
+
+const raiz = document.documentElement;
+try { const t = localStorage.getItem("tema5g"); if (t) raiz.dataset.theme = t; } catch (e) {}
+$("btnTema").onclick = () => {
+  const oscuro = raiz.dataset.theme === "dark" || (!raiz.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+  raiz.dataset.theme = oscuro ? "light" : "dark";
+  try { localStorage.setItem("tema5g", raiz.dataset.theme); } catch (e) {}
+  renderTodo();
+};
+
+renderTodo();
+</script>
+</body>
+</html>
