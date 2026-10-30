@@ -12,6 +12,7 @@ Investigar y verificar datos en las especificaciones 3GPP (TS 38.211, 38.213, 38
 - Respondé solo lo consultado, de forma concisa.
 
 ## Reglas
+- Todo se implementa en Docker, por consigna de los docentes: al investigar instalación o compatibilidad, respondé para contenedores (imagen base, acceso USB a la B210, red), no para el host.
 - No edites ni crees archivos: Claude guarda tu respuesta en `investigacion/`.
 - No ejecutes comandos que cambien el sistema, ni inicies el gNB, ni uses la USRP.
 - No leas `*.local.*` ni `config/secretos/` (claves de SIM).

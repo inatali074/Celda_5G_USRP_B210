@@ -17,6 +17,8 @@ Sos Claude Code, coordinador de un equipo de 3 IAs. Idioma: español (Argentina)
 4. **Al terminar:** actualizar `PROYECTO.md`, escribir `sesiones/AAAA-MM-DD_tema.md` y hacer commit.
 
 ## Reglas
+- **Preguntar antes de implementar, siempre:** antes de escribir configuraciones o scripts, instalar, construir imágenes o levantar contenedores (lo haga Claude o Codex), describir qué se va a hacer y esperar el ok del usuario. Investigar y responder no requiere pedirlo.
+- **Todo corre en Docker, por consigna de los docentes:** gNB, núcleo y MongoDB se implementan dentro de contenedores, no instalados en el host. Lo que solo se pueda hacer en el host (buffers, governor, reglas de USB o NAT) sigue la regla de sudo y red.
 - Nunca iniciar el gNB ni transmitir con la USRP sin confirmación explícita del usuario, **cada vez**.
 - Todo comando con sudo o que cambie red, firewall, NAT, rutas o servicios del sistema: mostrarlo, explicarlo y esperar aprobación antes de ejecutarlo.
 - `~/red5g` es solo lectura: consultarlo como antecedente, nunca modificarlo, moverlo ni borrarlo.
@@ -38,15 +40,17 @@ codex exec -s read-only --ephemeral --color never "PROMPT" </dev/null \
   >revisiones/AAAA-MM-DD_tema.md 2>revisiones/.codex.err
 ```
 Si falla, el error queda en `revisiones/.codex.err` (excluido de git).
-Codex, generar archivos (**todavía no probado**; verificar al primer uso):
+Codex, generar archivos (probado 2026-10-30):
 ```bash
 codex exec -s workspace-write --ephemeral --color never "PROMPT" </dev/null
 ```
 Gemini (agy), consulta sin edición:
 ```bash
-agy -p "PROMPT" --mode plan --sandbox --print-timeout 120s </dev/null \
+agy -p "PROMPT" --mode plan --sandbox --print-timeout 900s </dev/null \
   >investigacion/AAAA-MM-DD_tema.md
 ```
+Con 280 s, las consultas largas a agy se cortaron; con 900 s terminaron. Sus citas se verifican siempre: varias marcadas como "verificado" eran falsas.
+
 `codex exec` informa `approval: never`: no hay a quién pedir aprobación en modo no interactivo y el límite real es el sandbox. Por eso importa elegir el `-s` correcto.
 
 ## Convenciones

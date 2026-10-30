@@ -7,6 +7,8 @@ Desplegar desde cero una celda 5G NR Standalone (Opción 2, Release 15) en un en
 
 ## Alcance
 - Radio USRP B210 por USB 3.0, gNB OCUDU/srsRAN Project, núcleo Open5GS v2.8.0 + MongoDB, NAT del kernel Linux, PLMN 722/999.
+- La implementación va dentro de Docker, por consigna de los docentes.
+- Antes de implementar cualquier cosa se le pregunta al usuario.
 - Cada decisión se justifica con teoría y especificaciones (TS 38.211, 38.213, 38.321, 38.331).
 - Cada etapa se cierra con evidencia: sincronización, acceso, registro, sesión PDU, tráfico IP y mediciones.
 - Nada de `~/red5g` se reutiliza: sus resultados son solo antecedente.
@@ -16,7 +18,7 @@ Desplegar desde cero una celda 5G NR Standalone (Opción 2, Release 15) en un en
 | :--- | :--- |
 | Sistema | Debian 13 (trixie), kernel 6.12.113 |
 | CPU / RAM / disco | Intel i3-1005G1 (2C/4T, AVX2 y AVX-512) / 7,3 GiB / 86 GB libres |
-| USRP B210 | **No conectada** al relevar (`No UHD Devices Found`). Hay bus USB 3 libre |
+| USRP B210 | Serie 31677B2, rev. 4, FW 8.0, FPGA 16.0, sin GPSDO. **USB 3.0 confirmado** (5000 Mb/s) tras cargar firmware con `uhd_usrp_probe`, sin transmitir. Aparece en USB 2.0 (`Cypress WestBridge`) hasta cargarlo; hay que repetirlo tras cada desconexión |
 | UHD | 4.8.0 instalado (`uhd-host`, paquete Debian) |
 | Instalados | docker, git, pcscd, pcsc-tools |
 | No instalados | Open5GS, MongoDB, gNB, tmux, iperf3, tshark |
@@ -35,13 +37,16 @@ Desplegar desde cero una celda 5G NR Standalone (Opción 2, Release 15) en un en
 | Componente | Versión | Estado |
 | :--- | :--- | :--- |
 | Open5GS | v2.8.0 | Fijada por el proyecto |
-| UHD | 4.8.0 (Debian) | Propuesta: ya instalada; confirmar soporte de B210 e imágenes de FPGA |
-| OCUDU/srsRAN | Sin definir | Las fuentes dicen "OCUDU 2.10", "OCUDU 26.10" y `release_25_10`. Propuesta: fijar un commit tras verificar el repositorio oficial, antes de instalar |
+| UHD | 4.8.0 en el host; 4.9.0.1 en el Dockerfile oficial de OCUDU | Propuesta: usar la del contenedor. Probado en el host solo para cargar firmware |
+| OCUDU (ex srsRAN Project) | `release_26_10` (`e0db566`) | Propuesta, sin decidir: tag oficial más reciente. "OCUDU 26.10" es este tag; "OCUDU 2.10" no existe. Ver `investigacion/2026-10-30_verificacion-claude.md` |
 
 ## Decisiones
 | ID | Fecha | Decisión | Justificación | Aportó |
 | :--- | :--- | :--- | :--- | :--- |
 | D-001 | 2026-10-30 | El repo git es solo local y versiona lo nuevo más los documentos propios sin claves de la raíz (`Diagramas_UL_DL_Paging_5G.{md,html}`, `DFT-s-OFDM_explicacion.html`, `generar_html.py`). El resto del material previo, `.env` y `CONTEXTO_ANTECEDENTES.local.md` quedan excluidos | Varios contienen claves de SIM; también son pesados o de terceros. Sin referencia a TS: decisión de organización | Claude |
+| D-002 | 2026-10-30 | Implementación en Docker | Consigna de los docentes. Sin referencia a TS | Usuario |
+| D-003 | 2026-10-30 | Preguntar antes de implementar, siempre | Pedido del usuario. Sin referencia a TS | Usuario |
+| D-004 | 2026-10-30 | La prueba sin radio usa n3 FDD, 20 MHz, 106 PRB, μ=0, CP-OFDM en UL. No fija la banda de radio | srsUE rechaza SCS común distinto de 15 kHz (`rrc_nr_procedures.cc:439`), así que n78 μ=1 no se puede probar por ZMQ. Numerología: TS 38.211 §4.2 | Codex, revisó Claude |
 
 ## Propuestas pendientes de decisión
 | ID | Propuesta | Justificación | Falta verificar |
@@ -58,7 +63,7 @@ Desplegar desde cero una celda 5G NR Standalone (Opción 2, Release 15) en un en
 Según `Prueba_configuracion_Drive_5G.docx` (29/10): ZMQ + srsUE funcionó de punta a punta; por aire en n78 un celular de Personal llegó al AMF; n3 no tuvo ningún PRACH real; DFT-s-OFDM y NEA2 quedaron sin validar con celular; B210 serie 31677B2 con `clock_ppm` −1,87 medido.
 
 ## Estado actual
-Configuración inicial terminada (sesión 0). Sin nada instalado ni transmitido. Codex y agy verificados.
+Imágenes construidas. El núcleo arranca, el abonado se carga y **N2/NG Setup funciona**. La prueba ZMQ con srsUE **está bloqueada**: el intercambio de muestras no avanza y no hubo registro, sesión PDU ni ping. Contenedores detenidos. Nada transmitido. Falta `gnb_b210.yml`.
 
 ## Próximos pasos
-Ver el plan propuesto en `sesiones/2026-10-30_configuracion-inicial.md`.
+Ver `sesiones/2026-10-30_docker-y-zmq.md`.

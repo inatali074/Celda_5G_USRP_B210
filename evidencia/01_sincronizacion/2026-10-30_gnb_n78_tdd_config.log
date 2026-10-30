@@ -1,0 +1,12 @@
+
+--== OCUDU gNB (commit e0db566) ==--
+
+Warning: Scheduling priority of thread "main_pool#0" not changed. Cause: Not enough privileges.
+Lower PHY in executor sequential baseband mode.
+Warning: Scheduling priority of thread "io_broker_epoll" not changed. Cause: Not enough privileges.
+Available radio types: uhd, zmq and realtime_loopback.
+Cell pci=1, bw=20 MHz, 1T1R, dl_arfcn=632628 (n78), dl_freq=3489.42 MHz, dl_ssb_arfcn=632256, ul_freq=3489.42 MHz
+
+N2: Failed to connect to AMF on [10.53.1.2]:38412. error="Network is unreachable" timeout=0ms
+==== gNB started ===
+Type <h> to view help

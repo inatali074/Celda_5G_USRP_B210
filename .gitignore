@@ -14,5 +14,6 @@ grabador/
 
 # Generados
 .codex.err
+.agy.err
 __pycache__/
 *.pyc

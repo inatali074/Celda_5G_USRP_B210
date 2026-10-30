@@ -1,0 +1,6 @@
+2026-10-30T16:14:33.987543 [CU-CP   ] [I] N2: Connection to AMF on 10.53.1.2:38412 was established
+2026-10-30T16:14:33.987641 [NGAP    ] [I] "NG Setup Procedure" started...
+2026-10-30T16:14:33.987652 [NGAP    ] [I] Tx PDU: NGSetupRequest
+2026-10-30T16:14:33.989951 [NGAP    ] [I] Rx PDU: NGSetupResponse
+2026-10-30T16:14:33.989972 [NGAP    ] [I] "NG Setup Procedure" finished successfully
+2026-10-30T16:14:33.989979 [CU-CP   ] [I] Connected to AMF. Supported PLMNs: 722999 

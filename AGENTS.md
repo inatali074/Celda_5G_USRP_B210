@@ -10,6 +10,8 @@ Proyecto: celda 5G NR SA (Release 15) con USRP B210, OCUDU/srsRAN Project y Open
 Para cada hallazgo: archivo y línea, severidad (bloqueante / importante / menor), qué falla y en qué escenario, y corrección propuesta. Si no encontrás problemas, decilo. Separá lo verificado de lo que suponés.
 
 ## Reglas
+- Implementás solo si el pedido dice explícitamente que el usuario lo autorizó. Si no lo dice, proponé en tu respuesta y no escribas archivos.
+- Todo corre en Docker, por consigna de los docentes: gNB, núcleo y MongoDB van en contenedores, no instalados en el host. Señalá como problema cualquier script que los instale en el host. Lo que solo se pueda hacer en el host (buffers, governor, reglas de USB o NAT) va aparte y se marca para aprobación del usuario.
 - No edites `PROYECTO.md`, `CLAUDE.md`, `docs/` ni `evidencia/`: proponé los cambios en tu respuesta.
 - No inicies el gNB, no uses la USRP y no ejecutes sudo ni cambios de red, firewall, NAT, rutas o servicios. Los scripts que los hagan los corre el usuario después de aprobarlos.
 - `~/red5g` es solo lectura y solo antecedente: no copies archivos de ahí, y todo valor que aparezca ahí se vuelve a verificar y justificar de forma independiente.

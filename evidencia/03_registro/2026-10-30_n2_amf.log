@@ -1,0 +1,29 @@
+open5gs-1  | Open5GS daemon v2.8.0
+open5gs-1  | Open5GS daemon v2.8.0
+open5gs-1  | Open5GS daemon v2.8.0
+open5gs-1  | Open5GS daemon v2.8.0
+open5gs-1  | Open5GS daemon v2.8.0
+open5gs-1  | Open5GS daemon v2.8.0
+open5gs-1  | Open5GS daemon v2.8.0
+open5gs-1  | Open5GS daemon v2.8.0
+open5gs-1  | 10/30 15:23:47.510: [amf] INFO: ngap_server() [10.53.1.2]:38412 (../src/amf/ngap-sctp.c:61)
+open5gs-1  | Open5GS daemon v2.8.0
+open5gs-1  | 10/30 15:23:47.567: [dbi] INFO: MongoDB URI: 'mongodb://10.53.1.4/open5gs' (../lib/dbi/ogs-mongoc.c:128)
+open5gs-1  | Open5GS daemon v2.8.0
+open5gs-1  | Open5GS daemon v2.8.0
+open5gs-1  | Open5GS daemon v2.8.0
+open5gs-1  | 10/30 15:23:47.717: [dbi] INFO: MongoDB URI: 'mongodb://10.53.1.4/open5gs' (../lib/dbi/ogs-mongoc.c:128)
+open5gs-1  | 10/30 16:10:43.139: [amf] INFO: gNB-N2 accepted[10.53.1.5]:34540 in ng-path module (../src/amf/ngap-sctp.c:113)
+open5gs-1  | 10/30 16:10:43.139: [amf] INFO: gNB-N2 accepted[10.53.1.5] in master_sm module (../src/amf/amf-sm.c:818)
+open5gs-1  | 10/30 16:10:43.142: [amf] INFO: [Added] Number of gNBs is now 1 (../src/amf/context.c:1277)
+open5gs-1  | 10/30 16:10:43.142: [amf] INFO: gNB-N2[10.53.1.5] max_num_of_ostreams : 30 (../src/amf/amf-sm.c:865)
+open5gs-1  | 10/30 16:12:34.210: [amf] INFO: gNB-N2[10.53.1.5] connection refused!!! (../src/amf/amf-sm.c:878)
+open5gs-1  | 10/30 16:12:34.210: [amf] INFO: [Removed] Number of gNBs is now 0 (../src/amf/context.c:1305)
+open5gs-1  | 10/30 16:12:43.907: [amf] INFO: gNB-N2 accepted[10.53.1.5]:47154 in ng-path module (../src/amf/ngap-sctp.c:113)
+open5gs-1  | 10/30 16:12:43.907: [amf] INFO: gNB-N2 accepted[10.53.1.5] in master_sm module (../src/amf/amf-sm.c:818)
+open5gs-1  | 10/30 16:12:43.909: [amf] INFO: [Added] Number of gNBs is now 1 (../src/amf/context.c:1277)
+open5gs-1  | 10/30 16:12:43.909: [amf] INFO: gNB-N2[10.53.1.5] max_num_of_ostreams : 30 (../src/amf/amf-sm.c:865)
+open5gs-1  | 10/30 16:14:24.697: [amf] INFO: gNB-N2[10.53.1.5] connection refused!!! (../src/amf/amf-sm.c:878)
+open5gs-1  | 10/30 16:14:24.697: [amf] INFO: [Removed] Number of gNBs is now 0 (../src/amf/context.c:1305)
+open5gs-1  | 10/30 16:14:33.987: [amf] INFO: gNB-N2 accepted[10.53.1.5]:50834 in ng-path module (../src/amf/ngap-sctp.c:113)
+open5gs-1  | 10/30 16:14:33.987: [amf] INFO: gNB-N2 accepted[10.53.1.5] in master_sm module (../src/amf/amf-sm.c:818)
