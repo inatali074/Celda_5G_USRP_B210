@@ -27,11 +27,17 @@ Desplegar desde cero una celda 5G NR Standalone (Opción 2, Release 15) en un en
 | `~/red5g` | **No existe en esta PC**: está en la PC de un compañero |
 
 ## A definir (lo decide el usuario)
-1. **Entorno de RF:** jaula de Faraday, cable con atenuadores o permiso ENACOM. Bloquea toda transmisión.
-2. **Celulares:** modelos que se usarán y sus bandas NR SA. Antecedentes: OnePlus 13, Motorola Edge 30, Xiaomi Redmi Note 14 5G.
-3. **Entregable:** informe, formato y fecha.
-4. **SIM:** ¿se puede conseguir una tarjeta programable 5G? (ver Riesgos)
+1. **Entorno de RF:** definido: jaula de Faraday (2026-10-30). Falta confirmar que la B210 esté adentro antes de cada transmisión.
+2. **Celulares:** definidos: OnePlus 13, Motorola Edge 30, Xiaomi Redmi Note 14 5G. Falta confirmar sus bandas SA.
+3. **Entregable:** por ahora sin formato ni fecha.
+4. **SIM:** se usan las que hay; falta leerlas (el usuario las conecta al lector). Ver Riesgos.
 5. **Acceso a `~/red5g`:** copia de solo lectura, si se quiere consultar más allá del docx.
+
+## SIM leídas (solo lectura, con `scripts/leer_sim.py`)
+| Fecha | ICCID | IMSI | MNC en EF_AD | AcT 722/999 | 5G |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 2026-10-30 | …0010 | 722999000000001 | 3 dígitos | E-UTRAN, UTRAN, GSM; sin NG-RAN | Sin DF_5GS, EF_UST de 11 bytes |
+| 2026-10-30 | <ICCID> | 722999000000003 | 3 dígitos | E-UTRAN, UTRAN, GSM; sin NG-RAN | Sin DF_5GS, EF_UST de 11 bytes. Autenticación sin probar; abonado sin cargar |
 
 ## Versiones
 | Componente | Versión | Estado |
@@ -47,6 +53,8 @@ Desplegar desde cero una celda 5G NR Standalone (Opción 2, Release 15) en un en
 | D-002 | 2026-10-30 | Implementación en Docker | Consigna de los docentes. Sin referencia a TS | Usuario |
 | D-003 | 2026-10-30 | Preguntar antes de implementar, siempre | Pedido del usuario. Sin referencia a TS | Usuario |
 | D-004 | 2026-10-30 | La prueba sin radio usa n3 FDD, 20 MHz, 106 PRB, μ=0, CP-OFDM en UL. No fija la banda de radio | srsUE rechaza SCS común distinto de 15 kHz (`rrc_nr_procedures.cc:439`), así que n78 μ=1 no se puede probar por ZMQ. Numerología: TS 38.211 §4.2 | Codex, revisó Claude |
+| D-006 | 2026-10-30 | Primera celda: n78 TDD, ARFCN 635000 (3525 MHz), 20 MHz, μ=1, CP-OFDM en UL, TX/RX 50/40 | Fuera del bloque atribuido a Personal; barrido sin portadoras visibles (no concluyente en señales débiles). CP-OFDM primero para cambiar una sola cosa. Numerología: TS 38.211 §4.2; SSB caso C: TS 38.213 §4.1 | Claude, Codex |
+| D-005 | 2026-10-30 | Se abandona la prueba con srsUE; se pasa a la celda real con celulares. Los servicios `gnb-zmq` y `srsue` quedan en el compose, sin usar | Tres corridas bloqueadas antes de la búsqueda de celda, sin causa identificada. El objetivo son celulares reales. Sin referencia a TS | Usuario, a propuesta de Claude |
 
 ## Propuestas pendientes de decisión
 | ID | Propuesta | Justificación | Falta verificar |
@@ -55,15 +63,16 @@ Desplegar desde cero una celda 5G NR Standalone (Opción 2, Release 15) en un en
 | P-002 | Definir la **frecuencia** recién con el entorno de RF elegido | 3489,42 MHz cae en el bloque de Personal y atrajo celulares ajenos | Bloques adjudicados, barrido en recepción |
 
 ## Riesgos
+- **RF, criterio de los docentes (informado por el usuario, 2026-10-30):** la jaula puede dejar pasar señales de una torre cercana, y consideran que no llegaría a la población por la jaula, la lejanía del laboratorio de zonas urbanas, la baja potencia de la SDR y la poca ganancia de las antenas. Por eso ver señal comercial no prueba que la jaula esté abierta. No se puede comparar adentro y afuera: la jaula es del laboratorio y no se pueden abrir las puertas para probar, así que su atenuación queda sin medir y el barrido de hoy es solo la línea de base dentro de la jaula.
 - **RF:** ambas bandas están licenciadas. En pruebas previas, celulares de Personal intentaron registrarse en la celda, así que la señal salía del laboratorio. No se transmite hasta definir el entorno.
-- **SIM:** las tarjetas LY14 del laboratorio no tienen DF_5GS ni servicios 5G en EF_UST, y con ellas los celulares no buscaron la celda. El docx de antecedente lo da por causa raíz, pero también sigue abierto el perfil del módem para un PLMN desconocido. Hay que verificar en TS 31.102 y TS 33.501 si esos servicios son realmente obligatorios.
+- **SIM:** **una LY14 sin DF_5GS se registró en SA el 2026-10-30 en el Redmi, lo que refuta la causa raíz del docx. El Motorola la ignora con esa SIM, lo que apoya la hipótesis del perfil de módem.** Antes, las tarjetas LY14 sin DF_5GS ni servicios 5G en EF_UST no habían buscado la celda. El docx de antecedente lo da por causa raíz, pero también sigue abierto el perfil del módem para un PLMN desconocido. Hay que verificar en TS 31.102 y TS 33.501 si esos servicios son realmente obligatorios.
 - **CPU:** 2 núcleos a 20 MHz pueden no alcanzar. El host tiene el governor en `powersave` y buffers bajos, y cambiarlos requiere aprobación.
 
 ## Antecedentes (no reutilizados, a reverificar)
 Según `Prueba_configuracion_Drive_5G.docx` (29/10): ZMQ + srsUE funcionó de punta a punta; por aire en n78 un celular de Personal llegó al AMF; n3 no tuvo ningún PRACH real; DFT-s-OFDM y NEA2 quedaron sin validar con celular; B210 serie 31677B2 con `clock_ppm` −1,87 medido.
 
 ## Estado actual
-Imágenes construidas. El núcleo arranca, el abonado se carga y **N2/NG Setup funciona**. La prueba ZMQ con srsUE **está bloqueada**: el intercambio de muestras no avanza y no hubo registro, sesión PDU ni ping. También falló con PLMN 001/01, en la última corrida autorizada. Sigue pendiente decidir si se abandona. Contenedores detenidos. Nada transmitido. Falta `gnb_b210.yml`.
+Celda n78 TDD al aire por la B210 en Docker, dentro de la jaula. **El Redmi Note 14 5G con la SIM 1, en selección automática, completó RACH, RRC, 5G-AKA y registro** (2026-10-30). El Motorola Edge 30 Neo con la SIM de laboratorio nunca vio la red, pero sí con un chip comercial: el comportamiento depende del teléfono y la SIM. Falta la sesión PDU: el teléfono no la pidió. La celda queda apagada entre pruebas.
 
 ## Próximos pasos
-Ver `sesiones/2026-10-30_docker-y-zmq.md`.
+Ver la sección "Para retomar" de `sesiones/2026-10-30_docker-y-zmq.md`, que incluye el ID de la sesión de Claude Code. Primero: grabar NG-RAN en la SIM 3 (requiere PC con Windows).

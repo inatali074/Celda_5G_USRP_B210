@@ -13,6 +13,8 @@ services:
         ipv4_address: 10.53.1.4
 
   open5gs:
+    # Sin terminal, 5gc retiene su salida y se pierde si el proceso termina con error.
+    tty: true
     build:
       context: ./docker/open5gs
       args:
@@ -50,6 +52,8 @@ services:
 
   gnb-radio:
     profiles: [radio]
+    tty: true
+    stdin_open: true
     restart: 'no'
     build: &gnb-build
       context: ./docker/gnb

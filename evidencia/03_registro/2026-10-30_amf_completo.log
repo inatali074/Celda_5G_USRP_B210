@@ -1,0 +1,62 @@
+10/30 17:25:03.945: [amf] INFO: InitialUEMessage
+10/30 17:25:03.945: [amf] INFO: [Added] Number of gNB-UEs is now 1
+10/30 17:25:03.945: [amf] INFO:     RAN_UE_NGAP_ID[0] AMF_UE_NGAP_ID[1] TAC[7] CellID[0x66c000]
+10/30 17:25:03.947: [amf] INFO: [suci-0-722-999-0-0-0-000000001] Unknown UE by SUCI
+10/30 17:25:03.947: [amf] INFO: [Added] Number of AMF-UEs is now 1
+10/30 17:25:03.947: [gmm] INFO: Registration request
+10/30 17:25:03.947: [gmm] INFO: [suci-0-722-999-0-0-0-000000001]    SUCI
+10/30 17:25:03.955: [amf] INFO: Setup NF EndPoint(addr) [127.0.0.11:7777]
+10/30 17:25:04.225: [gmm] WARNING: [suci-0-722-999-0-0-0-000000001] Authentication failure [21]
+10/30 17:25:04.225: [gmm] WARNING: [suci-0-722-999-0-0-0-000000001] Authentication failure(Synch failure[count=0])
+10/30 17:25:04.233: [amf] WARNING: UnRef NF EndPoint(addr) [127.0.0.11:7777]
+10/30 17:25:04.233: [amf] INFO: Setup NF EndPoint(addr) [127.0.0.11:7777]
+10/30 17:25:04.738: [amf] INFO: Setup NF EndPoint(addr) [127.0.0.12:7777]
+10/30 17:25:04.744: [amf] INFO: Setup NF EndPoint(addr) [127.0.0.13:7777]
+10/30 17:25:04.941: [gmm] INFO: [imsi-722999000000001] Registration complete
+10/30 17:25:04.941: [amf] INFO: [imsi-722999000000001] Configuration update command
+10/30 17:25:04.941: [gmm] INFO:     UTC [2026-10-30T17:25:04] Timezone[0]/DST[0]
+10/30 17:25:04.941: [gmm] INFO:     LOCAL [2026-10-30T17:25:04] Timezone[0]/DST[0]
+10/30 17:25:07.081: [amf] INFO: UE Context Release [Action:2]
+10/30 17:25:07.081: [amf] INFO:     RAN_UE_NGAP_ID[0] AMF_UE_NGAP_ID[1]
+10/30 17:25:07.081: [amf] INFO:     SUCI[suci-0-722-999-0-0-0-000000001]
+10/30 17:25:07.081: [amf] INFO: [Removed] Number of gNB-UEs is now 0
+10/30 17:25:08.084: [amf] INFO: InitialUEMessage
+10/30 17:25:08.084: [amf] INFO: [Added] Number of gNB-UEs is now 1
+10/30 17:25:08.084: [amf] INFO:     RAN_UE_NGAP_ID[1] AMF_UE_NGAP_ID[2] TAC[7] CellID[0x66c000]
+10/30 17:25:08.084: [amf] INFO: [suci-0-722-999-0-0-0-000000001] Known UE by 5G-S_TMSI[AMF_ID:0x20040,M_TMSI:0xc00002cb]
+10/30 17:25:08.084: [gmm] INFO: [imsi-722999000000001] Deregistration request
+10/30 17:25:08.084: [gmm] INFO: [suci-0-722-999-0-0-0-000000001]    SUCI
+10/30 17:25:08.227: [amf] INFO: UE Context Release [Action:2]
+10/30 17:25:08.227: [amf] INFO:     RAN_UE_NGAP_ID[1] AMF_UE_NGAP_ID[2]
+10/30 17:25:08.227: [amf] INFO:     SUCI[suci-0-722-999-0-0-0-000000001]
+10/30 17:25:08.227: [amf] INFO: [Removed] Number of gNB-UEs is now 0
+10/30 17:26:10.964: [amf] INFO: InitialUEMessage
+10/30 17:26:10.964: [amf] INFO: [Added] Number of gNB-UEs is now 1
+10/30 17:26:10.964: [amf] INFO:     RAN_UE_NGAP_ID[2] AMF_UE_NGAP_ID[3] TAC[7] CellID[0x66c000]
+10/30 17:26:10.964: [amf] INFO: [suci-0-722-34-0-0-0-ANONIMIZADO] Unknown UE by SUCI
+10/30 17:26:10.964: [amf] INFO: [Added] Number of AMF-UEs is now 2
+10/30 17:26:10.964: [gmm] INFO: Registration request
+10/30 17:26:10.964: [gmm] INFO: [suci-0-722-34-0-0-0-ANONIMIZADO]    SUCI
+10/30 17:26:10.969: [gmm] ERROR: [suci-0-722-34-0-0-0-ANONIMIZADO] HTTP response error [400]
+10/30 17:26:10.969: [amf] WARNING: [suci-0-722-34-0-0-0-ANONIMIZADO] Registration reject [95]
+10/30 17:26:10.969: [gmm] WARNING: [(null)] Failure in transaction; no context restoration.
+10/30 17:26:11.105: [amf] INFO: UE Context Release [Action:3]
+10/30 17:26:11.105: [amf] INFO:     RAN_UE_NGAP_ID[2] AMF_UE_NGAP_ID[3]
+10/30 17:26:11.105: [amf] INFO:     SUCI[suci-0-722-34-0-0-0-ANONIMIZADO]
+10/30 17:26:11.105: [amf] INFO: [Removed] Number of gNB-UEs is now 0
+10/30 17:26:11.106: [amf] INFO: [Removed] Number of AMF-UEs is now 1
+10/30 17:26:46.168: [amf] INFO: InitialUEMessage
+10/30 17:26:46.168: [amf] INFO: [Added] Number of gNB-UEs is now 1
+10/30 17:26:46.168: [amf] INFO:     RAN_UE_NGAP_ID[3] AMF_UE_NGAP_ID[4] TAC[7] CellID[0x66c000]
+10/30 17:26:46.169: [amf] INFO: [suci-0-722-34-0-0-0-ANONIMIZADO] Unknown UE by SUCI
+10/30 17:26:46.169: [amf] INFO: [Added] Number of AMF-UEs is now 2
+10/30 17:26:46.169: [gmm] INFO: Registration request
+10/30 17:26:46.169: [gmm] INFO: [suci-0-722-34-0-0-0-ANONIMIZADO]    SUCI
+10/30 17:26:46.171: [gmm] ERROR: [suci-0-722-34-0-0-0-ANONIMIZADO] HTTP response error [400]
+10/30 17:26:46.171: [amf] WARNING: [suci-0-722-34-0-0-0-ANONIMIZADO] Registration reject [95]
+10/30 17:26:46.171: [gmm] WARNING: [(null)] Failure in transaction; no context restoration.
+10/30 17:26:46.260: [amf] INFO: UE Context Release [Action:3]
+10/30 17:26:46.260: [amf] INFO:     RAN_UE_NGAP_ID[3] AMF_UE_NGAP_ID[4]
+10/30 17:26:46.260: [amf] INFO:     SUCI[suci-0-722-34-0-0-0-ANONIMIZADO]
+10/30 17:26:46.260: [amf] INFO: [Removed] Number of gNB-UEs is now 0
+10/30 17:26:46.260: [amf] INFO: [Removed] Number of AMF-UEs is now 1

@@ -1,0 +1,344 @@
+2026-10-30T17:53:43.067014 [GNB     ] [I] Built in Release mode using commit e0db566 on branch HEAD
+2026-10-30T17:53:43.067649 [CONFIG  ] [I] gNB input configuration (only non-default values): 
+log:
+  filename: /tmp/gnb.log
+  all_level: info
+cu_cp:
+  amf:
+    addrs: 10.53.1.2
+    port: 38412
+    bind_addrs: 10.53.1.3
+    supported_tracking_areas: "tac: 7\nplmn_list:\n  - plmn: 722999\n    tai_slice_support_list:\n      - sst: 1"
+pcap:
+  ngap_filename: /tmp/gnb_ngap.pcap
+  ngap_enable: false
+  mac_filename: /tmp/gnb_mac.pcap
+  mac_enable: false
+cu_up:
+  ngu:
+    socket: "bind_addr: 10.53.1.3"
+cell_cfg:
+  pci: 1
+  dl_arfcn: 635000
+  band: 78
+  common_scs: 30
+  channel_bandwidth_MHz: 20
+  plmn: 722999
+  tac: 7
+  pusch:
+    enable_transform_precoding: false
+expert_phy:
+  pusch_channel_estimator_td_strategy: average
+  pusch_channel_estimator_cfo_compensation: true
+ru_sdr:
+  srate: 23.04
+  device_driver: uhd
+  device_args: type=b200
+  tx_gain: 70
+  rx_gain: 40
+  clock_ppm: -1.87
+  otw_format: sc12
+2026-10-30T17:53:43.366486 [GNB     ] [W] CPU0 scaling governor is not set to performance, which may hinder performance. You can set it to performance using the "ocudu_performance" script
+2026-10-30T17:53:43.366502 [GNB     ] [W] CPU1 scaling governor is not set to performance, which may hinder performance. You can set it to performance using the "ocudu_performance" script
+2026-10-30T17:53:43.366512 [GNB     ] [W] CPU2 scaling governor is not set to performance, which may hinder performance. You can set it to performance using the "ocudu_performance" script
+2026-10-30T17:53:43.366525 [GNB     ] [W] CPU3 scaling governor is not set to performance, which may hinder performance. You can set it to performance using the "ocudu_performance" script
+2026-10-30T17:53:43.366546 [GNB     ] [W] DRM KMS polling is enabled, which may hinder performance. You can disable it using the "ocudu_performance" script
+2026-10-30T17:53:43.367360 [CONFIG  ] [I] Worker pool "main_pool" instantiated with #workers=1, task_queue_size=2048, backoff_period=50us and priority=96.
+2026-10-30T17:53:43.398621 [GTPU    ] [I] GTP-U demux. lif=NG-U name=NG-U-DEMUX queue_size=2046 batch_size=256 warn_on_drop=false test_mode=false
+2026-10-30T17:53:43.398795 [GTPU    ] [I] Tunnel added. teid=0x000000
+2026-10-30T17:53:47.695346 [CONFIG  ] [I] The upper-bound on the number of UEs supported by cell {pci=1, du_cell_index=0} is 96 (the actual number might be lower than that). This is determined by the lowest of the following limits: SR (96), CSI (96), SRS (n/a) and UE contexts per cell (1984). Up to 160 UE contexts can be created in the cell, the extra ones being used to RRC Reject UEs.
+2026-10-30T17:53:47.697222 [DU      ] [I] DU created successfully
+2026-10-30T17:53:47.697240 [DU      ] [I] O-DU created successfully
+2026-10-30T17:53:52.653558 [GNB     ] [I] SSB derived parameters for cell: 1, band: 78, dl_arfcn:635000, nof_crbs: 51 scs:30kHz, ssb_scs:30kHz:
+	 - SSB offset pointA:2 
+	 - k_SSB:4 
+	 - SSB arfcn:634656 
+	 - Coreset index:1 
+	 - Searchspace index:0
+2026-10-30T17:53:52.653631 [GNB     ] [I] Starting CU-CP...
+2026-10-30T17:53:52.653964 [CU-CP   ] [I] N2: Connection to AMF on 10.53.1.2:38412 was established
+2026-10-30T17:53:52.654057 [NGAP    ] [I] "NG Setup Procedure" started...
+2026-10-30T17:53:52.654065 [NGAP    ] [I] Tx PDU: NGSetupRequest
+2026-10-30T17:53:52.656681 [NGAP    ] [I] Rx PDU: NGSetupResponse
+2026-10-30T17:53:52.656702 [NGAP    ] [I] "NG Setup Procedure" finished successfully
+2026-10-30T17:53:52.656716 [CU-CP   ] [I] Connected to AMF. Supported PLMNs: 722999 
+2026-10-30T17:53:52.656733 [GNB     ] [I] CU-CP started successfully
+2026-10-30T17:53:52.656736 [CU-UP   ] [I] CU-UP starting...
+2026-10-30T17:53:52.656840 [CU-UP-E1] [I] e1=0: Tx PDU tid=0 GNB-CU-UP-E1SetupRequest
+2026-10-30T17:53:52.656853 [CU-CP   ] [I] Added TNL connection to CU-UP 0
+2026-10-30T17:53:52.656859 [CU-CP-E1] [I] Rx PDU tid=0: GNB-CU-UP-E1SetupRequest
+2026-10-30T17:53:52.656866 [CU-CP-E1] [I] Tx PDU tid=0: GNB-CU-UP-E1SetupResponse
+2026-10-30T17:53:52.656869 [CU-UP-E1] [I] e1=0: Rx PDU tid=0 GNB-CU-UP-E1SetupResponse
+2026-10-30T17:53:52.656872 [CU-UP-E1] [I] e1=0: "E1AP CU-UP Setup Procedure" finalized
+2026-10-30T17:53:52.656883 [CU-UP   ] [I] CU-UP started successfully
+2026-10-30T17:53:52.656886 [DU      ] [I] Starting DU...
+2026-10-30T17:53:52.656887 [DU      ] [I] Starting DU-High...
+2026-10-30T17:53:52.677461 [DU-MNG  ] [I] SIB1 cell=0: {
+  "cellSelectionInfo": {
+    "q-RxLevMin": -70,
+    "q-QualMin": -20
+  },
+  "cellAccessRelatedInfo": {
+    "plmn-IdentityInfoList": [
+      {
+        "plmn-IdentityList": [
+          {
+            "mcc": [
+              7,
+              2,
+              2
+            ],
+            "mnc": [
+              9,
+              9,
+              9
+            ]
+          }
+        ],
+        "trackingAreaCode": "000000000000000000000111",
+        "cellIdentity": "000000000000011001101100000000000000",
+        "cellReservedForOperatorUse": "notReserved"
+      }
+    ]
+  },
+  "connEstFailureControl": {
+    "connEstFailCount": "n1",
+    "connEstFailOffsetValidity": "s30",
+    "connEstFailOffset": 1
+  },
+  "servingCellConfigCommon": {
+    "downlinkConfigCommon": {
+      "frequencyInfoDL": {
+        "frequencyBandList": [
+          {
+            "freqBandIndicatorNR": 78
+          }
+        ],
+        "offsetToPointA": 2,
+        "scs-SpecificCarrierList": [
+          {
+            "offsetToCarrier": 0,
+            "subcarrierSpacing": "kHz30",
+            "carrierBandwidth": 51,
+            "txDirectCurrentLocation": 306
+          }
+        ]
+      },
+      "initialDownlinkBWP": {
+        "genericParameters": {
+          "locationAndBandwidth": 13750,
+          "subcarrierSpacing": "kHz30"
+        },
+        "pdcch-ConfigCommon": {
+          {
+            "commonSearchSpaceList": [
+              {
+                "searchSpaceId": 1,
+                "controlResourceSetId": 0,
+                "monitoringSlotPeriodicityAndOffset": {
+                },
+                "monitoringSymbolsWithinSlot": "10000000000000",
+                "nrofCandidates": {
+                  "aggregationLevel1": "n0",
+                  "aggregationLevel2": "n0",
+                  "aggregationLevel4": "n2",
+                  "aggregationLevel8": "n0",
+                  "aggregationLevel16": "n0"
+                },
+                "searchSpaceType": {
+                  "common": {
+                    "dci-Format0-0-AndFormat1-0": {
+                    }
+                  }
+                }
+              }
+            ],
+            "searchSpaceSIB1": 0,
+            "pagingSearchSpace": 1,
+            "ra-SearchSpace": 1
+          }
+        },
+        "pdsch-ConfigCommon": {
+          {
+            "pdsch-TimeDomainAllocationList": [
+              {
+                "mappingType": "typeA",
+                "startSymbolAndLength": 53
+              },
+              {
+                "mappingType": "typeA",
+                "startSymbolAndLength": 72
+              }
+            ]
+          }
+        }
+      },
+      "bcch-Config": {
+        "modificationPeriodCoeff": "n4"
+      },
+      "pcch-Config": {
+        "defaultPagingCycle": "rf128",
+        "nAndPagingFrameOffset": {
+        },
+        "ns": "one"
+      }
+    },
+    "uplinkConfigCommon": {
+      "frequencyInfoUL": {
+        "frequencyBandList": [
+          {
+            "freqBandIndicatorNR": 78
+          }
+        ],
+        "absoluteFrequencyPointA": 634388,
+        "scs-SpecificCarrierList": [
+          {
+            "offsetToCarrier": 0,
+            "subcarrierSpacing": "kHz30",
+            "carrierBandwidth": 51
+          }
+        ]
+      },
+      "initialUplinkBWP": {
+        "genericParameters": {
+          "locationAndBandwidth": 13750,
+          "subcarrierSpacing": "kHz30"
+        },
+        "rach-ConfigCommon": {
+          {
+            "rach-ConfigGeneric": {
+              "prach-ConfigurationIndex": 159,
+              "msg1-FDM": "one",
+              "msg1-FrequencyStart": 11,
+              "zeroCorrelationZoneConfig": 0,
+              "preambleReceivedTargetPower": -100,
+              "preambleTransMax": "n7",
+              "powerRampingStep": "dB4",
+              "ra-ResponseWindow": "sl20"
+            },
+            "ssb-perRACH-OccasionAndCB-PreamblesPerSSB": {
+              "one": "n64"
+            },
+            "ra-ContentionResolutionTimer": "sf64",
+            "prach-RootSequenceIndex": {
+              "l139": 1
+            },
+            "msg1-SubcarrierSpacing": "kHz30",
+            "restrictedSetConfig": "unrestrictedSet"
+          }
+        },
+        "pusch-ConfigCommon": {
+          {
+            "pusch-TimeDomainAllocationList": [
+              {
+                "k2": 4,
+                "mappingType": "typeA",
+                "startSymbolAndLength": 27
+              },
+              {
+                "k2": 5,
+                "mappingType": "typeA",
+                "startSymbolAndLength": 27
+              },
+              {
+                "k2": 6,
+                "mappingType": "typeA",
+                "startSymbolAndLength": 27
+              },
+              {
+                "k2": 7,
+                "mappingType": "typeA",
+                "startSymbolAndLength": 27
+              },
+              {
+                "k2": 11,
+                "mappingType": "typeA",
+                "startSymbolAndLength": 27
+              }
+            ],
+            "msg3-DeltaPreamble": 6,
+            "p0-NominalWithGrant": -76
+          }
+        },
+        "pucch-ConfigCommon": {
+          {
+            "pucch-ResourceCommon": 11,
+            "pucch-GroupHopping": "neither",
+            "p0-nominal": -90
+          }
+        }
+      },
+      "timeAlignmentTimerCommon": "infinity"
+    },
+    "n-TimingAdvanceOffset": "n25600",
+    "ssb-PositionsInBurst": {
+      "inOneGroup": "10000000"
+    },
+    "ssb-PeriodicityServingCell": "ms10",
+    "tdd-UL-DL-ConfigurationCommon": {
+      "referenceSubcarrierSpacing": "kHz30",
+      "pattern1": {
+        "dl-UL-TransmissionPeriodicity": "ms5",
+        "nrofDownlinkSlots": 6,
+        "nrofDownlinkSymbols": 8,
+        "nrofUplinkSlots": 3,
+        "nrofUplinkSymbols": 0
+      }
+    },
+    "ss-PBCH-BlockPower": -16
+  },
+  "ims-EmergencySupport": "true",
+  "eCallOverIMS-Support": "true",
+  "ue-TimersAndConstants": {
+    "t300": "ms1000",
+    "t301": "ms1000",
+    "t310": "ms1000",
+    "n310": "n1",
+    "t311": "ms3000",
+    "n311": "n1",
+    "t319": "ms1000"
+  }
+}
+2026-10-30T17:53:52.677560 [DU-F1   ] [I] F1 Setup: Sending F1 Setup Request to CU-CP...
+2026-10-30T17:53:52.677562 [DU-F1   ] [I] Tx PDU du=0 tid=0: F1SetupRequest
+2026-10-30T17:53:52.677646 [CU-CP   ] [I] Added TNL connection to DU 0
+2026-10-30T17:53:52.677662 [CU-CP-F1] [I] Rx PDU du=0 tid=0: F1SetupRequest
+2026-10-30T17:53:52.677730 [CU-CP   ] [I] Logical cell nci=0x66c000 realized by du=0 (admin_state=unlocked barred=false)
+2026-10-30T17:53:52.677731 [CU-CP   ] [I] Logical cell nci=0x66c000 operational_state: disabled -> enabled
+2026-10-30T17:53:52.677743 [CU-CP-F1] [I] Tx PDU du=0 tid=0: F1SetupResponse
+2026-10-30T17:53:52.677749 [DU-F1   ] [I] Rx PDU du=0 tid=0: F1SetupResponse
+2026-10-30T17:53:52.677756 [DU-F1   ] [I] F1 Setup: Procedure completed successfully.
+2026-10-30T17:53:52.677763 [SCHED   ] [I] [     0.0] cell=0: Cell scheduling was activated.
+2026-10-30T17:53:52.677768 [MAC     ] [I] [     0.0] cell=0: Cell was activated
+2026-10-30T17:53:52.677779 [DU      ] [I] DU-High started successfully
+2026-10-30T17:53:52.677783 [DU      ] [I] DU started successfully
+2026-10-30T17:53:52.678150 [SCHED   ] [I] [   488.7] Processed slot events pci=1: Cell creation idx=0
+2026-10-30T17:53:52.678170 [GNB     ] [I] ==== gNB started ===
+2026-10-30T17:55:32.946537 [GNB     ] [I] Stopping...
+2026-10-30T17:55:32.959682 [DU      ] [I] Stopping DU...
+2026-10-30T17:55:32.959683 [DU      ] [I] Stopping DU-High...
+2026-10-30T17:55:32.959797 [SCHED   ] [I] [  265.17] cell=0: Cell scheduling was deactivated.
+2026-10-30T17:55:32.959887 [MAC     ] [I] [  265.17] cell=0: Cell was stopped.
+2026-10-30T17:55:32.959901 [DU-F1   ] [I] Tx PDU du=0 tid=1: F1RemovalRequest
+2026-10-30T17:55:32.959916 [CU-CP-F1] [I] Rx PDU du=0 tid=1: F1RemovalRequest
+2026-10-30T17:55:32.959922 [CU-CP-F1] [I] Tx PDU du=0 tid=1: F1RemovalResponse
+2026-10-30T17:55:32.959924 [DU-F1   ] [I] Rx PDU du=0 tid=1: F1RemovalResponse
+2026-10-30T17:55:32.959934 [CU-CP   ] [I] Logical cell nci=0x66c000 de-realized. Operator intent kept (admin_state=unlocked barred=false)
+2026-10-30T17:55:32.959945 [CU-CP   ] [I] Removed DU 0
+2026-10-30T17:55:32.959948 [DU-F1   ] [I] F1 Removal: F1 TNL association shut down
+2026-10-30T17:55:32.959958 [DU      ] [I] DU-High stopped successfully
+2026-10-30T17:55:32.959958 [DU      ] [I] DU stopped successfully
+2026-10-30T17:55:32.960019 [CU-UP-E1] [I] e1=0: Tx PDU tid=1 E1ReleaseRequest
+2026-10-30T17:55:32.960024 [CU-CP-E1] [I] Rx PDU tid=1: E1ReleaseRequest
+2026-10-30T17:55:32.960026 [CU-CP-E1] [I] "E1 Release Procedure" started...
+2026-10-30T17:55:32.960029 [CU-CP-E1] [I] Tx PDU tid=1: E1ReleaseResponse
+2026-10-30T17:55:32.960031 [CU-CP-E1] [I] "E1 Release Procedure" finished successfully
+2026-10-30T17:55:32.960033 [CU-UP-E1] [I] e1=0: Rx PDU tid=1 E1ReleaseResponse
+2026-10-30T17:55:32.960040 [CU-CP   ] [I] Removed CU-UP 0
+2026-10-30T17:55:32.960042 [CU-UP-E1] [I] e1=0: E1AP CU-UP Release Procedure: E1 TNL association shut down
+2026-10-30T17:55:32.960280 [CU-UP   ] [I] CU-UP stopped successfully
+2026-10-30T17:55:32.960289 [CU-CP   ] [I] Stopping CU-CP...
+2026-10-30T17:55:32.960691 [CU-CP   ] [I] CU-CP stopped successfully
+2026-10-30T17:55:32.991145 [GNB     ] [I] Closing PCAP files...
+2026-10-30T17:55:32.991150 [GNB     ] [I] PCAP files successfully closed.
+(END)

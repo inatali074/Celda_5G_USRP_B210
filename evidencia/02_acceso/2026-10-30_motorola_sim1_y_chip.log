@@ -1,0 +1,659 @@
+2026-10-30T17:57:42.957996 [GNB     ] [I] Built in Release mode using commit e0db566 on branch HEAD
+2026-10-30T17:57:42.958635 [CONFIG  ] [I] gNB input configuration (only non-default values): 
+log:
+  filename: /tmp/gnb.log
+  all_level: info
+cu_cp:
+  amf:
+    addrs: 10.53.1.2
+    port: 38412
+    bind_addrs: 10.53.1.3
+    supported_tracking_areas: "tac: 7\nplmn_list:\n  - plmn: 722999\n    tai_slice_support_list:\n      - sst: 1"
+pcap:
+  ngap_filename: /tmp/gnb_ngap.pcap
+  ngap_enable: false
+  mac_filename: /tmp/gnb_mac.pcap
+  mac_enable: false
+cu_up:
+  ngu:
+    socket: "bind_addr: 10.53.1.3"
+cell_cfg:
+  pci: 1
+  dl_arfcn: 635000
+  band: 78
+  common_scs: 30
+  channel_bandwidth_MHz: 20
+  plmn: 722999
+  tac: 7
+  pusch:
+    enable_transform_precoding: false
+expert_phy:
+  pusch_channel_estimator_td_strategy: average
+  pusch_channel_estimator_cfo_compensation: true
+ru_sdr:
+  srate: 23.04
+  device_driver: uhd
+  device_args: type=b200
+  tx_gain: 70
+  rx_gain: 40
+  clock_ppm: -1.87
+  otw_format: sc12
+2026-10-30T17:57:43.269358 [GNB     ] [W] CPU0 scaling governor is not set to performance, which may hinder performance. You can set it to performance using the "ocudu_performance" script
+2026-10-30T17:57:43.269375 [GNB     ] [W] CPU1 scaling governor is not set to performance, which may hinder performance. You can set it to performance using the "ocudu_performance" script
+2026-10-30T17:57:43.269387 [GNB     ] [W] CPU2 scaling governor is not set to performance, which may hinder performance. You can set it to performance using the "ocudu_performance" script
+2026-10-30T17:57:43.269399 [GNB     ] [W] CPU3 scaling governor is not set to performance, which may hinder performance. You can set it to performance using the "ocudu_performance" script
+2026-10-30T17:57:43.269421 [GNB     ] [W] DRM KMS polling is enabled, which may hinder performance. You can disable it using the "ocudu_performance" script
+2026-10-30T17:57:43.270255 [CONFIG  ] [I] Worker pool "main_pool" instantiated with #workers=1, task_queue_size=2048, backoff_period=50us and priority=96.
+2026-10-30T17:57:43.301703 [GTPU    ] [I] GTP-U demux. lif=NG-U name=NG-U-DEMUX queue_size=2046 batch_size=256 warn_on_drop=false test_mode=false
+2026-10-30T17:57:43.301888 [GTPU    ] [I] Tunnel added. teid=0x000000
+2026-10-30T17:57:47.515186 [CONFIG  ] [I] The upper-bound on the number of UEs supported by cell {pci=1, du_cell_index=0} is 96 (the actual number might be lower than that). This is determined by the lowest of the following limits: SR (96), CSI (96), SRS (n/a) and UE contexts per cell (1984). Up to 160 UE contexts can be created in the cell, the extra ones being used to RRC Reject UEs.
+2026-10-30T17:57:47.516791 [DU      ] [I] DU created successfully
+2026-10-30T17:57:47.516805 [DU      ] [I] O-DU created successfully
+2026-10-30T17:57:52.342498 [GNB     ] [I] SSB derived parameters for cell: 1, band: 78, dl_arfcn:635000, nof_crbs: 51 scs:30kHz, ssb_scs:30kHz:
+	 - SSB offset pointA:2 
+	 - k_SSB:4 
+	 - SSB arfcn:634656 
+	 - Coreset index:1 
+	 - Searchspace index:0
+2026-10-30T17:57:52.342570 [GNB     ] [I] Starting CU-CP...
+2026-10-30T17:57:52.342990 [CU-CP   ] [I] N2: Connection to AMF on 10.53.1.2:38412 was established
+2026-10-30T17:57:52.343091 [NGAP    ] [I] "NG Setup Procedure" started...
+2026-10-30T17:57:52.343097 [NGAP    ] [I] Tx PDU: NGSetupRequest
+2026-10-30T17:57:52.346057 [NGAP    ] [I] Rx PDU: NGSetupResponse
+2026-10-30T17:57:52.346080 [NGAP    ] [I] "NG Setup Procedure" finished successfully
+2026-10-30T17:57:52.346094 [CU-CP   ] [I] Connected to AMF. Supported PLMNs: 722999 
+2026-10-30T17:57:52.346113 [GNB     ] [I] CU-CP started successfully
+2026-10-30T17:57:52.346115 [CU-UP   ] [I] CU-UP starting...
+2026-10-30T17:57:52.346217 [CU-UP-E1] [I] e1=0: Tx PDU tid=0 GNB-CU-UP-E1SetupRequest
+2026-10-30T17:57:52.346231 [CU-CP   ] [I] Added TNL connection to CU-UP 0
+2026-10-30T17:57:52.346238 [CU-CP-E1] [I] Rx PDU tid=0: GNB-CU-UP-E1SetupRequest
+2026-10-30T17:57:52.346242 [CU-CP-E1] [I] Tx PDU tid=0: GNB-CU-UP-E1SetupResponse
+2026-10-30T17:57:52.346247 [CU-UP-E1] [I] e1=0: Rx PDU tid=0 GNB-CU-UP-E1SetupResponse
+2026-10-30T17:57:52.346250 [CU-UP-E1] [I] e1=0: "E1AP CU-UP Setup Procedure" finalized
+2026-10-30T17:57:52.346257 [CU-UP   ] [I] CU-UP started successfully
+2026-10-30T17:57:52.346263 [DU      ] [I] Starting DU...
+2026-10-30T17:57:52.346263 [DU      ] [I] Starting DU-High...
+2026-10-30T17:57:52.368450 [DU-MNG  ] [I] SIB1 cell=0: {
+  "cellSelectionInfo": {
+    "q-RxLevMin": -70,
+    "q-QualMin": -20
+  },
+  "cellAccessRelatedInfo": {
+    "plmn-IdentityInfoList": [
+      {
+        "plmn-IdentityList": [
+          {
+            "mcc": [
+              7,
+              2,
+              2
+            ],
+            "mnc": [
+              9,
+              9,
+              9
+            ]
+          }
+        ],
+        "trackingAreaCode": "000000000000000000000111",
+        "cellIdentity": "000000000000011001101100000000000000",
+        "cellReservedForOperatorUse": "notReserved"
+      }
+    ]
+  },
+  "connEstFailureControl": {
+    "connEstFailCount": "n1",
+    "connEstFailOffsetValidity": "s30",
+    "connEstFailOffset": 1
+  },
+  "servingCellConfigCommon": {
+    "downlinkConfigCommon": {
+      "frequencyInfoDL": {
+        "frequencyBandList": [
+          {
+            "freqBandIndicatorNR": 78
+          }
+        ],
+        "offsetToPointA": 2,
+        "scs-SpecificCarrierList": [
+          {
+            "offsetToCarrier": 0,
+            "subcarrierSpacing": "kHz30",
+            "carrierBandwidth": 51,
+            "txDirectCurrentLocation": 306
+          }
+        ]
+      },
+      "initialDownlinkBWP": {
+        "genericParameters": {
+          "locationAndBandwidth": 13750,
+          "subcarrierSpacing": "kHz30"
+        },
+        "pdcch-ConfigCommon": {
+          {
+            "commonSearchSpaceList": [
+              {
+                "searchSpaceId": 1,
+                "controlResourceSetId": 0,
+                "monitoringSlotPeriodicityAndOffset": {
+                },
+                "monitoringSymbolsWithinSlot": "10000000000000",
+                "nrofCandidates": {
+                  "aggregationLevel1": "n0",
+                  "aggregationLevel2": "n0",
+                  "aggregationLevel4": "n2",
+                  "aggregationLevel8": "n0",
+                  "aggregationLevel16": "n0"
+                },
+                "searchSpaceType": {
+                  "common": {
+                    "dci-Format0-0-AndFormat1-0": {
+                    }
+                  }
+                }
+              }
+            ],
+            "searchSpaceSIB1": 0,
+            "pagingSearchSpace": 1,
+            "ra-SearchSpace": 1
+          }
+        },
+        "pdsch-ConfigCommon": {
+          {
+            "pdsch-TimeDomainAllocationList": [
+              {
+                "mappingType": "typeA",
+                "startSymbolAndLength": 53
+              },
+              {
+                "mappingType": "typeA",
+                "startSymbolAndLength": 72
+              }
+            ]
+          }
+        }
+      },
+      "bcch-Config": {
+        "modificationPeriodCoeff": "n4"
+      },
+      "pcch-Config": {
+        "defaultPagingCycle": "rf128",
+        "nAndPagingFrameOffset": {
+        },
+        "ns": "one"
+      }
+    },
+    "uplinkConfigCommon": {
+      "frequencyInfoUL": {
+        "frequencyBandList": [
+          {
+            "freqBandIndicatorNR": 78
+          }
+        ],
+        "absoluteFrequencyPointA": 634388,
+        "scs-SpecificCarrierList": [
+          {
+            "offsetToCarrier": 0,
+            "subcarrierSpacing": "kHz30",
+            "carrierBandwidth": 51
+          }
+        ]
+      },
+      "initialUplinkBWP": {
+        "genericParameters": {
+          "locationAndBandwidth": 13750,
+          "subcarrierSpacing": "kHz30"
+        },
+        "rach-ConfigCommon": {
+          {
+            "rach-ConfigGeneric": {
+              "prach-ConfigurationIndex": 159,
+              "msg1-FDM": "one",
+              "msg1-FrequencyStart": 11,
+              "zeroCorrelationZoneConfig": 0,
+              "preambleReceivedTargetPower": -100,
+              "preambleTransMax": "n7",
+              "powerRampingStep": "dB4",
+              "ra-ResponseWindow": "sl20"
+            },
+            "ssb-perRACH-OccasionAndCB-PreamblesPerSSB": {
+              "one": "n64"
+            },
+            "ra-ContentionResolutionTimer": "sf64",
+            "prach-RootSequenceIndex": {
+              "l139": 1
+            },
+            "msg1-SubcarrierSpacing": "kHz30",
+            "restrictedSetConfig": "unrestrictedSet"
+          }
+        },
+        "pusch-ConfigCommon": {
+          {
+            "pusch-TimeDomainAllocationList": [
+              {
+                "k2": 4,
+                "mappingType": "typeA",
+                "startSymbolAndLength": 27
+              },
+              {
+                "k2": 5,
+                "mappingType": "typeA",
+                "startSymbolAndLength": 27
+              },
+              {
+                "k2": 6,
+                "mappingType": "typeA",
+                "startSymbolAndLength": 27
+              },
+              {
+                "k2": 7,
+                "mappingType": "typeA",
+                "startSymbolAndLength": 27
+              },
+              {
+                "k2": 11,
+                "mappingType": "typeA",
+                "startSymbolAndLength": 27
+              }
+            ],
+            "msg3-DeltaPreamble": 6,
+            "p0-NominalWithGrant": -76
+          }
+        },
+        "pucch-ConfigCommon": {
+          {
+            "pucch-ResourceCommon": 11,
+            "pucch-GroupHopping": "neither",
+            "p0-nominal": -90
+          }
+        }
+      },
+      "timeAlignmentTimerCommon": "infinity"
+    },
+    "n-TimingAdvanceOffset": "n25600",
+    "ssb-PositionsInBurst": {
+      "inOneGroup": "10000000"
+    },
+    "ssb-PeriodicityServingCell": "ms10",
+    "tdd-UL-DL-ConfigurationCommon": {
+      "referenceSubcarrierSpacing": "kHz30",
+      "pattern1": {
+        "dl-UL-TransmissionPeriodicity": "ms5",
+        "nrofDownlinkSlots": 6,
+        "nrofDownlinkSymbols": 8,
+        "nrofUplinkSlots": 3,
+        "nrofUplinkSymbols": 0
+      }
+    },
+    "ss-PBCH-BlockPower": -16
+  },
+  "ims-EmergencySupport": "true",
+  "eCallOverIMS-Support": "true",
+  "ue-TimersAndConstants": {
+    "t300": "ms1000",
+    "t301": "ms1000",
+    "t310": "ms1000",
+    "n310": "n1",
+    "t311": "ms3000",
+    "n311": "n1",
+    "t319": "ms1000"
+  }
+}
+2026-10-30T17:57:52.368565 [DU-F1   ] [I] F1 Setup: Sending F1 Setup Request to CU-CP...
+2026-10-30T17:57:52.368566 [DU-F1   ] [I] Tx PDU du=0 tid=0: F1SetupRequest
+2026-10-30T17:57:52.368660 [CU-CP   ] [I] Added TNL connection to DU 0
+2026-10-30T17:57:52.368677 [CU-CP-F1] [I] Rx PDU du=0 tid=0: F1SetupRequest
+2026-10-30T17:57:52.368753 [CU-CP   ] [I] Logical cell nci=0x66c000 realized by du=0 (admin_state=unlocked barred=false)
+2026-10-30T17:57:52.368754 [CU-CP   ] [I] Logical cell nci=0x66c000 operational_state: disabled -> enabled
+2026-10-30T17:57:52.368768 [CU-CP-F1] [I] Tx PDU du=0 tid=0: F1SetupResponse
+2026-10-30T17:57:52.368775 [DU-F1   ] [I] Rx PDU du=0 tid=0: F1SetupResponse
+2026-10-30T17:57:52.368783 [DU-F1   ] [I] F1 Setup: Procedure completed successfully.
+2026-10-30T17:57:52.368792 [SCHED   ] [I] [     0.0] cell=0: Cell scheduling was activated.
+2026-10-30T17:57:52.368797 [MAC     ] [I] [     0.0] cell=0: Cell was activated
+2026-10-30T17:57:52.368807 [DU      ] [I] DU-High started successfully
+2026-10-30T17:57:52.368816 [DU      ] [I] DU started successfully
+2026-10-30T17:57:52.369198 [SCHED   ] [I] [  475.15] Processed slot events pci=1: Cell creation idx=0
+2026-10-30T17:57:52.372013 [GNB     ] [I] ==== gNB started ===
+2026-10-30T18:01:48.124826 [PHY     ] [I] [  488.19] PRACH: rsi=1 rssi=-30.5dB detected_preambles=[{idx=54 ta=7.94us detection_metric=71.8 power_dB=-30.60}] t=132.0us
+2026-10-30T18:01:48.125221 [SCHED   ] [I] [   489.8] Processed slot events pci=1: prach(ra-rnti=0x10b preamble=54 ssb=0 tc-rnti=0x4601)
+2026-10-30T18:01:48.126204 [SCHED   ] [I] [  489.10] Slot decisions pci=1 t=2us (1 PDSCH, 0 PUSCHs, 0 PUCCHs): RAR: ra-rnti=0x10b rb=[0..3) tbs=9
+2026-10-30T18:01:48.126282 [PHY     ] [I] [  489.10] PDCCH: rnti=0x10b ss_id=1 format=1_0 cce=0 al=4 t=30.0us
+2026-10-30T18:01:48.126315 [PHY     ] [I] [  489.10] PDSCH: rnti=0x10b prb=[0, 3) symb=[2, 14) mod=QPSK rv=0 bg=BG2 tbs=9 t=28.6us
+2026-10-30T18:01:48.129769 [SCHED   ] [I] [  489.17] Slot decisions pci=1 t=8us (0 PDSCHs, 1 PUSCH, 0 PUCCHs): UL: ue=invalid rnti=0x4601 h_id=0 ss_id=1 rb=[8..11) newtx=true rv=0 tbs=11 msg3_delay=7
+2026-10-30T18:01:48.133941 [PHY     ] [I] [  489.17] PUSCH: rnti=0x4601 harq_id=0 prb=[8, 11) symb=[0, 14) mod=QPSK rv=0 tbs=11 crc=OK iter=1.0 sinr=25.3dB t=119.9us uci_t=0.0us ret_t=8.3us
+2026-10-30T18:01:48.133960 [MAC     ] [I] [   490.5] UL rnti=0x4601 subPDUs: [CCCH48: len=6, PAD: len=3]
+2026-10-30T18:01:48.133978 [DU-MNG  ] [I] ue=0 rnti=0x4601 proc="UE Create": Procedure started....
+2026-10-30T18:01:48.134239 [DU-F1   ] [I] ue=0 c-rnti=0x4601 du_ue=0: F1 UE context created successfully.
+2026-10-30T18:01:48.134275 [RLC     ] [I] du=0 ue=0 SRB0 DL: RLC TM created. queue_size=8
+2026-10-30T18:01:48.134281 [RLC     ] [I] du=0 ue=0 SRB0 UL: RLC TM created. 
+2026-10-30T18:01:48.134317 [RLC     ] [I] du=0 ue=0 SRB1 DL: RLC AM configured. tx_sn_size=12 pdcp_sn_len=12 t_poll_retx=45 max_retx=8 poll_pdu=-1 poll_byte=-1 queue_size=32 queue_size_bytes=64000 max_window=0
+2026-10-30T18:01:48.134331 [RLC     ] [I] du=0 ue=0 SRB1 UL: RLC AM configured. rx_sn_size=12 t_reassembly=35 t_status_prohibit=0 max_sn_per_status={na}
+2026-10-30T18:01:48.135047 [MAC     ] [I] [   490.7] ue=0 crnti=0x4601 proc="MAC UE Creation": finished successfully
+2026-10-30T18:01:48.135052 [DU-MNG  ] [I] ue=0 rnti=0x4601 proc="UE Create": Procedure finished successfully.
+2026-10-30T18:01:48.135063 [RLC     ] [I] du=0 ue=0 SRB0 UL: RX SDU. sdu_len=6
+2026-10-30T18:01:48.135076 [DU-F1   ] [I] Tx PDU du=0 tid=1 ue=0 du_ue=0: InitialULRRCMessageTransfer
+2026-10-30T18:01:48.135086 [CU-CP-F1] [I] Rx PDU du=0 tid=1 du_ue=0: InitialULRRCMessageTransfer
+2026-10-30T18:01:48.135100 [CU-UEMNG] [I] ue=0 du_index=0: Created new CU-CP UE
+2026-10-30T18:01:48.135221 [CU-CP   ] [I] ue=0 c-rnti=0x4601: UE created
+2026-10-30T18:01:48.135223 [CU-CP-F1] [I] ue=0 du_ue=0 cu_ue=0: Added UE context
+2026-10-30T18:01:48.135237 [RRC     ] [I] ue=0 c-rnti=0x4601: CCCH UL rrcSetupRequest
+2026-10-30T18:01:48.135243 [RRC     ] [I] ue=0 c-rnti=0x4601: "RRC Setup Procedure" started...
+2026-10-30T18:01:48.135307 [PDCP    ] [I] ue=0 SRB1 DL: PDCP configured. rb_type=SRB rlc_mode=AM sn_size=12 discard_timer=infinity count_notify=3221225472 count_max=4294967294 warn_on_drop=false test_mode=false
+2026-10-30T18:01:48.135405 [PDCP    ] [I] ue=0 SRB1 UL: PDCP configured. rb_type=SRB rlc_mode=AM sn_size=12 t_reordering=infinity count_notify=3221225472 count_max=4294967294 warn_on_drop=false
+2026-10-30T18:01:48.135458 [RRC     ] [I] ue=0 c-rnti=0x4601: CCCH DL rrcSetup
+2026-10-30T18:01:48.135484 [CU-CP-F1] [I] Tx PDU du=0 ue=0 cu_ue=0 du_ue=0: DLRRCMessageTransfer
+2026-10-30T18:01:48.135520 [DU-F1   ] [I] Rx PDU du=0 ue=0 cu_ue=0 du_ue=0: DLRRCMessageTransfer
+2026-10-30T18:01:48.135528 [RLC     ] [I] du=0 ue=0 SRB0 DL: TX SDU. sdu_len=302 queued_sdus=1 queued_bytes=302
+2026-10-30T18:01:48.136262 [SCHED   ] [I] [  490.10] Slot decisions pci=1 t=20us (1 PDSCH, 0 PUSCHs, 0 PUCCHs): DL: ue=0 c-rnti=0x4601 h_id=0 ss_id=1 rb=[0..23) k1=7 cw[0]: newtx=true rv=0 tbs=317 ri=1 dl_bo=0
+2026-10-30T18:01:48.136309 [RLC     ] [I] du=0 ue=0 SRB0 DL: TX PDU. pdu_len=302 grant_len=307
+2026-10-30T18:01:48.136314 [MAC     ] [I] [  490.10] DL PDU: ue=0 rnti=0x4601 size=317: CON_RES: id=15d31284dea6, SDU: lcid=0 nof_sdus=1 total_size=305
+2026-10-30T18:01:48.136355 [PHY     ] [I] [  490.10] PDCCH: rnti=0x4601 ss_id=1 format=1_0 cce=0 al=4 t=31.8us
+2026-10-30T18:01:48.136424 [PHY     ] [I] [  490.10] PDSCH: rnti=0x4601 h_id=0 k1=7 prb=[0, 23) symb=[2, 14) mod=QPSK rv=0 bg=BG2 tbs=317 t=48.5us
+2026-10-30T18:01:48.138755 [PHY     ] [I] [   490.7] PUCCH: rnti=0x4601 format=1 prb1=4 prb2=na symb=[0, 14) cs=0 occ=0 sr=no metric=0.1 sinr=-25.7dB t=26.9us
+2026-10-30T18:01:48.139032 [PHY     ] [I] [   490.8] PUCCH: rnti=0x4601 format=2 prb=[7, 8) prb2=na symb=[4, 6) csi1=2222 sinr=-1.9dB t=48.8us
+2026-10-30T18:01:48.143719 [PHY     ] [I] [  490.17] PUCCH: rnti=0x4601 format=1 prb1=0 prb2=50 symb=[0, 14) cs=0 occ=0 ack=1 metric=2895.6 sinr=22.8dB t=26.8us
+2026-10-30T18:01:48.158715 [PHY     ] [I] [   492.7] PUCCH: rnti=0x4601 format=1 prb1=4 prb2=na symb=[0, 14) cs=0 occ=0 sr=yes metric=7619.0 sinr=24.6dB t=26.0us
+2026-10-30T18:01:48.159004 [PHY     ] [I] [   492.8] PUCCH: rnti=0x4601 format=2 prb=[7, 8) prb2=na symb=[4, 6) csi1=2222 sinr=-2.4dB t=58.9us
+2026-10-30T18:01:48.162732 [PHY     ] [I] [   493.3] PDCCH: rnti=0x4601 ss_id=1 format=0_0 cce=0 al=4 t=31.9us
+2026-10-30T18:01:48.164681 [SCHED   ] [I] [   493.7] Slot decisions pci=1 t=6us (0 PDSCHs, 1 PUSCH, 0 PUCCHs): UL: ue=0 rnti=0x4601 h_id=0 ss_id=1 rb=[8..32) newtx=true rv=0 tbs=528 k2=4
+2026-10-30T18:01:48.168889 [PHY     ] [I] [   493.7] PUSCH: rnti=0x4601 harq_id=0 prb=[8, 32) symb=[0, 14) mod=QPSK rv=0 tbs=528 crc=OK iter=2.0 sinr=25.0dB t=128.8us uci_t=0.0us ret_t=8.8us
+2026-10-30T18:01:48.168910 [MAC     ] [I] [  493.15] UL rnti=0x4601 ue=0 subPDUs: [lcid=1: len=37, SBSR: lcg=0 bs=0, SE_PHR: ph=[-21..-20)dB p_cmax=[23..24)dBm, PAD: len=483]
+2026-10-30T18:01:48.168914 [RLC     ] [I] du=0 ue=0 SRB1 UL: RX PDU. pdu_len=37 dc=data p=1 si=full sn=0
+2026-10-30T18:01:48.168918 [RLC     ] [I] du=0 ue=0 SRB1 UL: RX SDU. sn=0 sdu_len=35
+2026-10-30T18:01:48.168953 [DU-F1   ] [I] Tx PDU du=0 ue=0 cu_ue=0 du_ue=0: ULRRCMessageTransfer
+2026-10-30T18:01:48.168967 [CU-CP-F1] [I] Rx PDU du=0 ue=0 cu_ue=0 du_ue=0: ULRRCMessageTransfer
+2026-10-30T18:01:48.168972 [PDCP    ] [I] ue=0 SRB1 UL: RX PDU. type=data pdu_len=35 sn=0 count=0
+2026-10-30T18:01:48.168975 [PDCP    ] [I] ue=0 SRB1 UL: RX SDU. count=0
+2026-10-30T18:01:48.169008 [RRC     ] [I] ue=0 c-rnti=0x4601: DCCH UL rrcSetupComplete
+2026-10-30T18:01:48.169042 [NGAP    ] [I] Tx PDU ue=0 ran_ue=0: InitialUEMessage
+2026-10-30T18:01:48.169159 [RRC     ] [I] ue=0 c-rnti=0x4601: "RRC Setup Procedure" finished successfully
+2026-10-30T18:01:48.169230 [SCHED   ] [I] [  493.16] Slot decisions pci=1 t=57us (1 PDSCH, 0 PUSCHs, 0 PUCCHs): DL: ue=0 c-rnti=0x4601 h_id=0 ss_id=2 rb=[0..2) k1=11 cw[0]: newtx=true rv=0 tbs=5 ri=1 dl_bo=5
+2026-10-30T18:01:48.169278 [MAC     ] [I] [  493.16] DL PDU: ue=0 rnti=0x4601 size=5: 
+2026-10-30T18:01:48.169320 [PHY     ] [I] [  493.16] PDCCH: rnti=0x4601 ss_id=2 format=1_1 cce=4 al=4 t=30.4us
+2026-10-30T18:01:48.169357 [PHY     ] [I] [  493.16] PDSCH: rnti=0x4601 h_id=0 k1=11 prb=[0, 2) symb=[2, 8) mod=QPSK rv=0 bg=BG2 tbs=5 t=33.7us
+2026-10-30T18:01:48.171239 [SCHED   ] [I] [   494.0] Slot decisions pci=1 t=47us (1 PDSCH, 0 PUSCHs, 0 PUCCHs): DL: ue=0 c-rnti=0x4601 h_id=1 ss_id=2 rb=[22..24) k1=7 cw[0]: newtx=true rv=0 tbs=11 ri=1 dl_bo=0
+2026-10-30T18:01:48.171288 [RLC     ] [I] du=0 ue=0 SRB1 DL: TX status PDU. pdu_len=3 grant_len=9
+2026-10-30T18:01:48.171293 [MAC     ] [I] [   494.0] DL PDU: ue=0 rnti=0x4601 size=11: SDU: lcid=1 nof_sdus=1 total_size=5
+2026-10-30T18:01:48.171345 [PHY     ] [I] [   494.0] PDCCH: rnti=0x4601 ss_id=2 format=1_1 cce=8 al=4 t=23.3us
+2026-10-30T18:01:48.171379 [PHY     ] [I] [   494.0] PDSCH: rnti=0x4601 h_id=1 k1=7 prb=[22, 24) symb=[2, 14) mod=QPSK rv=0 bg=BG2 tbs=11 t=31.6us
+2026-10-30T18:01:48.174339 [NGAP    ] [I] Rx PDU ue=0 ran_ue=0 amf_ue=1: DownlinkNASTransport
+2026-10-30T18:01:48.174354 [NGAP    ] [I] ue=0 ran_ue=0 amf_ue=1: "DL NAS Message Transfer Procedure" started...
+2026-10-30T18:01:48.174374 [RRC     ] [I] ue=0 c-rnti=0x4601: DCCH DL dlInformationTransfer
+2026-10-30T18:01:48.174381 [PDCP    ] [I] ue=0 SRB1 DL: TX PDU. type=data pdu_len=13 sn=0 count=0 is_retx=false
+2026-10-30T18:01:48.174390 [CU-CP-F1] [I] Tx PDU du=0 ue=0 cu_ue=0 du_ue=0: DLRRCMessageTransfer
+2026-10-30T18:01:48.174394 [NGAP    ] [I] ue=0 ran_ue=0 amf_ue=1: "DL NAS Message Transfer Procedure" finished successfully
+2026-10-30T18:01:48.174397 [NGAP    ] [I] Rx PDU ue=0 ran_ue=0 amf_ue=1: UEContextReleaseCommand
+2026-10-30T18:01:48.174399 [NGAP    ] [I] ue=0 ran_ue=0 amf_ue=1: "UE Context Release Procedure" started...
+2026-10-30T18:01:48.174415 [PDCP    ] [I] ue=0 SRB1 DL: TX PDU. type=data pdu_len=8 sn=1 count=1 is_retx=false
+2026-10-30T18:01:48.174416 [RRC     ] [I] ue=0 c-rnti=0x4601: DCCH DL rrcRelease
+2026-10-30T18:01:48.174430 [CU-CP-F1] [I] Tx PDU du=0 ue=0 cu_ue=0 du_ue=0: UEContextReleaseCommand
+2026-10-30T18:01:48.174453 [DU-F1   ] [I] Rx PDU du=0 ue=0 cu_ue=0 du_ue=0: DLRRCMessageTransfer
+2026-10-30T18:01:48.174457 [DU-F1   ] [I] Rx PDU du=0 ue=0 cu_ue=0 du_ue=0: UEContextReleaseCommand
+2026-10-30T18:01:48.174475 [RLC     ] [I] du=0 ue=0 SRB1 DL: TX SDU. sdu_len=13 pdcp_sn=0 is_retx=false queued_sdus=1 queued_bytes=13
+2026-10-30T18:01:48.174478 [DU-MNG  ] [I] ue=0: DRB traffic stopped
+2026-10-30T18:01:48.174490 [RLC     ] [I] du=0 ue=0 SRB1 DL: TX SDU. sdu_len=8 pdcp_sn=1 is_retx=false queued_sdus=2 queued_bytes=21
+2026-10-30T18:01:48.176311 [SCHED   ] [I] [  494.10] Slot decisions pci=1 t=38us (1 PDSCH, 0 PUSCHs, 0 PUCCHs): DL: ue=0 c-rnti=0x4601 h_id=2 ss_id=2 rb=[0..5) k1=7 cw[0]: newtx=true rv=0 tbs=30 ri=1 dl_bo=0
+2026-10-30T18:01:48.176372 [RLC     ] [I] du=0 ue=0 SRB1 DL: TX PDU. dc=data p=0 si=full sn=0 pdu_len=15 grant_len=28
+2026-10-30T18:01:48.176375 [RLC     ] [I] du=0 ue=0 SRB1 DL: TX PDU. dc=data p=1 si=full sn=1 pdu_len=10 grant_len=11
+2026-10-30T18:01:48.176378 [MAC     ] [I] [  494.10] DL PDU: ue=0 rnti=0x4601 size=30: SDU: lcid=1 nof_sdus=2 total_size=29
+2026-10-30T18:01:48.176419 [PHY     ] [I] [  494.10] PDCCH: rnti=0x4601 ss_id=2 format=1_1 cce=0 al=4 t=29.2us
+2026-10-30T18:01:48.176491 [PHY     ] [I] [  494.10] PDSCH: rnti=0x4601 h_id=2 k1=7 prb=[0, 5) symb=[2, 14) mod=QPSK rv=0 bg=BG2 tbs=30 t=67.8us
+2026-10-30T18:01:48.178837 [PHY     ] [I] [   494.7] PUCCH: rnti=0x4601 format=1 prb1=0 prb2=na symb=[0, 14) cs=0 occ=0 ack=11 metric=32184.2 sinr=30.8dB t=26.1us
+2026-10-30T18:01:48.178866 [PHY     ] [I] [   494.7] PUCCH: rnti=0x4601 format=1 prb1=4 prb2=na symb=[0, 14) cs=0 occ=0 ack=22 metric=0.6 sinr=-19.7dB t=14.8us
+2026-10-30T18:01:48.179097 [PHY     ] [I] [   494.8] PUCCH: rnti=0x4601 format=2 prb=[7, 8) prb2=na symb=[4, 6) csi1=1100 sinr=31.9dB t=47.8us
+2026-10-30T18:01:48.183779 [PHY     ] [I] [  494.17] PUCCH: rnti=0x4601 format=1 prb1=0 prb2=na symb=[0, 14) cs=0 occ=0 ack=1 metric=47536.0 sinr=32.5dB t=33.4us
+2026-10-30T18:01:48.198757 [PHY     ] [I] [   496.7] PUCCH: rnti=0x4601 format=1 prb1=4 prb2=na symb=[0, 14) cs=0 occ=0 sr=yes metric=56333.2 sinr=33.3dB t=33.8us
+2026-10-30T18:01:48.199028 [PHY     ] [I] [   496.8] PUCCH: rnti=0x4601 format=2 prb=[7, 8) prb2=na symb=[4, 6) csi1=1101 sinr=30.7dB t=40.3us
+2026-10-30T18:01:48.202785 [PHY     ] [I] [   497.3] PDCCH: rnti=0x4601 ss_id=2 format=0_1 cce=14 al=2 t=19.3us
+2026-10-30T18:01:48.204732 [SCHED   ] [I] [   497.7] Slot decisions pci=1 t=5us (0 PDSCHs, 1 PUSCH, 0 PUCCHs): UL: ue=0 rnti=0x4601 h_id=0 ss_id=2 rb=[0..6) newtx=true rv=0 tbs=592 k2=4
+2026-10-30T18:01:48.208783 [SCHED   ] [I] [  497.15] Slot decisions pci=1 t=40us (1 PDSCH, 0 PUSCHs, 0 PUCCHs): DL: ue=0 c-rnti=0x4601 h_id=2 ss_id=2 rb=[0..2) k1=4 cw[0]: newtx=true rv=0 tbs=145 ri=1 dl_bo=0
+2026-10-30T18:01:48.208838 [MAC     ] [I] [  497.15] DL PDU: ue=0 rnti=0x4601 size=145: TA_CMD: tag_id=0, ta_cmd=30
+2026-10-30T18:01:48.208868 [PHY     ] [I] [  497.15] PDCCH: rnti=0x4601 ss_id=2 format=1_1 cce=2 al=2 t=22.0us
+2026-10-30T18:01:48.208908 [PHY     ] [I] [  497.15] PDSCH: rnti=0x4601 h_id=2 k1=4 prb=[0, 2) symb=[2, 14) mod=64QAM rv=0 bg=BG1 tbs=145 t=37.2us
+2026-10-30T18:01:48.209071 [PHY     ] [I] [   497.7] PUSCH: rnti=0x4601 harq_id=0 prb=[0, 6) symb=[0, 14) mod=64QAM rv=0 tbs=592 crc=OK iter=1.0 sinr=31.1dB t=88.8us uci_t=0.0us ret_t=3.5us
+2026-10-30T18:01:48.209090 [MAC     ] [I] [  497.15] UL rnti=0x4601 ue=0 subPDUs: [lcid=1: len=3, SBSR: lcg=0 bs=0, SE_PHR: ph=[-15..-14)dB p_cmax=[22..23)dBm, PAD: len=581]
+2026-10-30T18:01:48.209094 [RLC     ] [I] du=0 ue=0 SRB1 UL: RX status PDU. ack_sn=2 n_nack=0
+2026-10-30T18:01:48.209110 [RLC     ] [I] du=0 ue=0 SRB1 DL: Handled status report. t=7us ack_sn=2 n_nack=0
+2026-10-30T18:01:48.209119 [DU-MNG  ] [I] ue=0 proc="UE Delete": Procedure started....
+2026-10-30T18:01:48.209128 [DU-MNG  ] [I] ue=0: SRB and DRB traffic stopped
+2026-10-30T18:01:48.209147 [DU-F1   ] [I] ue=0 c-rnti=0x4601 du_ue=0 cu_ue=0: F1 UE context removed.
+2026-10-30T18:01:48.214888 [PHY     ] [I] [  497.19] PUCCH: rnti=0x4601 format=1 prb1=0 prb2=na symb=[0, 14) cs=0 occ=0 ack=0 metric=28381.1 sinr=30.3dB t=28.0us
+2026-10-30T18:01:48.218793 [PHY     ] [I] [   498.7] PUCCH: rnti=0x4601 format=1 prb1=4 prb2=na symb=[0, 14) cs=0 occ=0 sr=no metric=0.4 sinr=-18.0dB t=26.2us
+2026-10-30T18:01:48.218890 [PHY     ] [I] [   498.8] PUCCH: rnti=0x4601 format=2 prb=[7, 8) prb2=na symb=[4, 6) csi1=2222 sinr=-3.4dB t=30.9us
+2026-10-30T18:01:48.238760 [PHY     ] [I] [   500.7] PUCCH: rnti=0x4601 format=1 prb1=4 prb2=na symb=[0, 14) cs=0 occ=0 sr=no metric=0.1 sinr=-24.4dB t=26.3us
+2026-10-30T18:01:48.238970 [PHY     ] [I] [   500.8] PUCCH: rnti=0x4601 format=2 prb=[7, 8) prb2=na symb=[4, 6) csi1=2222 sinr=-7.3dB t=35.7us
+2026-10-30T18:01:48.258749 [PHY     ] [I] [   502.7] PUCCH: rnti=0x4601 format=1 prb1=4 prb2=na symb=[0, 14) cs=0 occ=0 sr=no metric=0.2 sinr=-18.1dB t=30.0us
+2026-10-30T18:01:48.258990 [PHY     ] [I] [   502.8] PUCCH: rnti=0x4601 format=2 prb=[7, 8) prb2=na symb=[4, 6) csi1=2222 sinr=-6.8dB t=50.3us
+2026-10-30T18:01:48.278810 [PHY     ] [I] [   504.7] PUCCH: rnti=0x4601 format=1 prb1=4 prb2=na symb=[0, 14) cs=0 occ=0 sr=no metric=0.1 sinr=-24.6dB t=32.7us
+2026-10-30T18:01:48.279045 [PHY     ] [I] [   504.8] PUCCH: rnti=0x4601 format=2 prb=[7, 8) prb2=na symb=[4, 6) csi1=2222 sinr=-1.5dB t=59.9us
+2026-10-30T18:01:48.284832 [MAC     ] [I] [   505.7] ue=0 crnti=0x4601 proc="MAC UE Removal": finished successfully
+2026-10-30T18:01:48.284852 [DU-MNG  ] [I] ue=0 proc="UE Delete": Procedure finished successfully.
+2026-10-30T18:01:48.284859 [DU-F1   ] [I] Tx PDU du=0 cu_ue=0 du_ue=0: UEContextReleaseComplete
+2026-10-30T18:01:48.284866 [CU-CP-F1] [I] Rx PDU du=0 ue=0 cu_ue=0 du_ue=0: UEContextReleaseComplete
+2026-10-30T18:01:48.284922 [CU-CP   ] [I] ue=0: "UE Removal Routine" finished successfully
+2026-10-30T18:01:48.284947 [NGAP    ] [I] Tx PDU ran_ue=0 amf_ue=1: UEContextReleaseComplete
+2026-10-30T18:01:48.285062 [NGAP    ] [I] ue=0 ran_ue=0 amf_ue=1: "UE Context Release Procedure" finished successfully
+2026-10-30T18:02:05.238911 [FAPI    ] [W] [  152.15] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 152.5
+2026-10-30T18:02:05.238924 [SCHED   ] [I] [   152.6] Processed slot events pci=1: ErrorIndication slot=152.5
+2026-10-30T18:02:05.238949 [FAPI    ] [W] [  152.15] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 152.6
+2026-10-30T18:02:05.238954 [SCHED   ] [I] [   152.7] Processed slot events pci=1: ErrorIndication slot=152.6
+2026-10-30T18:02:05.238956 [FAPI    ] [W] [  152.15] Sector#0: Real-time failure in FAPI: Received late UL_TTI.request from slot 152.7
+2026-10-30T18:02:05.238962 [SCHED   ] [I] [   152.8] Processed slot events pci=1: ErrorIndication slot=152.7
+2026-10-30T18:02:05.238963 [FAPI    ] [W] [  152.15] Sector#0: Real-time failure in FAPI: Received late UL_TTI.request from slot 152.8
+2026-10-30T18:02:05.238967 [SCHED   ] [I] [   152.9] Processed slot events pci=1: ErrorIndication slot=152.8
+2026-10-30T18:02:05.238967 [FAPI    ] [W] [  152.15] Sector#0: Real-time failure in FAPI: Received late UL_TTI.request from slot 152.9
+2026-10-30T18:02:05.238972 [SCHED   ] [I] [  152.10] Processed slot events pci=1: ErrorIndication slot=152.9
+2026-10-30T18:02:05.244860 [FAPI    ] [W] [   153.7] Sector#0: Real-time failure in FAPI: Received late UL_TTI.request from slot 152.17
+2026-10-30T18:02:05.244868 [SCHED   ] [I] [  152.18] Processed slot events pci=1: ErrorIndication slot=152.17
+2026-10-30T18:02:05.244868 [FAPI    ] [W] [   153.7] Sector#0: Real-time failure in FAPI: Received late UL_TTI.request from slot 152.18
+2026-10-30T18:02:05.244871 [SCHED   ] [I] [  152.19] Processed slot events pci=1: ErrorIndication slot=152.18
+2026-10-30T18:02:05.244872 [FAPI    ] [W] [   153.7] Sector#0: Real-time failure in FAPI: Received late UL_TTI.request from slot 152.19
+2026-10-30T18:02:05.244876 [SCHED   ] [I] [   153.0] Processed slot events pci=1: ErrorIndication slot=152.19
+2026-10-30T18:02:05.244928 [FAPI    ] [W] [   153.7] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 153.0
+2026-10-30T18:02:05.244936 [SCHED   ] [I] [   153.1] Processed slot events pci=1: ErrorIndication slot=153.0
+2026-10-30T18:02:05.244956 [FAPI    ] [W] [   153.7] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 153.1
+2026-10-30T18:02:05.244962 [SCHED   ] [I] [   153.2] Processed slot events pci=1: ErrorIndication slot=153.1
+2026-10-30T18:02:05.250532 [FAPI    ] [W] [  153.18] Sector#0: Real-time failure in FAPI: Received late UL_TTI.request from slot 153.9
+2026-10-30T18:02:05.250541 [SCHED   ] [I] [  153.10] Processed slot events pci=1: ErrorIndication slot=153.9
+2026-10-30T18:02:05.250566 [FAPI    ] [W] [  153.18] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 153.10
+2026-10-30T18:02:05.250573 [SCHED   ] [I] [  153.11] Processed slot events pci=1: ErrorIndication slot=153.10
+2026-10-30T18:02:05.250594 [FAPI    ] [W] [  153.18] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 153.11
+2026-10-30T18:02:05.250601 [SCHED   ] [I] [  153.12] Processed slot events pci=1: ErrorIndication slot=153.11
+2026-10-30T18:02:05.250620 [FAPI    ] [W] [  153.18] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 153.12
+2026-10-30T18:02:05.250626 [SCHED   ] [I] [  153.13] Processed slot events pci=1: ErrorIndication slot=153.12
+2026-10-30T18:02:05.250646 [FAPI    ] [W] [  153.19] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 153.13
+2026-10-30T18:02:05.250665 [SCHED   ] [I] [  153.14] Processed slot events pci=1: ErrorIndication slot=153.13
+2026-10-30T18:02:05.256429 [RF      ] [W] Real-time failure in RF: underflow
+2026-10-30T18:02:05.257964 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.258052 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.258129 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.258202 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.258282 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.270839 [RF      ] [W] Real-time failure in RF: underflow
+2026-10-30T18:02:05.270841 [RF      ] [W] Real-time failure in RF: underflow
+2026-10-30T18:02:05.270841 [RF      ] [W] Real-time failure in RF: underflow
+2026-10-30T18:02:05.272946 [RF      ] [W] Real-time failure in RF: underflow
+2026-10-30T18:02:05.274468 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.274551 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.274581 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.274622 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.274696 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.277457 [RF      ] [W] Real-time failure in RF: underflow
+2026-10-30T18:02:05.278826 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.278916 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.278974 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.279007 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.279051 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.280680 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.280711 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.280750 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.280808 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.280846 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.283920 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.284018 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.284046 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.284080 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.284133 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.286079 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.286185 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.286216 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.286247 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.286295 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.286516 [RF      ] [W] Real-time failure in RF: overflow
+2026-10-30T18:02:05.286867 [FAPI    ] [W] [  157.11] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 157.4
+2026-10-30T18:02:05.286877 [SCHED   ] [I] [   157.5] Processed slot events pci=1: ErrorIndication slot=157.4
+2026-10-30T18:02:05.286898 [FAPI    ] [W] [  157.11] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 157.5
+2026-10-30T18:02:05.286903 [SCHED   ] [I] [   157.6] Processed slot events pci=1: ErrorIndication slot=157.5
+2026-10-30T18:02:05.287699 [PHY     ] [W] [  156.19] Real-time failure in lower PHY: PRACH request late for sector 0, slot 156.19 and start symbol 0.
+2026-10-30T18:02:05.290932 [FAPI    ] [W] [  157.19] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 157.12
+2026-10-30T18:02:05.290942 [SCHED   ] [I] [  157.13] Processed slot events pci=1: ErrorIndication slot=157.12
+2026-10-30T18:02:05.290965 [FAPI    ] [W] [  157.19] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 157.13
+2026-10-30T18:02:05.290971 [SCHED   ] [I] [  157.14] Processed slot events pci=1: ErrorIndication slot=157.13
+2026-10-30T18:02:05.296793 [FAPI    ] [W] [  158.11] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 158.2
+2026-10-30T18:02:05.296803 [SCHED   ] [I] [   158.3] Processed slot events pci=1: ErrorIndication slot=158.2
+2026-10-30T18:02:05.296828 [FAPI    ] [W] [  158.11] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 158.3
+2026-10-30T18:02:05.296835 [SCHED   ] [I] [   158.4] Processed slot events pci=1: ErrorIndication slot=158.3
+2026-10-30T18:02:05.296855 [FAPI    ] [W] [  158.11] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 158.4
+2026-10-30T18:02:05.296862 [SCHED   ] [I] [   158.5] Processed slot events pci=1: ErrorIndication slot=158.4
+2026-10-30T18:02:05.296882 [FAPI    ] [W] [  158.11] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 158.5
+2026-10-30T18:02:05.296887 [SCHED   ] [I] [   158.6] Processed slot events pci=1: ErrorIndication slot=158.5
+2026-10-30T18:02:05.298972 [RF      ] [W] Real-time failure in RF: underflow
+2026-10-30T18:02:05.305367 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.305517 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.305519 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.305553 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.305588 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.308322 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.308448 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.308449 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.308523 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.308553 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.313270 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.313325 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.313431 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.313432 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.313520 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.315970 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.315972 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.315972 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.316068 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.316069 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.325737 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.325775 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.325776 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.325795 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.325796 [FAPI    ] [W] [   161.9] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 161.0
+2026-10-30T18:02:05.325807 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.325809 [SCHED   ] [I] [   161.1] Processed slot events pci=1: ErrorIndication slot=161.0
+2026-10-30T18:02:05.325832 [FAPI    ] [W] [   161.9] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 161.1
+2026-10-30T18:02:05.325832 [RF      ] [W] Real-time failure in RF: underflow
+2026-10-30T18:02:05.325838 [SCHED   ] [I] [   161.2] Processed slot events pci=1: ErrorIndication slot=161.1
+2026-10-30T18:02:05.325861 [FAPI    ] [W] [   161.9] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 161.2
+2026-10-30T18:02:05.325868 [SCHED   ] [I] [   161.3] Processed slot events pci=1: ErrorIndication slot=161.2
+2026-10-30T18:02:05.325890 [FAPI    ] [W] [   161.9] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 161.3
+2026-10-30T18:02:05.325897 [SCHED   ] [I] [   161.4] Processed slot events pci=1: ErrorIndication slot=161.3
+2026-10-30T18:02:05.331431 [RF      ] [W] Real-time failure in RF: underflow
+2026-10-30T18:02:05.333040 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.333123 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.333138 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.333166 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.333266 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.335352 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.335354 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.335607 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.335608 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.335608 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.336831 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.336949 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.337027 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.337028 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.337064 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.338996 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.339140 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.339141 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.339179 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.339252 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.341153 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.341282 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.341283 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.341339 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.341412 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.342414 [RF      ] [W] Real-time failure in RF: overflow
+2026-10-30T18:02:05.343387 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.343481 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.343482 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.343546 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.343578 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.345565 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.345666 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.345697 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.345741 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.345802 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.347951 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.347955 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.347955 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.347972 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.348324 [PHY     ] [W] [  161.19] Real-time failure in lower PHY: PRACH request late for sector 0, slot 161.19 and start symbol 0.
+2026-10-30T18:02:05.348416 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.348464 [FAPI    ] [W] [   163.5] Sector#0: Real-time failure in FAPI: Received late UL_TTI.request from slot 162.18
+2026-10-30T18:02:05.348480 [SCHED   ] [I] [  162.19] Processed slot events pci=1: ErrorIndication slot=162.18
+2026-10-30T18:02:05.348482 [FAPI    ] [W] [   163.6] Sector#0: Real-time failure in FAPI: Received late UL_TTI.request from slot 162.19
+2026-10-30T18:02:05.348487 [SCHED   ] [I] [   163.0] Processed slot events pci=1: ErrorIndication slot=162.19
+2026-10-30T18:02:05.348515 [FAPI    ] [W] [   163.6] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 163.0
+2026-10-30T18:02:05.348522 [SCHED   ] [I] [   163.1] Processed slot events pci=1: ErrorIndication slot=163.0
+2026-10-30T18:02:05.349944 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.350022 [RF      ] [W] Real-time failure in RF: overflow
+2026-10-30T18:02:05.350062 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.350063 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.350100 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.350152 [RF      ] [W] Real-time failure in RF: late
+2026-10-30T18:02:05.353749 [FAPI    ] [W] [   164.5] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 163.11
+2026-10-30T18:02:05.353760 [SCHED   ] [I] [  163.12] Processed slot events pci=1: ErrorIndication slot=163.11
+2026-10-30T18:02:05.353783 [FAPI    ] [W] [   164.5] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 163.12
+2026-10-30T18:02:05.353791 [SCHED   ] [I] [  163.13] Processed slot events pci=1: ErrorIndication slot=163.12
+2026-10-30T18:02:05.353813 [FAPI    ] [W] [   164.5] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 163.13
+2026-10-30T18:02:05.353818 [SCHED   ] [I] [  163.14] Processed slot events pci=1: ErrorIndication slot=163.13
+2026-10-30T18:02:05.353839 [FAPI    ] [W] [   164.5] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 163.14
+2026-10-30T18:02:05.353845 [SCHED   ] [I] [  163.15] Processed slot events pci=1: ErrorIndication slot=163.14
+2026-10-30T18:02:05.353864 [FAPI    ] [W] [   164.5] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 163.15
+2026-10-30T18:02:05.353869 [SCHED   ] [I] [  163.16] Processed slot events pci=1: ErrorIndication slot=163.15
+2026-10-30T18:02:05.353887 [FAPI    ] [W] [   164.5] Sector#0: Real-time failure in FAPI: Received late DL_TTI.request from slot 163.16
+2026-10-30T18:02:05.353892 [SCHED   ] [I] [  163.17] Processed slot events pci=1: ErrorIndication slot=163.16
+2026-10-30T18:02:05.353893 [FAPI    ] [W] [   164.5] Sector#0: Real-time failure in FAPI: Received late UL_TTI.request from slot 163.17
+2026-10-30T18:02:05.353897 [SCHED   ] [I] [  163.18] Processed slot events pci=1: ErrorIndication slot=163.17
+2026-10-30T18:02:05.353898 [FAPI    ] [W] [   164.5] Sector#0: Real-time failure in FAPI: Received late UL_TTI.request from slot 163.18
+2026-10-30T18:02:05.353901 [SCHED   ] [I] [  163.19] Processed slot events pci=1: ErrorIndication slot=163.18
+2026-10-30T18:02:05.353902 [FAPI    ] [W] [   164.5] Sector#0: Real-time failure in FAPI: Received late UL_TTI.request from slot 163.19
+2026-10-30T18:02:05.353906 [SCHED   ] [I] [   164.0] Processed slot events pci=1: ErrorIndication slot=163.19
+2026-10-30T18:02:05.354119 [PHY     ] [E] [   164.4] The modulator is busy.
+2026-10-30T18:02:05.361689 [PHY     ] [W] [   164.0] Real-time failure in lower PHY: Downlink data late for sector 0 and slot 164.0.
+2026-10-30T18:02:05.361712 [SCHED   ] [W] [   165.1] cell=0, slot=164.0: Discarding error indication. Cause: Scheduler results associated with the slot of the error indication have already been erased (current slot=165.1)
+2026-10-30T18:03:04.679641 [GNB     ] [I] Stopping...
+2026-10-30T18:03:04.680795 [PHY     ] [W] [  976.19] Real-time failure in lower PHY: PRACH request late for sector 0, slot 976.19 and start symbol 0.
+2026-10-30T18:03:04.691528 [DU      ] [I] Stopping DU...
+2026-10-30T18:03:04.691528 [DU      ] [I] Stopping DU-High...
+2026-10-30T18:03:04.691607 [SCHED   ] [I] [  977.10] cell=0: Cell scheduling was deactivated.
+2026-10-30T18:03:04.691689 [MAC     ] [I] [  977.10] cell=0: Cell was stopped.
+2026-10-30T18:03:04.691702 [DU-F1   ] [I] Tx PDU du=0 tid=2: F1RemovalRequest
+2026-10-30T18:03:04.691716 [CU-CP-F1] [I] Rx PDU du=0 tid=2: F1RemovalRequest
+2026-10-30T18:03:04.691721 [CU-CP-F1] [I] Tx PDU du=0 tid=2: F1RemovalResponse
+2026-10-30T18:03:04.691724 [DU-F1   ] [I] Rx PDU du=0 tid=2: F1RemovalResponse
+2026-10-30T18:03:04.691735 [CU-CP   ] [I] Logical cell nci=0x66c000 de-realized. Operator intent kept (admin_state=unlocked barred=false)
+2026-10-30T18:03:04.691747 [CU-CP   ] [I] Removed DU 0
+2026-10-30T18:03:04.691750 [DU-F1   ] [I] F1 Removal: F1 TNL association shut down
+2026-10-30T18:03:04.691759 [DU      ] [I] DU-High stopped successfully
+2026-10-30T18:03:04.691759 [DU      ] [I] DU stopped successfully
+2026-10-30T18:03:04.691820 [CU-UP-E1] [I] e1=0: Tx PDU tid=1 E1ReleaseRequest
+2026-10-30T18:03:04.691824 [CU-CP-E1] [I] Rx PDU tid=1: E1ReleaseRequest
+2026-10-30T18:03:04.691826 [CU-CP-E1] [I] "E1 Release Procedure" started...
+2026-10-30T18:03:04.691829 [CU-CP-E1] [I] Tx PDU tid=1: E1ReleaseResponse
+2026-10-30T18:03:04.691831 [CU-CP-E1] [I] "E1 Release Procedure" finished successfully
+2026-10-30T18:03:04.691833 [CU-UP-E1] [I] e1=0: Rx PDU tid=1 E1ReleaseResponse
+2026-10-30T18:03:04.691840 [CU-CP   ] [I] Removed CU-UP 0
+2026-10-30T18:03:04.691842 [CU-UP-E1] [I] e1=0: E1AP CU-UP Release Procedure: E1 TNL association shut down
+2026-10-30T18:03:04.692048 [CU-UP   ] [I] CU-UP stopped successfully
+2026-10-30T18:03:04.692053 [CU-CP   ] [I] Stopping CU-CP...
+2026-10-30T18:03:04.692424 [CU-CP   ] [I] CU-CP stopped successfully
+2026-10-30T18:03:04.724241 [GNB     ] [I] Closing PCAP files...
+2026-10-30T18:03:04.724251 [GNB     ] [I] PCAP files successfully closed.
+(END)
