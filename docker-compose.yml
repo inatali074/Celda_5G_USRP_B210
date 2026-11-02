@@ -76,7 +76,7 @@ services:
     volumes:
       - /dev/bus/usb:/dev/bus/usb
       - type: bind
-        source: ./config/gnb/gnb_b210.yml
+        source: ./config/gnb/${GNB_CONFIG:-gnb_b210.yml}
         target: /config/gnb.yml
         read_only: true
         bind:

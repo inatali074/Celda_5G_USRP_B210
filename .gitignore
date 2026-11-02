@@ -17,3 +17,6 @@ grabador/
 .agy.err
 __pycache__/
 *.pyc
+
+# Logs de start.sh/stop.sh: pueden tener identificadores
+logs/

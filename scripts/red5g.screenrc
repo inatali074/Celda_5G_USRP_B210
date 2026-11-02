@@ -1,0 +1,17 @@
+# Consola de control: 4 paneles. Moverse: Ctrl-a Tab, o con el mouse.
+startup_message off
+defscrollback 5000
+mousetrack on
+caption always "%{= kw} %t "
+hardstatus alwayslastline "%{= kg} Red 5G %{-} Ctrl-a Tab: cambiar panel | Ctrl-a Esc: subir | Ctrl-a d: salir sin apagar | apagar: ./stop.sh"
+
+split
+split -v
+screen -t conexiones 0 scripts/panel.sh conexiones
+focus
+screen -t metricas 1 scripts/panel.sh metricas
+focus
+split -v
+screen -t eventos 2 scripts/panel.sh eventos
+focus
+screen -t ping 3 scripts/panel.sh ping

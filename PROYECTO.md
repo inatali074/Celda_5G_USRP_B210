@@ -1,6 +1,6 @@
 # Proyecto: celda 5G NR SA con USRP B210
 
-*Memoria entre sesiones. Solo la edita Claude. Última actualización: 2026-10-30.*
+*Memoria entre sesiones. Solo la edita Claude. Última actualización: 2026-11-02.*
 
 ## Objetivo
 Desplegar desde cero una celda 5G NR Standalone (Opción 2, Release 15) en un entorno de RF autorizado o controlado, y lograr que un celular con SIM de laboratorio se registre, obtenga IP y navegue. Después, medir throughput, latencia y jitter y compararlos con 2G (EDGE) y 4G (LTE) del mismo grupo.
@@ -37,7 +37,15 @@ Desplegar desde cero una celda 5G NR Standalone (Opción 2, Release 15) en un en
 | Fecha | ICCID | IMSI | MNC en EF_AD | AcT 722/999 | 5G |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | 2026-10-30 | …0010 | 722999000000001 | 3 dígitos | E-UTRAN, UTRAN, GSM; sin NG-RAN | Sin DF_5GS, EF_UST de 11 bytes |
-| 2026-10-30 | <ICCID> | 722999000000003 | 3 dígitos | E-UTRAN, UTRAN, GSM; sin NG-RAN | Sin DF_5GS, EF_UST de 11 bytes. Autenticación sin probar; abonado sin cargar |
+| 2026-10-30 | <ICCID> | 722999000000003 | 3 dígitos | E-UTRAN, UTRAN, GSM; sin NG-RAN | Sin DF_5GS, EF_UST de 11 bytes. **Regrabada el 2026-11-02, ver abajo** |
+
+Estado al 2026-11-02 (K/OPc confirmadas por AUTHENTICATE en SIM 3 y SIM 4; ADM en ref. `0x0C` aceptada en ambas; copias previas en `evidencia/sim/`):
+
+| SIM | ICCID | IMSI | PLMN | AcT | Abonado | Uso |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| SIM 1 | …0010 | 722999000000001 | 722/999 | Sin NG-RAN | Cargado | Referencia, sin tocar |
+| SIM 3 | …0374 | 001010000000003 | 001/01 | NG-RAN + E-UTRAN | Cargado | Redmi |
+| SIM 4 | …0044 | 001010000000004 | 001/01 | NG-RAN + E-UTRAN | Cargado | OnePlus 13. Grabada con OYEI en Windows, luego por APDU |
 
 ## Versiones
 | Componente | Versión | Estado |
@@ -55,6 +63,10 @@ Desplegar desde cero una celda 5G NR Standalone (Opción 2, Release 15) en un en
 | D-004 | 2026-10-30 | La prueba sin radio usa n3 FDD, 20 MHz, 106 PRB, μ=0, CP-OFDM en UL. No fija la banda de radio | srsUE rechaza SCS común distinto de 15 kHz (`rrc_nr_procedures.cc:439`), así que n78 μ=1 no se puede probar por ZMQ. Numerología: TS 38.211 §4.2 | Codex, revisó Claude |
 | D-006 | 2026-10-30 | Primera celda: n78 TDD, ARFCN 635000 (3525 MHz), 20 MHz, μ=1, CP-OFDM en UL, TX/RX 50/40 | Fuera del bloque atribuido a Personal; barrido sin portadoras visibles (no concluyente en señales débiles). CP-OFDM primero para cambiar una sola cosa. Numerología: TS 38.211 §4.2; SSB caso C: TS 38.213 §4.1 | Claude, Codex |
 | D-005 | 2026-10-30 | Se abandona la prueba con srsUE; se pasa a la celda real con celulares. Los servicios `gnb-zmq` y `srsue` quedan en el compose, sin usar | Tres corridas bloqueadas antes de la búsqueda de celda, sin causa identificada. El objetivo son celulares reales. Sin referencia a TS | Usuario, a propuesta de Claude |
+| D-007 | 2026-11-02 | NG-RAN y PLMN se graban por APDU desde Linux (`scripts/grabar_ng_ran.py`, `grabar_plmn.py`). K y OPc solo con OYEI en Windows | Los archivos usan UPDATE BINARY con ADM (TS 31.102 §4.2.5, §4.2.53, §4.2.54). El Ki LTE usa un comando propietario | Claude, revisó Codex |
+| D-008 | 2026-11-02 | Para las pruebas con celulares se usa PLMN 001/01 en vez de 722/999. **Se aparta de lo fijado en Alcance; hay que justificarlo en el informe** | Con 722/999 el Redmi y el Motorola no generaron PRACH con NG-RAN grabado. Con 001/01 el Redmi registró al primer intento y el OnePlus también. No se identificó por qué el módem los trata distinto | Claude, aprobó usuario |
+| D-009 | 2026-11-02 | Consola de control con `start.sh`, `stop.sh` y GNU screen, 4 paneles | Pedido del usuario. `screen` ya estaba instalado; `tmux` no. Sin referencia a TS | Usuario, revisó Codex |
+| D-010 | 2026-11-02 | Configuración activa de prueba: `gnb_b210_00101_csiaper.yml` (CSI aperiódico, tx_gain 80, clock_ppm −1,87) | Con CSI periódico el gNB corta a los 3 s por CSI sin decodificar. Sin CSI-RS hubo más reconexiones. No es la configuración final | Claude, aprobó usuario |
 
 ## Propuestas pendientes de decisión
 | ID | Propuesta | Justificación | Falta verificar |
@@ -72,7 +84,9 @@ Desplegar desde cero una celda 5G NR Standalone (Opción 2, Release 15) en un en
 Según `Prueba_configuracion_Drive_5G.docx` (29/10): ZMQ + srsUE funcionó de punta a punta; por aire en n78 un celular de Personal llegó al AMF; n3 no tuvo ningún PRACH real; DFT-s-OFDM y NEA2 quedaron sin validar con celular; B210 serie 31677B2 con `clock_ppm` −1,87 medido.
 
 ## Estado actual
-Celda n78 TDD al aire por la B210 en Docker, dentro de la jaula. **El Redmi Note 14 5G con la SIM 1, en selección automática, completó RACH, RRC, 5G-AKA y registro** (2026-10-30). El Motorola Edge 30 Neo con la SIM de laboratorio nunca vio la red, pero sí con un chip comercial: el comportamiento depende del teléfono y la SIM. Falta la sesión PDU: el teléfono no la pidió. La celda queda apagada entre pruebas.
+**Camino completo logrado el 2026-11-02 con PLMN 001/01:** registro, sesión PDU, IP y navegación por NAT en un Redmi Note 14 5G y sesión con IP en un OnePlus 13, con la celda n78 TDD en Docker. **La conexión no es estable todavía:** se corta cada pocos segundos o decenas de segundos, por lo que aún no se puede medir throughput, latencia ni jitter.
+
+Lo que se sabe de los cortes: el teléfono deja de usar los permisos de PUSCH (SINR cerca de ruido) aunque sus SR llegan, y los PDSCH quedan sin ACK; hay errores de bajada aun en MCS bajos. Eso apunta a la bajada, sin causa confirmada. Saturación por `tx_gain` bastante descartada (60 no mejoró). Pendientes: reloj (`clock_ppm` 0 quedó sin concluir: corrida de 2 min con poco tráfico). También hubo fallas de tiempo real sostenidas que no se recuperan sin reiniciar el gNB, coincidentes con abrir un navegador en la PC, y una caída USB de la B210 sin causa conocida. La celda queda apagada.
 
 ## Próximos pasos
-Ver la sección "Para retomar" de `sesiones/2026-10-30_docker-y-zmq.md`, que incluye el ID de la sesión de Claude Code. Primero: grabar NG-RAN en la SIM 3 (requiere PC con Windows).
+Ver la sección "Para retomar" de `sesiones/2026-11-02_sim-001-01-y-datos.md`.
