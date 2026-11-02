@@ -6,6 +6,8 @@ Todo corre en Docker. La PC nueva necesita Linux, Docker con Compose, y **USB 3*
 ```bash
 scripts/empaquetar_para_otra_pc.sh /ruta/al/pendrive/red5g
 ```
+La carpeta de destino tiene que ser nueva o estar vacía. En un pendrive FAT o exFAT no se aplican los permisos de Linux, así que cualquiera que lo conecte puede leer las claves.
+
 Hacen falta unos 10 GB libres. Con `--sin-imagenes` ocupa muy poco, pero la otra PC tiene que construir las imágenes, lo que lleva horas y requiere internet.
 
 **El paquete contiene K, OPc y ADM de las SIM de laboratorio.** No lo subas a ningún lado y borralo del pendrive al terminar. No incluye `CONTEXTO_ANTECEDENTES.local.md`, `grabador/` ni el material de referencia: copialos aparte si los necesitás.
@@ -35,6 +37,7 @@ Revisá también:
 
 ## Arrancar y apagar
 ```bash
+cd ~/red5g-docker
 ./start.sh    # Pide escribir "si": TRANSMITE
 ./stop.sh     # Corta la transmisión, guarda los logs y apaga todo
 ```

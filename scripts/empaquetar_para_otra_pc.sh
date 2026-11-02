@@ -28,8 +28,14 @@ for s in config/secretos/usim.env config/secretos/sim_adm.env; do
     [[ -r $s ]] || { echo "Falta $s"; exit 1; }
 done
 
+# Destino vacío: así no quedan sumas viejas ni se hereda el permiso de un secretos.tar anterior.
+if [[ -e $destino && -n $(ls -A -- "$destino") ]]; then
+    echo "$destino no está vacía: elegí una carpeta nueva."
+    exit 1
+fi
 umask 077
 mkdir -p -- "$destino"
+chmod 700 -- "$destino"
 destino=$(cd -- "$destino" && pwd)
 
 echo "--- Proyecto (con historial de git) ---"
