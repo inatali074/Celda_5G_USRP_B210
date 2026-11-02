@@ -1,3 +1,6 @@
+# Nombre fijo: los scripts usan los contenedores 5g-*, sin importar cómo se llame la carpeta.
+name: 5g
+
 services:
   mongodb:
     image: mongo:6.0
