@@ -64,5 +64,9 @@ Notación: `ack=2` en PUCCH es compatible con DTX, pero la codificación no se v
 - https://docs.srsran.com/projects/project/en/latest/tutorials/source/cotsUE/source/index.html (recomienda reloj externo)
 - TS 38.213 §4.2 (paso de TA)
 
-## Hallazgo 5 (tarde): el corte de ~60 s es el teléfono buscando voz
-Con `adb logcat` en el Redmi: deja la celda a los 60,00 ± 0,02 s de obtener servicio (7 de 7). Lo hace sin mensajes de la red (`+CIEV: 3,0`, `+CSCON: 0`) y escanea LTE. El OnePlus también se corta. Open5GS v2.8.0 anuncia IMS VoPS = 1 fijo (`src/amf/gmm-build.c`) y no hay IMS. Con el teléfono en `NR only`, más de 5 min estable en n3 y en n78. Detalle en `sesiones/2026-11-03_cortes-60s-volte.md` y D-015. La "degradación gradual del PUSCH" anterior al corte queda como fenómeno aparte, sin explicar.
+## Hallazgo 5 (tarde): el corte de ~60 s lo inicia el teléfono; hipótesis principal: la voz
+- Con `adb logcat`, el Redmi pierde servicio a los 59,991-60,022 s de obtenerlo (5 ciclos en n3). En los extractos no hay una liberación previa de la red, y después escanea LTE.
+- Open5GS v2.8.0 anuncia IMS VoPS = 1 fijo (`src/amf/gmm-build.c` L113-118) y no hay IMS. TS 24.501 §4.3.2 prevé que un UE *voice centric* deje N1 si no obtiene voz.
+- Con `NR only`, el Redmi duró 338,7 s en n3 y 345,3 s en n78.
+- **Es una hipótesis, no está demostrada:** `NR only` también bloquea otras políticas de RAT, y el OnePlus se corta a ~35-37 s.
+- Revisión: `revisiones/2026-11-03_codex-conclusion-voz.md`. Detalle: `sesiones/2026-11-03_cortes-60s-volte.md` y D-015. La "degradación gradual del PUSCH" anterior al corte queda como fenómeno aparte, sin explicar.

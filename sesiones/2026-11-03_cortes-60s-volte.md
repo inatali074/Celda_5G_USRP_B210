@@ -1,7 +1,7 @@
 # Sesión 2026-11-03 (tarde): causa de los cortes, n3 FDD y el corte de los 60 s
 
 ## Resultado
-**Se encontró la causa del corte de cada ~60 s, y es la voz, no la radio.** Los teléfonos con VoLTE activado se registran, esperan voz por IMS (Open5GS les anuncia que hay, pero no tenemos IMS) y a los 60 s dejan solos la celda para buscar LTE. **Con el teléfono en `NR only`, el Redmi quedó estable más de 5 minutos en n3 FDD y en n78 TDD.** En el camino:
+**El corte de cada ~60 s lo inicia el teléfono, y quedó mitigado poniendo el Redmi en `NR only`:** duró 5 min 39 s en n3 FDD y 5 min 45 s en n78 TDD. **La hipótesis principal sobre la causa es la voz:** Open5GS anuncia IMS, pero no tenemos; el teléfono esperaría la voz y, al no conseguirla, dejaría la celda para buscar LTE. Es la explicación más consistente, pero **no está demostrada** (revisión de Codex, `revisiones/2026-11-03_codex-conclusion-voz.md`). En el camino:
 - `clock_ppm 0` llevó las conexiones de 3-10 s a ~60 s;
 - el kos alto quitó las RLF por CSI;
 - **n3 FDD funcionó por primera vez**.
@@ -18,19 +18,19 @@ Horas en UTC. Teléfono: Redmi Note 14 5G (SIM …003), salvo que se indique otr
 | 3 | `_csiper_ppm0.yml` | El Redmi no manda CSI periódico (~0,4 % de F2 decodificados) |
 | 4 | `_csiper_ppm0_kos.yml` | Sin RLF por CSI; **sigue el corte de ~60 s** (D-014). Queda como punto de retorno TDD, etiqueta `tdd-ppm0-2026-11-03` |
 | 5 | `_n3_ppm0_kos.yml` (n3 FDD, ARFCN 368500) | **Primer acceso real en n3.** Cortes a 64,1 s y 61,3 s del UE creado: el corte no depende de banda, duplexación ni numerología |
-| 6 | n3 + `adb logcat` en el Redmi | El módem deja la celda a **60,004 / 59,991 / 60,016 s** de obtener servicio: `+CIEV: 3,0` y, 10 ms después, `+CSCON: 0` (RRC idle local, sin RRCRelease ni nada en Open5GS). Después escanea LTE comercial (EARFCN 2450, 9360, 9485, 2225, 850, 950, 3050) y vuelve en 6-9 s con un Registration de movilidad |
-| 7 | n3 + MDLog (DebugLoggerUI) + OnePlus | Redmi: **60,022 y 60,014 s** (7 de 7 conexiones completas entre 59,99 y 60,02 s). OnePlus: pide la DNN `ims` y el núcleo la rechaza; se corta antes (~40 s) |
-| 8 | n3 con VoLTE desactivado | Los dos teléfonos se registran pero se van en ~5-20 s |
-| 9 | n3 + **Redmi en `NR only`** con VoLTE | **5 min 38 s sin corte.** Terminó por "RLC max ReTxs" cuando el procesador de UL del gNB se trabó por tiempo real (ver abajo) |
-| 10 | n78 TDD (`_csiper_ppm0_kos.yml`) + **Redmi en `NR only`** | **Más de 5 min 27 s sin corte**, casi sin fallas de tiempo real (339). El OnePlus (sin `NR only`) se cortó a ~38 y ~35 s del registro |
+| 6 | n3 + `adb logcat` en el Redmi | El módem pierde servicio a **60,004 / 59,991 / 60,016 s** de obtenerlo (`+CIEV: 3,0`), y la mayoría de las veces pasa a RRC idle (`+CSCON: 0`) 2-15 ms después; en el primer ciclo, 14,8 s después. En los extractos no hay `rrcRelease` previo ni eventos del núcleo. Después escanea LTE comercial (EARFCN 2450, 9360, 9485, 2225, 850, 950, 3050) y vuelve en 6-9 s con un Registration de movilidad |
+| 7 | n3 + MDLog (DebugLoggerUI) + OnePlus | Redmi: **60,022 y 60,014 s**. En total, **5 ciclos en n3 entre 59,991 y 60,022 s**; otros dos pares completos (15,2 y 23,9 s) terminaron al parar la celda. OnePlus: pide la DNN `ims`, el núcleo la rechaza y se corta antes (~40 s) |
+| 8 | n3 con VoLTE desactivado | Se registran, pero el Redmi tuvo RLF por CRC a 1,4 s del registro. El OnePlus siguió pidiendo `ims`. **Prueba confundida:** no está claro qué cambió efectivamente en cada teléfono |
+| 9 | n3 + **Redmi en `NR only`** con VoLTE | **338,7 s (5 min 39 s) desde que se creó el UE.** Terminó por RLF "RLC max ReTxs" a las 20:40:22. El atasco masivo de UL se registra desde ~20:40:35, así que no está probado que lo haya causado |
+| 10 | n78 TDD (`_csiper_ppm0_kos.yml`) + **Redmi en `NR only`** | **345,3 s (5 min 45 s) sin RLF** hasta parar el gNB (último PUSCH OK a las 20:51:48,7). Casi sin fallas de tiempo real (339). El OnePlus (sin `NR only`) tuvo RLF a 37,4 y 35,2 s del registro |
 
-## Por qué es la voz
-- **El corte lo inicia el teléfono:** en el gNB y en Open5GS no hay ningún mensaje alrededor del corte (se verificó en los logs RRC/NGAP de la prueba 7).
-- **Es un temporizador exacto:** 60,00 ± 0,02 s desde el registro, en n3 y en n78.
-- **Open5GS v2.8.0 anuncia "IMS voice over PS session supported" = 1 fijo en el código** (`src/amf/gmm-build.c`, líneas 125-130). No hay opción en el YAML.
-- **Un UE "voice centric" sin voz en 5GS deshabilita N1 y busca E-UTRA** (TS 24.501 §4.3 / §4.9, según Gemini; la sección exacta falta verificarla). Es lo que se ve: escaneo de bandas LTE.
+## Por qué la hipótesis principal es la voz (no demostrada)
+- **El corte lo inicia el teléfono:** en los extractos del gNB y de Open5GS no hay `rrcRelease` previo ni un evento del núcleo que lo explique. Las liberaciones llegan después. Esto favorece una salida local del UE, pero no prueba que sea por la voz: una falla local de radio también podría producirla.
+- **Parece un temporizador:** 5 ciclos entre 59,991 y 60,022 s, en n3 y medidos entre indicaciones AT. En n78 no hay logcat, así que la precisión solo está medida en n3.
+- **Open5GS v2.8.0 anuncia "IMS voice over PS session supported" = 1 fijo en el código** (`src/amf/gmm-build.c`, líneas 113-118 del tag), sin opción en el YAML. Falta decodificar el Registration Accept real.
+- **TS 24.501 V15.7.0 §4.3.2** (con §4.9.2) contempla que, aun anunciándose IMS, las capas superiores no indiquen voz en un plazo definido por el fabricante. Un UE *voice centric* en single-registration deshabilita entonces N1 y busca E-UTRA, con condiciones sobre las sesiones persistentes (verificado por Codex). No fija 60 s ni dice que todo teléfono sea *voice centric*. Encaja con el escaneo LTE observado.
 - **La guía oficial de srsRAN para COTS UEs** (verificado con WebFetch) dice, para el Pixel 6: *"Requires disabled NR_TIMER_WAIT_IMS_REGISTRATION or SUPPORT_IMS_NR_REGISTRATION_TIMER"*. Para el iPhone 13 Pro: *"iPhones require IMS to be enable UE to stay connected."*
-- Sin VoLTE, el teléfono sabe desde el principio que no tendrá voz y se va enseguida. Con `NR only` no tiene a dónde ir y se queda.
+- Con `NR only` no tiene a dónde ir y se queda. Pero `NR only` también bloquea otras políticas de selección de RAT, así que su éxito no distingue la voz de otras causas. La prueba sin VoLTE no ayuda a decidir (ver la prueba 8).
 
 **Descartados:** el `timeAlignmentTimer` (en OCUDU va de 500 ms a 10,24 s o infinito; no hay 60 s), T3512 (540 s), T3502, T3511, T3540 y T3346 (análisis de Gemini, coherente con TS 24.501 Tabla 10.2.1), y la búsqueda de HPLMN (TS 23.122: solo en VPLMN y en minutos).
 
@@ -59,7 +59,7 @@ En los logs solo aparecen las SIM de laboratorio (…003 y …004): no hubo iden
 - **Gemini:**
   - `investigacion/2026-11-03_gemini-clock-csi-rlf.md`;
   - `investigacion/2026-11-03_gemini-redmi-60s.md`. Propuso `NR only`, que resultó clave. Su cita principal (guía COTS de srsRAN) se verificó. **Las citas de issues de GitHub, Amarisoft y OAI no se verificaron.** Tampoco se verificaron sus códigos `*#*#8667#*#*` y `*#*#86583#*#*` ni el bloque `sib` propuesto para OCUDU.
-- **Falta revisión cruzada:** la conclusión de la voz (D-015) todavía no la revisó Codex.
+- **Codex revisó D-015** (`revisiones/2026-11-03_codex-conclusion-voz.md`). Cuestionó que se presentara como causa demostrada, el "7 de 7", los tiempos del OnePlus y la prueba sin VoLTE, y precisó la sección de TS 24.501 y las líneas de Open5GS. Las correcciones están incorporadas.
 
 ## Errores de esta sesión
 - Se lanzó tres veces la configuración equivocada por correr `./start.sh` sin argumento. Ahora el argumento existe, y `start.sh` verifica el montaje.
@@ -72,5 +72,5 @@ En los logs solo aparecen las SIM de laboratorio (…003 y …004): no hubo iden
 3. **OnePlus en `NR only` (P-005)** con `adb shell am start -n com.android.phone/.settings.RadioInfo`.
 4. **Mediciones:** throughput (`iperf3` contra `ogstun`), latencia y jitter, ahora que la conexión dura minutos.
 5. **Decidir P-003** (IMS en Docker o parche de Open5GS), para explicarlo en el informe o eliminar la dependencia de `NR only`.
-6. Que Codex revise D-015 y la evidencia de hoy (revisión cruzada pendiente).
-7. Verificar en TS 24.501 la sección exacta del comportamiento "voice centric" (§4.3) y el cambio a E-UTRA.
+6. **Prueba que más ayudaría a decidir (Codex):** A/B/A cambiando solo el Redmi a *data centric*, con LTE permitido, si el firmware lo deja. Si no, A/B/A con IMS VoPS 1→0→1 en una imagen de prueba de Open5GS (P-003).
+7. Decodificar el Registration Accept real (VoPS) y ver el *usage setting* del Redmi.

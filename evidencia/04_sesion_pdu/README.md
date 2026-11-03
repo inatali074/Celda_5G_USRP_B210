@@ -18,11 +18,11 @@ Los logs del gNB están comprimidos con gzip. Identificadores de terceros anonim
 
 ## 2026-11-03: corte de los 60 s y estabilidad con `NR only`
 **Qué confirma:**
-- **El corte de ~60 s lo inicia el teléfono, por la voz.** En `2026-11-03_redmi_logcat_radio_extracto.log`, el módem pasa a "sin servicio" (`+CIEV: 3,0`) y a RRC idle (`+CSCON: 0`) a los 60,00 ± 0,02 s de obtener servicio (`+CIEV: 3,1`). Después escanea LTE (`+EPHYCONFIG: 4,...`). En los logs del gNB y del núcleo no hay ningún mensaje en ese momento.
-- **Con `NR only`** (`*_n3_nronly*` y `*_tdd_nronly*`), el Redmi quedó conectado más de 5 min en n3 y en n78.
+- **El corte de ~60 s lo inicia el teléfono.** En `2026-11-03_redmi_logcat_radio_extracto.log`, el módem pierde servicio (`+CIEV: 3,0`) a los 59,991-60,022 s de obtenerlo (`+CIEV: 3,1`): 5 ciclos en n3. Después escanea LTE (`+EPHYCONFIG: 4,...`). En los extractos del gNB y del núcleo no hay una liberación previa de la red.
+- **Con `NR only`** (`*_n3_nronly*` y `*_tdd_nronly*`), el Redmi duró 338,7 s en n3 (terminó por RLF) y 345,3 s en n78 (sin RLF hasta parar el gNB).
 - **n3 FDD funciona** (`*_n3_volte_*`). Ver D-015 en `PROYECTO.md` y `sesiones/2026-11-03_cortes-60s-volte.md`.
 
-**Qué no confirma:** que el mecanismo interno sea exactamente un temporizador de registro IMS. El MDLog no se pudo decodificar, y es la explicación más consistente, no una lectura directa. Tampoco hay mediciones de throughput todavía.
+**Qué no confirma:** que la causa sea la voz IMS. Es la hipótesis principal, pero `NR only` también bloquea otras políticas de RAT, el MDLog no se pudo decodificar y el OnePlus se corta a otros tiempos. Ver `revisiones/2026-11-03_codex-conclusion-voz.md`. Tampoco hay mediciones de throughput todavía.
 
 **Archivos** (`2026-11-03_*`):
 - `gnb_eventos_<corrida>.log` y `nucleo_<corrida>.log`: extractos (UE, RRC, RLF, registro, DNN y paging), con el conteo de PRACH y de fallas de tiempo real en la cabecera. Corridas:
