@@ -46,7 +46,7 @@ if docker logs 5g-open5gs-1 >/dev/null 2>&1; then
 fi
 
 echo "--- Núcleo y MongoDB ---"
-docker compose stop open5gs mongodb
+docker compose stop dashboard open5gs mongodb
 
 echo "--- Consola ---"
 screen -S "$SESION" -X quit >/dev/null 2>&1 && echo "  Consola cerrada." || echo "  No estaba abierta."

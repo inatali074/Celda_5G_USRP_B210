@@ -96,7 +96,9 @@ fi
 
 echo
 echo "--- Núcleo y MongoDB ---"
-docker compose up -d --no-build mongodb open5gs
+docker compose up -d --no-build mongodb open5gs dashboard
+
+echo "Dashboard: http://localhost:8080"
 
 printf 'Esperando a Open5GS'
 for _ in $(seq 1 40); do

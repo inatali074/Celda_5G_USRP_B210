@@ -74,3 +74,17 @@ pcap:
   mac_filename: /tmp/gnb_mac.pcap
   ngap_enable: false
   ngap_filename: /tmp/gnb_ngap.pcap
+
+# Monitoreo interno de la red ran; no publica el control remoto al host.
+remote_control:
+  enabled: true
+  bind_addr: 0.0.0.0
+  port: 8001
+
+metrics:
+  enable_json: true
+  periodicity:
+    du_report_period: 1000
+  layers:
+    enable_sched: true
+    enable_sched_ue: true

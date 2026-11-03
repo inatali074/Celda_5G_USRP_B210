@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es-AR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Celda 5G · Monitoreo</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{color-scheme:dark;font:15px system-ui;background:#101722;color:#e4edf9}body{margin:22px auto;max-width:1560px;padding:0 18px}h1{font-size:27px}h2{font-size:18px;margin:0 0 12px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}section{background:#1b2636;border:1px solid #33465e;border-radius:10px;padding:18px;margin-bottom:16px}.wide{grid-column:1/-1}small,.muted{color:#a8bbd1}button,input,select{font:inherit;padding:8px;background:#101e30;color:inherit;border:1px solid #587396;border-radius:5px;margin:4px}button{cursor:pointer;background:#244972}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:9px;border-bottom:1px solid #33465e;white-space:nowrap}.scroll{overflow:auto}pre{white-space:pre-wrap;overflow:auto;max-height:320px;font-size:12px}.alarm{background:#692a2a;color:#fff;padding:12px}.ok{color:#74dcaa}.chart{height:230px}.events{max-height:280px;overflow:auto}.event{border-bottom:1px solid #33465e;padding:7px;font-size:13px}.error{color:#ffb3a5}label{display:inline-block}@media(max-width:950px){.grid{grid-template-columns:1fr}}canvas{max-width:100%}
+</style>
+<h1>Celda 5G SA <small>· monitoreo en tiempo real</small></h1>
+<p id="connection">Conectando con el dashboard…</p>
+<div class="grid">
+<section><h2>Estado de la celda</h2><div id="cell"></div><p class="muted">Conexión de métricas ≠ confirmación de transmisión RF. El dashboard nunca controla el gNB.</p></section>
+<section><h2>Salud de tiempo real</h2><div id="health"></div><pre id="rt"></pre><div id="host"></div></section>
+<section class="wide"><h2>UEs observados</h2><small>Las filas del núcleo y de radio se unen sólo si las métricas incluyen un IMSI explícito. “—” indica dato desconocido. BLER se calcula NOK/(OK+NOK) del mensaje, sin asumir si los contadores son acumulados.</small><div class="scroll"><table><thead><tr id="columns"></tr></thead><tbody id="ues"></tbody></table></div></section>
+<section><h2>Throughput de ogstun (Mbit/s)</h2><small>RX = subida del UE; TX = bajada hacia el UE. Incluye tráfico local al núcleo.</small><div class="chart"><canvas id="tun"></canvas></div><pre id="packets"></pre></section>
+<section><h2>Bitrate informado por gNB</h2><small>Valores crudos; confirmar unidades en el esquema real antes de compararlos con ogstun.</small><div class="chart"><canvas id="brate"></canvas></div></section>
+<section><h2>SINR / SNR de PUSCH (dB)</h2><div class="chart"><canvas id="sinr"></canvas></div></section>
+<section><h2>BLER DL / UL (%)</h2><div class="chart"><canvas id="bler"></canvas></div></section>
+<section><h2>Ping</h2><form id="pingForm"><label>Destino <input id="pingTarget" list="destinations" value="10.45.0.1" required></label><datalist id="destinations"></datalist><label>Intervalo (s) <input id="pingInterval" type="number" min="0.2" max="2" step="0.1" value="1"></label><label>Duración (s) <input id="pingDuration" type="number" min="1" max="600" value="30"></label><button>Iniciar ping</button></form><small>Hasta tres simultáneos. Jitter = media de diferencias absolutas entre RTT consecutivos. Pérdida definitiva al finalizar.</small><div id="pings"></div><div class="chart"><canvas id="pingChart"></canvas></div></section>
+<section><h2>iperf3</h2><p>Servidor UE: <strong>10.45.0.1:5201</strong> · <span id="serverState"></span></p><button id="serverStart">Iniciar servidor</button><button id="serverStop">Detener servidor</button><form id="iperfForm"><label>Servidor destino <input id="iperfTarget" list="destinations" value="10.45.0.2" required></label><label>Segundos <input id="iperfDuration" type="number" min="1" max="60" value="10"></label><label><input id="reverse" type="checkbox"> -R (recibir en dashboard)</label><label><input id="udp" type="checkbox"> UDP</label><label>Mbit/s UDP <input id="bandwidth" type="number" min="1" max="100" value="10"></label><button>Iniciar cliente</button><button id="clientStop" type="button">Detener cliente</button></form><small>Contra un teléfono servidor: normal = bajada al UE; -R = subida del UE. Resultados e intervalos al terminar cada prueba.</small><div class="chart"><canvas id="iperfChart"></canvas></div><pre id="iperfResults"></pre></section>
+<section class="wide"><h2>Línea de tiempo</h2><div id="events" class="events"></div></section>
+<section class="wide"><h2>Métricas JSON crudas</h2><small>Último mensaje y hasta 30 mensajes en memoria. El mapeo tolerante puede requerir ajustes con capturas reales.</small><details open><summary>Último mensaje</summary><pre id="raw"></pre></details><details><summary>Historia reciente</summary><pre id="rawHistory"></pre></details><details><summary>Errores de adquisición</summary><pre id="errors"></pre></details></section>
+</div><p id="actionError" class="error" role="alert"></p>
+<script>
+'use strict';
+const $=id=>document.getElementById(id), fmt=v=>v===null||v===undefined?'—':typeof v==='number'?Number(v.toFixed(2)):String(v);
+const charts={};
+function chart(id,names){if(!window.Chart)return null;return charts[id]=new Chart($(id),{type:'line',data:{labels:[],datasets:names.map((label,i)=>({label,data:[],borderColor:['#68c7ff','#ffb96d','#80dfba','#d0a7ff'][i%4],pointRadius:0,borderWidth:2,spanGaps:false}))},options:{responsive:true,maintainAspectRatio:false,animation:false,scales:{x:{ticks:{maxTicksLimit:6,color:'#abc'}},y:{ticks:{color:'#abc'}}},plugins:{legend:{labels:{color:'#ddd'}}}}});}
+chart('tun',['Subida UE','Bajada UE']);chart('brate',['DL','UL']);chart('sinr',['PUSCH']);chart('bler',['DL','UL']);chart('pingChart',['RTT ms']);chart('iperfChart',['Mbit/s']);
+function plot(id,labels,series){const c=charts[id];if(!c)return;c.data.labels=labels;series.forEach((s,i)=>c.data.datasets[i].data=s);c.update('none');}
+const cols=[['rnti','RNTI'],['imsi','IMSI'],['ip','IP'],['seconds','Conectado (s)'],['cqi','CQI'],['ri','RI'],['dl_mcs','MCS DL'],['ul_mcs','MCS UL'],['sinr','SINR/SNR'],['dl_bler','BLER DL %'],['ul_bler','BLER UL %'],['ta','TA'],['phr','PHR'],['bsr','BSR'],['dl_brate','Bitrate DL'],['ul_brate','Bitrate UL']];
+cols.forEach(([,name])=>{const th=document.createElement('th');th.textContent=name;$('columns').append(th);});
+function aggregate(h,key){const v=h.ues.map(u=>Number(u[key])).filter((v,i)=>h.ues[i][key]!=null&&Number.isFinite(v));return v.length?v.reduce((a,b)=>a+b,0):null;}
+function average(h,key){const n=h.ues.filter(u=>u[key]!=null).length;return n?aggregate(h,key)/n:null;}
+function render(s){
+ $('connection').textContent='Dashboard conectado · '+new Date().toLocaleTimeString('es-AR');
+ $('cell').textContent=`Métricas gNB: ${s.gnb_connected?'WebSocket conectado':'desconectado'} · último mensaje: ${s.metrics_at?new Date(s.metrics_at*1000).toLocaleTimeString('es-AR'):'—'} · configuración: ${s.config||'no deducible del log'} · uptime dashboard: ${Math.floor(s.uptime)} s · gNB observado: ${s.gnb_since?Math.floor(Date.now()/1000-s.gnb_since)+' s':'—'}`;
+ $('health').textContent=s.alarm?`ALARMA: UL processor is busy supera ${s.busy_threshold}/s`:`Sin alarma UL busy (umbral > ${s.busy_threshold}/s)`;$('health').className=s.alarm?'alarm':'ok';$('rt').textContent=JSON.stringify(s.rt,null,2);
+ $('host').textContent=`Host completo: CPU ${fmt(s.host.cpu_percent)} % · carga 1/5/15 min: ${(s.host.load||[]).join(' / ')}`;
+ const used=new Set(), rows=s.radio_ues.map(u=>{const core=s.core_ues.find(c=>c.imsi===String(u.imsi));if(core)used.add(core.imsi);return {...core,...u};});rows.push(...s.core_ues.filter(c=>!used.has(c.imsi)));
+ $('ues').replaceChildren();for(const row of rows){const tr=document.createElement('tr');for(const [k] of cols){const td=document.createElement('td');td.textContent=fmt(row[k]);if(k==='seconds'&&row.connected===false)td.textContent+=' (finalizado)';tr.append(td);}$('ues').append(tr);}
+ const labels=s.history.map(h=>new Date(h.time*1000).toLocaleTimeString('es-AR'));
+ plot('tun',labels,['rx_bytes_per_s','tx_bytes_per_s'].map(k=>s.history.map(h=>h.ogstun[k]==null?null:h.ogstun[k]*8/1e6)));
+ plot('brate',labels,['dl_brate','ul_brate'].map(k=>s.history.map(h=>aggregate(h,k))));plot('sinr',labels,[s.history.map(h=>average(h,'sinr'))]);plot('bler',labels,['dl_bler','ul_bler'].map(k=>s.history.map(h=>average(h,k))));
+ $('packets').textContent=`Paquetes RX/s: ${fmt(s.ogstun.rx_packets_per_s)} · TX/s: ${fmt(s.ogstun.tx_packets_per_s)}`;
+ $('destinations').replaceChildren();[...new Set(['10.45.0.1','10.53.1.3','8.8.8.8',...s.core_ues.filter(u=>u.ip).map(u=>u.ip)])].forEach(ip=>{const o=document.createElement('option');o.value=ip;$('destinations').append(o);});
+ $('pings').replaceChildren();for(const [id,p] of Object.entries(s.pings)){const line=document.createElement('p');line.textContent=`${p.target}: ${p.running?'activo':'terminado'} · RTT ${fmt(p.rtt_ms)} ms · pérdida ${fmt(p.loss_percent)} % · jitter ${fmt(p.jitter_ms)} ms ${p.error||''} ${p.last_line||''}`;if(p.running){const b=document.createElement('button');b.textContent='Detener';b.onclick=()=>api('/api/ping/'+id,'DELETE');line.append(b);}$('pings').append(line);}
+ const last=Object.values(s.pings).at(-1);if(last)plot('pingChart',last.samples.map(x=>new Date(x.time*1000).toLocaleTimeString('es-AR')),[last.samples.map(x=>x.rtt_ms)]);
+ $('serverState').textContent=s.iperf.server?'activo / esperando prueba':'detenido';$('iperfResults').textContent=JSON.stringify(s.iperf.results,null,2);
+ const result=s.iperf.results.at(-1)?.result, intervals=result?.intervals||[];plot('iperfChart',intervals.map((v,i)=>fmt(v.sum?.end??i+1)),[intervals.map(v=>(v.sum?.bits_per_second??v.streams?.reduce((a,b)=>a+(b.bits_per_second||0),0)??0)/1e6)]);
+ $('events').replaceChildren();[...s.events].reverse().forEach(e=>{const d=document.createElement('div');d.className='event';d.textContent=`${new Date(e.time*1000).toLocaleTimeString('es-AR')} [${e.source}] ${e.text}`;$('events').append(d);});
+ for(const [id,value] of [['raw',s.raw],['rawHistory',s.metrics_history],['errors',s.errors]])$(id).textContent=JSON.stringify(value,null,2);
+}
+async function api(path,method='POST',body){try{const r=await fetch(path,{method,headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});const data=await r.json();if(!r.ok)throw Error(JSON.stringify(data.detail));$('actionError').textContent='';return data;}catch(e){$('actionError').textContent='No se pudo completar la acción: '+e.message;}}
+$('pingForm').onsubmit=e=>{e.preventDefault();api('/api/ping','POST',{target:$('pingTarget').value,interval:Number($('pingInterval').value),duration:Number($('pingDuration').value)});};
+$('iperfForm').onsubmit=e=>{e.preventDefault();api('/api/iperf/client','POST',{target:$('iperfTarget').value,duration:Number($('iperfDuration').value),reverse:$('reverse').checked,udp:$('udp').checked,bandwidth_mbps:Number($('bandwidth').value)});};
+$('serverStart').onclick=()=>api('/api/iperf/server');$('serverStop').onclick=()=>api('/api/iperf/server','DELETE');$('clientStop').onclick=()=>api('/api/iperf/client','DELETE');
+function connect(){const ws=new WebSocket('ws://'+location.host+'/ws');ws.onmessage=e=>render(JSON.parse(e.data));ws.onclose=()=>{$('connection').textContent='Dashboard desconectado; reintentando…';setTimeout(connect,2000);};ws.onerror=()=>ws.close();}connect();
+if(!window.Chart)$('actionError').textContent='Chart.js no está disponible: los datos siguen visibles, pero los gráficos requieren acceso al CDN.';
+</script></html>

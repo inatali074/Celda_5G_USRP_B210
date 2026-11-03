@@ -16,6 +16,8 @@ services:
         ipv4_address: 10.53.1.4
 
   open5gs:
+    ports:
+      - "127.0.0.1:8080:8080"
     # Sin terminal, 5gc retiene su salida y se pierde si el proceso termina con error.
     tty: true
     build:
@@ -43,6 +45,7 @@ services:
       timeout: 2s
       retries: 60
     volumes:
+      - core-logs:/var/log/open5gs
       - type: bind
         source: ./config/open5gs
         target: /config
@@ -52,6 +55,20 @@ services:
     networks:
       ran:
         ipv4_address: 10.53.1.2
+
+  dashboard:
+    build: ./docker/dashboard
+    network_mode: "service:open5gs"
+    depends_on:
+      open5gs:
+        condition: service_healthy
+    # ping usa sockets raw si el kernel no permite sockets ICMP de datagrama.
+    cap_drop: [ALL]
+    cap_add: [NET_RAW]
+    security_opt: [no-new-privileges:true]
+    volumes:
+      - gnb-logs:/logs/gnb:ro
+      - core-logs:/logs/core:ro
 
   gnb-radio:
     profiles: [radio]
@@ -77,6 +94,7 @@ services:
       rtprio: 99
       memlock: -1
     volumes:
+      - gnb-logs:/tmp
       - /dev/bus/usb:/dev/bus/usb
       - type: bind
         source: ./config/gnb/${GNB_CONFIG:-gnb_b210.yml}
@@ -84,6 +102,8 @@ services:
         read_only: true
         bind:
           create_host_path: false
+    # Conserva argv, stdin y señales: sh se reemplaza por el gNB.
+    entrypoint: ["/bin/sh", "-ec", ": > /tmp/gnb.log; exec /usr/local/bin/gnb \"$$@\"", "gnb"]
     command: ["-c", "/config/gnb.yml"]
     networks:
       ran:
@@ -166,6 +186,8 @@ services:
 
 volumes:
   mongodb-data:
+  gnb-logs:
+  core-logs:
 
 # N2 (SCTP/38412) y N3 (UDP/2152) circulan por esta red sin publicar puertos.
 # Las configuraciones deben usar estas IP; comprobar que la subred no se superponga con el host.

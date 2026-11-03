@@ -2,6 +2,8 @@
 # SBI y PFCP usan loopback dentro del único contenedor 5GC.
 db_uri: mongodb://10.53.1.4/open5gs
 logger:
+  file:
+    path: /var/log/open5gs/core.log
   level: info
 global:
   parameter:
