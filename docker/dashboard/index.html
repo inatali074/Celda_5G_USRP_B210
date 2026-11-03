@@ -1,59 +1,271 @@
-<!doctype html>
-<html lang="es-AR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Celda 5G · Monitoreo</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<!-- Diseño del Panel5G_SA de un compañero, adaptado al dashboard del proyecto. -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel 5G SA</title>
 <style>
-:root{color-scheme:dark;font:15px system-ui;background:#101722;color:#e4edf9}body{margin:22px auto;max-width:1560px;padding:0 18px}h1{font-size:27px}h2{font-size:18px;margin:0 0 12px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}section{background:#1b2636;border:1px solid #33465e;border-radius:10px;padding:18px;margin-bottom:16px}.wide{grid-column:1/-1}small,.muted{color:#a8bbd1}button,input,select{font:inherit;padding:8px;background:#101e30;color:inherit;border:1px solid #587396;border-radius:5px;margin:4px}button{cursor:pointer;background:#244972}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:9px;border-bottom:1px solid #33465e;white-space:nowrap}.scroll{overflow:auto}pre{white-space:pre-wrap;overflow:auto;max-height:320px;font-size:12px}.alarm{background:#692a2a;color:#fff;padding:12px}.ok{color:#74dcaa}.chart{height:230px}.events{max-height:280px;overflow:auto}.event{border-bottom:1px solid #33465e;padding:7px;font-size:13px}.error{color:#ffb3a5}label{display:inline-block}@media(max-width:950px){.grid{grid-template-columns:1fr}}canvas{max-width:100%}
+  :root{
+    --bg:#0b0f17;--bg2:#121826;--card:#151c2c;--card2:#1b2436;--line:#243049;
+    --tx:#e6edf6;--muted:#8a97ad;--dim:#5b6983;
+    --accent:#4ea1ff;--ok:#3ddc84;--warn:#ffcb47;--bad:#ff5d5d;--idle:#6b7890;--mag:#c07cff;
+    --mono:ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;--sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;}
+  :root:not([data-theme="dark"]){--bg:#eef2f8;--bg2:#e4ebf4;--card:#fff;--card2:#f3f6fb;--line:#d6dfec;
+    --tx:#14202e;--muted:#5a6882;--dim:#8893a6;--accent:#1766d6;--ok:#1a9e55;--warn:#b67c00;--bad:#d13b3b;--idle:#8893a6;--mag:#8a46d6;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px;padding:0 16px 48px;line-height:1.4;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{margin:0;font-weight:600}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  header{position:sticky;top:0;z-index:30;background:linear-gradient(180deg,var(--bg) 72%,transparent);padding:12px 0 10px;border-bottom:1px solid var(--line);margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700}
+  .dot{width:11px;height:11px;border-radius:50%;background:var(--bad)}
+  .dot.on{background:var(--ok);animation:pulse 1.8s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(61,220,132,.55)}70%{box-shadow:0 0 0 9px rgba(61,220,132,0)}100%{box-shadow:0 0 0 0 rgba(61,220,132,0)}}
+  .tag{background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--muted)}
+  .ctrls{display:flex;gap:8px;margin-left:auto;align-items:center;flex-wrap:wrap}
+  .btn{background:var(--card2);border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:7px 12px;cursor:pointer;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{border-color:var(--accent)}
+  .btn.go{background:var(--ok);color:#07160c;border-color:transparent}
+  .btn.stop{background:var(--bad);color:#2a0808;border-color:transparent}
+  .btn.ghost{background:transparent;color:var(--muted);font-weight:500}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  select,input{background:var(--card2);border:1px solid var(--line);color:var(--tx);border-radius:7px;padding:6px 8px;font-size:13px;font-family:var(--mono)}
+  .hmeta{display:flex;gap:16px;flex-wrap:wrap;align-items:center;color:var(--muted);font-size:12.5px;width:100%}
+  .hmeta b{color:var(--tx)}
+
+  .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:16px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;position:relative;overflow:hidden}
+  .kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .kpi .v{font-size:25px;font-weight:700;margin-top:3px}.kpi .u{font-size:13px;color:var(--muted);font-weight:500}
+  .kpi .spark{position:absolute;right:0;bottom:0;left:0;height:24px;opacity:.5}
+
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .card h2{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .card h2 .pill{margin-left:auto;font-size:11px;font-weight:600}
+  .span3{grid-column:span 3}.span4{grid-column:span 4}.span5{grid-column:span 5}.span6{grid-column:span 6}.span7{grid-column:span 7}.span8{grid-column:span 8}.span12{grid-column:span 12}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px}
+  .kv .k{color:var(--muted)}.kv .val{text-align:right;font-family:var(--mono)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-size:11.5px;padding:3px 9px;border-radius:7px;border:1px solid var(--line);background:var(--card2);font-family:var(--mono);display:flex;align-items:center;gap:5px}
+  .chip i{width:7px;height:7px;border-radius:50%;background:var(--ok)}.chip.down i{background:var(--bad)}.chip.down{color:var(--bad)}
+  .bar{height:7px;background:var(--card2);border-radius:5px;overflow:hidden;margin-top:4px;border:1px solid var(--line)}
+  .bar>span{display:block;height:100%;background:var(--accent);border-radius:5px;transition:width .4s}
+  .barlabel{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px}.barlabel b{color:var(--tx);font-family:var(--mono)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{padding:8px;text-align:right;white-space:nowrap}
+  th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;border-bottom:1px solid var(--line)}
+  td{border-bottom:1px solid var(--line);font-family:var(--mono)}
+  td:first-child,th:first-child{text-align:left}
+  tr.ue{cursor:pointer}tr.ue:hover td{background:var(--card2)}
+  .st{display:inline-flex;align-items:center;gap:6px;font-family:var(--sans)}.st i{width:8px;height:8px;border-radius:50%}
+  .good{color:var(--ok)}.mid{color:var(--warn)}.poor{color:var(--bad)}.idle{color:var(--idle)}
+  .bi-good{background:var(--ok)}.bi-mid{background:var(--warn)}.bi-poor{background:var(--bad)}.bi-idle{background:var(--idle)}
+  .detail td{background:var(--bg2)}.detail .inner{padding:12px 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px 22px}
+  .detail .m{font-size:12px;color:var(--muted)}.detail .m b{display:block;color:var(--tx);font-family:var(--mono);font-size:15px}
+  svg.chart{width:100%;height:110px;display:block}
+  .legend{display:flex;gap:16px;font-size:12px;color:var(--muted);margin-top:4px}.legend span{display:flex;align-items:center;gap:6px}.legend i{width:10px;height:3px;border-radius:2px}
+  .note{font-size:11.5px;color:var(--dim);margin-top:8px}
+  /* herramientas */
+  .toolrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+  .out{font-family:var(--mono);font-size:12px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:10px;white-space:pre-wrap;max-height:150px;overflow:auto;color:var(--muted)}
+  /* consola */
+  .tabs{display:flex;gap:4px;margin-bottom:10px}
+  .tabs button{background:var(--card2);border:1px solid var(--line);color:var(--muted);border-radius:7px 7px 0 0;padding:5px 11px;cursor:pointer;font-size:12px}
+  .tabs button.active{color:var(--tx);border-bottom-color:var(--card);background:var(--bg2)}
+  .console{font-family:var(--mono);font-size:11.5px;line-height:1.5;background:#060a12;border:1px solid var(--line);border-radius:8px;padding:10px;height:300px;overflow:auto;color:#aeb9cc;white-space:pre-wrap;word-break:break-word}
+  :root:not([data-theme="dark"]) .console{background:#0b1220;color:#c7d2e0}
+  .log{font-family:var(--mono);font-size:12px;max-height:230px;overflow:auto;display:flex;flex-direction:column-reverse}
+  .log .row{padding:4px 2px;border-bottom:1px solid var(--line);display:flex;gap:10px}.log .t{color:var(--dim)}
+  .ev-reg{color:var(--ok)}.ev-rel{color:var(--warn)}.ev-rlf{color:var(--bad)}.ev-sys{color:var(--muted)}
+  /* modal + toast */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:60}
+  .modal.show{display:flex}
+  .modal .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;max-width:440px;width:92%}
+  .modal h3{font-size:16px;margin-bottom:10px}.modal p{color:var(--muted);font-size:13px;margin:0 0 16px}
+  .modal .acts{display:flex;gap:10px;justify-content:flex-end}
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:11px 16px;font-size:13px;z-index:70;opacity:0;transition:.3s;pointer-events:none;max-width:90vw}
+  #toast.show{opacity:1}#toast.ok{border-color:var(--ok)}#toast.err{border-color:var(--bad)}
+  @media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.span3,.span4,.span5,.span6,.span7,.span8{grid-column:span 12}}
+  @media(max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}}
 </style>
-<h1>Celda 5G SA <small>· monitoreo en tiempo real</small></h1>
-<p id="connection">Conectando con el dashboard…</p>
+</head>
+<body>
+<header>
+  <div class="brand"><span class="dot" id="statusDot"></span><span>Panel 5G&nbsp;SA</span>
+    <span class="tag" id="cellTag">—</span></div>
+  <div class="ctrls">
+    <span class="tag" id="srcTag">—</span>
+
+    <button class="btn go" id="startBtn">▶ Levantar</button>
+    <button class="btn stop" id="stopBtn">■ Frenar</button>
+    <button class="btn ghost" id="themeBtn">◐</button>
+  </div>
+  <div class="hmeta">
+    <span>Estado <b id="cellState">—</b></span>
+    <span>Modo <b id="modeTxt">—</b></span>
+    <span>Actualizado <b class="mono" id="clock">--:--:--</b></span>
+    <span id="offHint" style="color:var(--warn)"></span>
+  </div>
+</header>
+
+<div class="kpis" id="kpis"></div>
+
 <div class="grid">
-<section><h2>Estado de la celda</h2><div id="cell"></div><p class="muted">Conexión de métricas ≠ confirmación de transmisión RF. El dashboard nunca controla el gNB.</p></section>
-<section><h2>Salud de tiempo real</h2><div id="health"></div><pre id="rt"></pre><div id="host"></div></section>
-<section class="wide"><h2>UEs observados</h2><small>Las filas del núcleo y de radio se unen sólo si las métricas incluyen un IMSI explícito. “—” indica dato desconocido. BLER se calcula NOK/(OK+NOK) del mensaje, sin asumir si los contadores son acumulados.</small><div class="scroll"><table><thead><tr id="columns"></tr></thead><tbody id="ues"></tbody></table></div></section>
-<section><h2>Throughput de ogstun (Mbit/s)</h2><small>RX = subida del UE; TX = bajada hacia el UE. Incluye tráfico local al núcleo.</small><div class="chart"><canvas id="tun"></canvas></div><pre id="packets"></pre></section>
-<section><h2>Bitrate informado por gNB</h2><small>Valores crudos; confirmar unidades en el esquema real antes de compararlos con ogstun.</small><div class="chart"><canvas id="brate"></canvas></div></section>
-<section><h2>SINR / SNR de PUSCH (dB)</h2><div class="chart"><canvas id="sinr"></canvas></div></section>
-<section><h2>BLER DL / UL (%)</h2><div class="chart"><canvas id="bler"></canvas></div></section>
-<section><h2>Ping</h2><form id="pingForm"><label>Destino <input id="pingTarget" list="destinations" value="10.45.0.1" required></label><datalist id="destinations"></datalist><label>Intervalo (s) <input id="pingInterval" type="number" min="0.2" max="2" step="0.1" value="1"></label><label>Duración (s) <input id="pingDuration" type="number" min="1" max="600" value="30"></label><button>Iniciar ping</button></form><small>Hasta tres simultáneos. Jitter = media de diferencias absolutas entre RTT consecutivos. Pérdida definitiva al finalizar.</small><div id="pings"></div><div class="chart"><canvas id="pingChart"></canvas></div></section>
-<section><h2>iperf3</h2><p>Servidor UE: <strong>10.45.0.1:5201</strong> · <span id="serverState"></span></p><button id="serverStart">Iniciar servidor</button><button id="serverStop">Detener servidor</button><form id="iperfForm"><label>Servidor destino <input id="iperfTarget" list="destinations" value="10.45.0.2" required></label><label>Segundos <input id="iperfDuration" type="number" min="1" max="60" value="10"></label><label><input id="reverse" type="checkbox"> -R (recibir en dashboard)</label><label><input id="udp" type="checkbox"> UDP</label><label>Mbit/s UDP <input id="bandwidth" type="number" min="1" max="100" value="10"></label><button>Iniciar cliente</button><button id="clientStop" type="button">Detener cliente</button></form><small>Contra un teléfono servidor: normal = bajada al UE; -R = subida del UE. Resultados e intervalos al terminar cada prueba.</small><div class="chart"><canvas id="iperfChart"></canvas></div><pre id="iperfResults"></pre></section>
-<section class="wide"><h2>Línea de tiempo</h2><div id="events" class="events"></div></section>
-<section class="wide"><h2>Métricas JSON crudas</h2><small>Último mensaje y hasta 30 mensajes en memoria. El mapeo tolerante puede requerir ajustes con capturas reales.</small><details open><summary>Último mensaje</summary><pre id="raw"></pre></details><details><summary>Historia reciente</summary><pre id="rawHistory"></pre></details><details><summary>Errores de adquisición</summary><pre id="errors"></pre></details></section>
-</div><p id="actionError" class="error" role="alert"></p>
+  <section class="card span8">
+    <h2>📱 Conexiones en tiempo real <span class="pill mono" id="ueCount"></span></h2>
+    <div style="overflow:auto">
+      <table id="ueTable"><thead><tr>
+        <th>UE / IMSI</th><th>IP</th><th>Estado</th><th>CQI</th><th>MCS↓/↑</th><th>RSRP PUSCH (rel.)</th>
+        <th>SINR↑</th><th>↓ Mbps</th><th>↑ Mbps</th><th>BLER↓</th><th>TA</th>
+      </tr></thead><tbody id="ueBody"></tbody></table>
+    </div>
+    <div class="note">Tocá una fila para HARQ, PHR, RI, BSR, SNR PUCCH y BLER UL. Asociación IMSI estimada, nunca por orden de tabla.</div>
+  </section>
+
+  <section class="card span4">
+    <h2>🖥️ Sistema y RF <span class="pill mono good" id="rtPill"></span></h2>
+    <div class="kv" id="sysKv"></div>
+    <div class="barlabel"><span>CPU host</span><b id="cpuTxt"></b></div><div class="bar"><span id="cpuBar"></span></div>
+    <div class="barlabel"><span>RAM</span><b id="ramTxt"></b></div><div class="bar"><span id="ramBar"></span></div>
+    <div class="note" id="rtNote"></div>
+  </section>
+
+  <!-- HERRAMIENTAS -->
+  <section class="card span5">
+    <h2>🛠️ Herramientas</h2>
+    <div class="toolrow">
+      <b style="width:52px">Ping</b>
+      <input id="pingTarget" list="targets" placeholder="IP o host" value="10.45.0.1" style="width:140px"><datalist id="targets"></datalist>
+      <input id="pingCount" title="Duración en segundos" type="number" value="5" min="1" max="600" style="width:56px">
+      <button class="btn" id="pingBtn">Enviar ping</button>
+    </div>
+    <div class="out" id="pingOut">Pingea desde el núcleo hacia la IP del celular (sale por ogstun).</div>
+    <div class="toolrow" style="margin-top:12px">
+      <b style="width:52px">Tráfico</b>
+      <select id="trafDir"><option value="normal">Cliente: enviar al UE</option><option value="reverse">Cliente: recibir del UE</option></select>
+      <label><input id="udp" type="checkbox"> UDP</label><input id="bandwidth" title="Mbit/s UDP" type="number" min="1" max="100" value="10" style="width:60px">
+      <button class="btn" id="serverBtn">Servidor :5201</button><button class="btn" id="serverStop">Detener servidor</button>
+      <input id="trafSecs" type="number" value="10" min="3" max="60" style="width:56px"><span class="note" style="margin:0">seg</span>
+      <button class="btn" id="trafBtn">▶ Generar tráfico</button>
+    </div>
+    <div class="out" id="trafOut">iperf3 real. El teléfono puede conectarse a 10.45.0.1:5201. El cliente usa el destino seleccionado para ping (debe tener servidor iperf3).</div>
+  </section>
+
+  <!-- NETWORK SLICE -->
+  <section class="card span3">
+    <h2>🍰 Network Slice</h2>
+    <div class="kv" id="sliceKv"></div>
+    <div class="note">S-NSSAI = SST + SD. SST 1 = eMBB (banda ancha). Todos los UE usan este slice y la DNN Metodos1.</div>
+  </section>
+
+  <section class="card span4">
+    <h2>🗼 Celda / gNB (OCUDU)</h2>
+    <div class="kv" id="cellKv"></div>
+    <div class="barlabel"><span>Uso PRB ↓</span><b id="prbDlTxt"></b></div><div class="bar"><span id="prbDlBar"></span></div>
+    <div class="barlabel"><span>Uso PRB ↑</span><b id="prbUlTxt"></b></div><div class="bar"><span id="prbUlBar"></span></div>
+  </section>
+
+  <!-- CONSOLAS -->
+  <section class="card span8">
+    <h2>🖳 Consolas en vivo</h2>
+    <div class="tabs" id="conTabs">
+      <button data-svc="gnb" class="active">gNB (OCUDU)</button>
+      <button data-svc="core">Núcleo (Open5GS)</button>
+
+    </div>
+    <div class="console" id="console">Elegí una consola. Se actualiza en vivo cuando la red está levantada.</div>
+  </section>
+
+  <section class="card span4">
+    <h2>📈 Ancho de banda (N6, 60 s)</h2>
+    <svg class="chart" id="thrChart" viewBox="0 0 600 110" preserveAspectRatio="none"></svg>
+    <div class="legend"><span><i style="background:var(--accent)"></i>↓ DL</span><span><i style="background:var(--ok)"></i>↑ UL</span>
+      <span style="margin-left:auto" class="mono" id="thrNow"></span></div>
+  </section>
+
+  <section class="card span4">
+    <h2>🧠 Núcleo 5G (Open5GS)</h2>
+    <div class="chips" id="nfChips" style="margin-bottom:12px"></div>
+    <div class="kv" id="coreKv"></div>
+  </section>
+
+  <section class="card span4">
+    <h2>⏱️ Fallas de tiempo real (/min)</h2>
+    <svg class="chart" id="rtChart" viewBox="0 0 600 110" preserveAspectRatio="none"></svg>
+    <div class="note" id="rtCmp"></div>
+  </section>
+
+  <section class="card span4">
+    <h2>📋 Eventos <span class="pill mono" id="cadence"></span></h2>
+    <div class="log" id="log"></div>
+  </section>
+</div>
+
+<div id="toast"></div>
+
+<p class="note" style="margin-top:18px">Diseño: Panel5G_SA de un compañero. Adaptado a FastAPI en Docker, puerto 8080. Asociación RNTI ↔ IMSI estimada por tiempo (ventana 5 s); puede fallar con registros simultáneos. No controla la red.</p>
 <script>
 'use strict';
-const $=id=>document.getElementById(id), fmt=v=>v===null||v===undefined?'—':typeof v==='number'?Number(v.toFixed(2)):String(v);
-const charts={};
-function chart(id,names){if(!window.Chart)return null;return charts[id]=new Chart($(id),{type:'line',data:{labels:[],datasets:names.map((label,i)=>({label,data:[],borderColor:['#68c7ff','#ffb96d','#80dfba','#d0a7ff'][i%4],pointRadius:0,borderWidth:2,spanGaps:false}))},options:{responsive:true,maintainAspectRatio:false,animation:false,scales:{x:{ticks:{maxTicksLimit:6,color:'#abc'}},y:{ticks:{color:'#abc'}}},plugins:{legend:{labels:{color:'#ddd'}}}}});}
-chart('tun',['Subida UE','Bajada UE']);chart('brate',['DL','UL']);chart('sinr',['PUSCH']);chart('bler',['DL','UL']);chart('pingChart',['RTT ms']);chart('iperfChart',['Mbit/s']);
-function plot(id,labels,series){const c=charts[id];if(!c)return;c.data.labels=labels;series.forEach((s,i)=>c.data.datasets[i].data=s);c.update('none');}
-const cols=[['rnti','RNTI'],['imsi','IMSI'],['ip','IP'],['seconds','Conectado (s)'],['cqi','CQI'],['ri','RI'],['dl_mcs','MCS DL'],['ul_mcs','MCS UL'],['sinr','SINR/SNR'],['dl_bler','BLER DL %'],['ul_bler','BLER UL %'],['ta','TA'],['phr','PHR'],['bsr','BSR'],['dl_brate','Bitrate DL'],['ul_brate','Bitrate UL']];
-cols.forEach(([,name])=>{const th=document.createElement('th');th.textContent=name;$('columns').append(th);});
-function aggregate(h,key){const v=h.ues.map(u=>Number(u[key])).filter((v,i)=>h.ues[i][key]!=null&&Number.isFinite(v));return v.length?v.reduce((a,b)=>a+b,0):null;}
-function average(h,key){const n=h.ues.filter(u=>u[key]!=null).length;return n?aggregate(h,key)/n:null;}
-function render(s){
- $('connection').textContent='Dashboard conectado · '+new Date().toLocaleTimeString('es-AR');
- $('cell').textContent=`Métricas gNB: ${s.gnb_connected?'WebSocket conectado':'desconectado'} · último mensaje: ${s.metrics_at?new Date(s.metrics_at*1000).toLocaleTimeString('es-AR'):'—'} · configuración: ${s.config||'no deducible del log'} · uptime dashboard: ${Math.floor(s.uptime)} s · gNB observado: ${s.gnb_since?Math.floor(Date.now()/1000-s.gnb_since)+' s':'—'}`;
- $('health').textContent=s.alarm?`ALARMA: UL processor is busy supera ${s.busy_threshold}/s`:`Sin alarma UL busy (umbral > ${s.busy_threshold}/s)`;$('health').className=s.alarm?'alarm':'ok';$('rt').textContent=JSON.stringify(s.rt,null,2);
- $('host').textContent=`Host completo: CPU ${fmt(s.host.cpu_percent)} % · carga 1/5/15 min: ${(s.host.load||[]).join(' / ')}`;
- const used=new Set(), rows=s.radio_ues.map(u=>{const core=s.core_ues.find(c=>c.imsi===String(u.imsi));if(core)used.add(core.imsi);return {...core,...u};});rows.push(...s.core_ues.filter(c=>!used.has(c.imsi)));
- $('ues').replaceChildren();for(const row of rows){const tr=document.createElement('tr');for(const [k] of cols){const td=document.createElement('td');td.textContent=fmt(row[k]);if(k==='seconds'&&row.connected===false)td.textContent+=' (finalizado)';tr.append(td);}$('ues').append(tr);}
- const labels=s.history.map(h=>new Date(h.time*1000).toLocaleTimeString('es-AR'));
- plot('tun',labels,['rx_bytes_per_s','tx_bytes_per_s'].map(k=>s.history.map(h=>h.ogstun[k]==null?null:h.ogstun[k]*8/1e6)));
- plot('brate',labels,['dl_brate','ul_brate'].map(k=>s.history.map(h=>aggregate(h,k))));plot('sinr',labels,[s.history.map(h=>average(h,'sinr'))]);plot('bler',labels,['dl_bler','ul_bler'].map(k=>s.history.map(h=>average(h,k))));
- $('packets').textContent=`Paquetes RX/s: ${fmt(s.ogstun.rx_packets_per_s)} · TX/s: ${fmt(s.ogstun.tx_packets_per_s)}`;
- $('destinations').replaceChildren();[...new Set(['10.45.0.1','10.53.1.3','8.8.8.8',...s.core_ues.filter(u=>u.ip).map(u=>u.ip)])].forEach(ip=>{const o=document.createElement('option');o.value=ip;$('destinations').append(o);});
- $('pings').replaceChildren();for(const [id,p] of Object.entries(s.pings)){const line=document.createElement('p');line.textContent=`${p.target}: ${p.running?'activo':'terminado'} · RTT ${fmt(p.rtt_ms)} ms · pérdida ${fmt(p.loss_percent)} % · jitter ${fmt(p.jitter_ms)} ms ${p.error||''} ${p.last_line||''}`;if(p.running){const b=document.createElement('button');b.textContent='Detener';b.onclick=()=>api('/api/ping/'+id,'DELETE');line.append(b);}$('pings').append(line);}
- const last=Object.values(s.pings).at(-1);if(last)plot('pingChart',last.samples.map(x=>new Date(x.time*1000).toLocaleTimeString('es-AR')),[last.samples.map(x=>x.rtt_ms)]);
- $('serverState').textContent=s.iperf.server?'activo / esperando prueba':'detenido';$('iperfResults').textContent=JSON.stringify(s.iperf.results,null,2);
- const result=s.iperf.results.at(-1)?.result, intervals=result?.intervals||[];plot('iperfChart',intervals.map((v,i)=>fmt(v.sum?.end??i+1)),[intervals.map(v=>(v.sum?.bits_per_second??v.streams?.reduce((a,b)=>a+(b.bits_per_second||0),0)??0)/1e6)]);
- $('events').replaceChildren();[...s.events].reverse().forEach(e=>{const d=document.createElement('div');d.className='event';d.textContent=`${new Date(e.time*1000).toLocaleTimeString('es-AR')} [${e.source}] ${e.text}`;$('events').append(d);});
- for(const [id,value] of [['raw',s.raw],['rawHistory',s.metrics_history],['errors',s.errors]])$(id).textContent=JSON.stringify(value,null,2);
+const $=s=>document.querySelector(s);
+const escapeHtml=v=>String(v??'–').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=(v,n=1)=>typeof v==='number'&&Number.isFinite(v)?v.toFixed(n):'–';
+const text=(id,v)=>$(id).textContent=v??'–';
+const kv=(id,rows)=>$(id).innerHTML=rows.map(([k,v])=>`<div class="k">${escapeHtml(k)}</div><div class="val">${escapeHtml(v)}</div>`).join('');
+const clamp=v=>Math.max(0,Math.min(100,Number(v)||0));
+async function api(path,method='GET',body){const r=await fetch(path,{method,headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});const data=await r.json();if(!r.ok)throw Error(typeof data.detail==='string'?data.detail:JSON.stringify(data.detail));return data;}
+function toast(msg){text('#toast',msg);$('#toast').className='show';setTimeout(()=>$('#toast').className='',6000);}
+function spark(values,color){let valid=values.filter(v=>typeof v==='number'&&Number.isFinite(v));if(!valid.length)return '<text x="10" y="55" fill="gray">sin datos</text>';const max=Math.max(1,...valid);let pen=false,d='';values.forEach((v,i)=>{if(typeof v!=='number'||!Number.isFinite(v)){pen=false;return;}d+=(pen?'L':'M')+(i*600/Math.max(1,values.length-1)).toFixed(1)+' '+(105-v/max*100).toFixed(1)+' ';pen=true;});return `<path d="${d}" fill="none" stroke="${color}" stroke-width="2"/>`;}
+let expanded=new Set();
+function render(d){
+ const C=d.cell||{},S=d.sys||{},K=d.core||{},R=d.rt||{},U=d.ues||[],T=d.thr||[],rates=R.rates||{};
+ const kpis=[['UEs radio',d.running?U.length:'–'],['PDU observadas',K.pdu],['N6 ↓ Mbit/s',fmt(T.at(-1)?.dl)],['N6 ↑ Mbit/s',fmt(T.at(-1)?.ul)],['Fallas /min',fmt(rates.total??(d.running?0:null))],['CPU host %',fmt(S.cpu_percent)]];
+ $('#kpis').innerHTML=kpis.map(([k,v])=>`<div class="kpi"><div class="l">${escapeHtml(k)}</div><div class="v mono">${escapeHtml(v)}</div></div>`).join('');
+ text('#ueCount',U.length+' con métricas');
+ $('#ueBody').innerHTML=U.map((u,i)=>{
+ const ta=u.ta_ns!=null?fmt(u.ta_ns)+' ns':'–';
+ const cols=[(u.name||u.rnti)+(u.imsi?' · '+u.imsi+' (estimada)':''),u.ip,u.status,u.cqi,fmt(u.dl_mcs,0)+' / '+fmt(u.ul_mcs,0),fmt(u.pusch_rsrp_db)+' dB',fmt(u.sinr)+' dB',fmt(u.dl_mbps),fmt(u.ul_mbps),fmt(u.dl_bler)+' %',ta];
+ const details=[['RNTI',u.rnti],['DNN',u.dnn],['HARQ DL OK/NOK',fmt(u.dl_ok,0)+' / '+fmt(u.dl_nok,0)],['HARQ UL OK/NOK',fmt(u.ul_ok,0)+' / '+fmt(u.ul_nok,0)],['BLER UL',fmt(u.ul_bler)+' %'],['SNR PUCCH',fmt(u.pucch_snr_db)+' dB'],['PHR',fmt(u.phr)+' dB'],['RI DL/UL',fmt(u.dl_ri,0)+' / '+fmt(u.ul_ri,0)],['BSR',u.bsr],['DL buffer',u.dl_bs],['TA PUSCH',fmt(u.pusch_ta_ns)+' ns'],['TA PUCCH',fmt(u.pucch_ta_ns)+' ns']];
+ return `<tr class="ue" data-i="${i}">${cols.map(v=>`<td>${escapeHtml(v)}</td>`).join('')}</tr><tr class="detail" id="det${i}" style="display:${expanded.has(u.rnti)?'table-row':'none'}"><td colspan="11"><div class="inner">${details.map(([k,v])=>`<div class="m">${escapeHtml(k)}<b>${escapeHtml(v)}</b></div>`).join('')}</div></td></tr>`;
+ }).join('')||'<tr><td colspan="11">Sin datos de UEs</td></tr>';
+ document.querySelectorAll('tr.ue').forEach(tr=>tr.onclick=()=>{const u=U[Number(tr.dataset.i)];expanded.has(u.rnti)?expanded.delete(u.rnti):expanded.add(u.rnti);$('#det'+tr.dataset.i).style.display=expanded.has(u.rnti)?'table-row':'none';});
+ kv('#sysKv',[['USB / serie','no disponible'],['clock_ppm',C.clockPpm],['TX/RX gain',`${C.txGain??'–'} / ${C.rxGain??'–'} dB`],['Governor',S.gov],['Frecuencia CPU',fmt(S.ghz)+' GHz'],['Temperatura hwmon (máxima)',fmt(S.temp)+' °C']]);
+ text('#cpuTxt',fmt(S.cpu_percent)+' % · '+(S.cpus??'–')+' CPU lógicas (100% total)');$('#cpuBar').style.width=clamp(S.cpu_percent)+'%';
+ text('#ramTxt',fmt(S.ram_used_gib,2)+' / '+fmt(S.ram_total_gib,2)+' GiB host');$('#ramBar').style.width=clamp(S.ram_used_gib/S.ram_total_gib*100)+'%';
+ text('#rtPill',R.alarm?'ALARMA UL busy':(R.total?.total??0)+' acumuladas');$('#rtPill').className='pill mono '+(R.alarm?'poor':'');
+ text('#rtNote','Fallas por minuto: '+Object.entries(rates).map(([k,v])=>k+' '+fmt(v)).join(' · '));
+ kv('#cellKv',[['Archivo montado',C.file],['Banda / duplex',`${C.band??'–'} / ${C.duplex??'–'}`],['ARFCN',C.arfcn],['Frecuencia DL',fmt(C.dlFreq,3)+' MHz'],['Ancho / SCS',`${C.bw??'–'} MHz / ${C.scs??'–'} kHz`],['PRB',C.prb],['PCI',C.pci],['PLMN / TAC',`${C.plmn??'–'} / ${C.tac??'–'}`]]);
+ for(const dir of ['Dl','Ul']){text('#prb'+dir+'Txt','sin datos normalizados');$('#prb'+dir+'Bar').style.width='0%';}
+ kv('#sliceKv',[['SST',K.slice?.sst],['SD',K.slice?.sd],['DNN observada en log',K.slice?.dnn]]);
+ $('#nfChips').innerHTML=['AMF','SMF','UPF','AUSF','UDM','UDR','PCF','NSSF','BSF','NRF','SCP'].map(n=>`<span class="chip down">${n}: ${escapeHtml(K.nf?.[n]||'desconocido')}</span>`).join('');
+ kv('#coreKv',[['Registros observados',K.reg],['PDU observadas',K.pdu],['N6 TX bytes (DL)',K.ogstun?.tx_bytes],['N6 RX bytes (UL)',K.ogstun?.rx_bytes],['Estado NF','Actividad de log; no prueba de proceso vivo']]);
+ $('#thrChart').innerHTML=spark(T.map(t=>t.dl),'#4ea1ff')+spark(T.map(t=>t.ul),'#3ddc84');text('#thrNow','↓ '+fmt(T.at(-1)?.dl)+' ↑ '+fmt(T.at(-1)?.ul)+' Mbit/s');
+ $('#rtChart').innerHTML=spark(R.series||[],'#ff5d5d');text('#rtCmp','60 puntos: tasa instantánea por minuto, según segundo de lectura del log. Alarma: UL busy >10/s.');
+ $('#log').innerHTML=(d.events||[]).slice().reverse().map(e=>`<div class="row"><span class="t">${escapeHtml(new Date(e.time*1000).toLocaleTimeString('es-AR'))}</span><span class="ev">${escapeHtml(e.source+': '+e.text)}</span></div>`).join('');
+ text('#cellState',d.running?'WebSocket conectado':'sin conexión al gNB');text('#modeTxt',d.mode);text('#srcTag','datos reales');text('#cellTag',`${C.band??'–'} · ${C.dlFreq??'–'} MHz · ${C.plmn??'–'}`);text('#offHint',d.running?'':'Sin datos de radio; ver consolas');$('#statusDot').className='dot'+(d.running?' on':'');
+ const ips=[...new Set(['10.45.0.1','8.8.8.8',...(K.ues||[]).map(u=>u.ip).filter(Boolean)])];$('#targets').innerHTML=ips.map(ip=>`<option value="${escapeHtml(ip)}"></option>`).join('');
+ const P=Object.values(d.pings||{});
+ text('#pingOut',P.length?P.slice(-4).map(p=>`${p.target} ${p.running?'(en curso)':'(terminado)'}: ${p.received??0}/${p.sent??0} respuestas, pérdida ${fmt(p.loss_percent)} %, RTT ${fmt(p.rtt_ms,2)} ms, jitter ${fmt(p.jitter_ms,2)} ms`).join('\n'):'Sin pruebas. Elegí IP y duración en segundos.');
+ const I=d.iperf||{},mb=b=>typeof b==='number'?fmt(b/1e6,2)+' Mbit/s':'–';
+ const ires=(I.results||[]).slice(-3).map(x=>{const r=x.result||{},e=r.end||{},t=new Date(x.time*1000).toLocaleTimeString('es-AR');
+  if(r.error)return `${t} ${x.mode}: error ${String(r.error).slice(0,200)}`;
+  if(e.sum&&e.sum.jitter_ms!==undefined)return `${t} ${x.mode} UDP: ${mb(e.sum.bits_per_second)}, jitter ${fmt(e.sum.jitter_ms,2)} ms, pérdida ${fmt(e.sum.lost_percent)} %`;
+  return `${t} ${x.mode} TCP: enviado ${mb(e.sum_sent?.bits_per_second)}, recibido ${mb(e.sum_received?.bits_per_second)}, retransmisiones ${e.sum_sent?.retransmits??'–'}`;});
+ text('#trafOut',`Servidor 10.45.0.1:5201: ${I.server?'activo':'apagado'} · cliente: ${I.client?'en curso':'libre'}\n`+(ires.join('\n')||'Sin resultados todavía.'));text('#clock',new Date().toLocaleTimeString('es-AR'));
 }
-async function api(path,method='POST',body){try{const r=await fetch(path,{method,headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});const data=await r.json();if(!r.ok)throw Error(JSON.stringify(data.detail));$('actionError').textContent='';return data;}catch(e){$('actionError').textContent='No se pudo completar la acción: '+e.message;}}
-$('pingForm').onsubmit=e=>{e.preventDefault();api('/api/ping','POST',{target:$('pingTarget').value,interval:Number($('pingInterval').value),duration:Number($('pingDuration').value)});};
-$('iperfForm').onsubmit=e=>{e.preventDefault();api('/api/iperf/client','POST',{target:$('iperfTarget').value,duration:Number($('iperfDuration').value),reverse:$('reverse').checked,udp:$('udp').checked,bandwidth_mbps:Number($('bandwidth').value)});};
-$('serverStart').onclick=()=>api('/api/iperf/server');$('serverStop').onclick=()=>api('/api/iperf/server','DELETE');$('clientStop').onclick=()=>api('/api/iperf/client','DELETE');
-function connect(){const ws=new WebSocket('ws://'+location.host+'/ws');ws.onmessage=e=>render(JSON.parse(e.data));ws.onclose=()=>{$('connection').textContent='Dashboard desconectado; reintentando…';setTimeout(connect,2000);};ws.onerror=()=>ws.close();}connect();
-if(!window.Chart)$('actionError').textContent='Chart.js no está disponible: los datos siguen visibles, pero los gráficos requieren acceso al CDN.';
-</script></html>
+let conSvc='gnb';
+async function pollLog(){try{const r=await api('/api/logs?svc='+conSvc+'&tail=160');const c=$('#console'),bottom=c.scrollTop+c.clientHeight>=c.scrollHeight-30;c.textContent=r.log||r.error||'sin datos';if(bottom)c.scrollTop=c.scrollHeight;}catch(e){text('#console',e.message);}}
+ document.querySelectorAll('#conTabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#conTabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');conSvc=b.dataset.svc;pollLog();});
+async function tick(){try{render(await api('/api/metrics'));}catch(e){render({mode:'sin datos'});text('#offHint','Sin servidor: '+e.message);}finally{setTimeout(tick,2000);}}
+async function logsLoop(){await pollLog();setTimeout(logsLoop,2000);}
+$('#startBtn').onclick=()=>toast('Ejecutá en una terminal: ./start.sh <config.yml>');$('#stopBtn').onclick=()=>toast('Ejecutá en una terminal: ./stop.sh');
+$('#themeBtn').onclick=()=>{document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';};
+async function action(path,body,out){try{await api(path,'POST',body);toast('Solicitud aceptada');}catch(e){text(out,e.message);toast(e.message);}}
+$('#pingBtn').onclick=()=>action('/api/ping',{target:$('#pingTarget').value,interval:1,duration:Number($('#pingCount').value)},'#pingOut');
+$('#trafBtn').onclick=()=>action('/api/iperf/client',{target:$('#pingTarget').value,duration:Number($('#trafSecs').value),reverse:$('#trafDir').value==='reverse',udp:$('#udp').checked,bandwidth_mbps:Number($('#bandwidth').value)},'#trafOut');
+$('#serverBtn').onclick=()=>action('/api/iperf/server',null,'#trafOut');
+$('#serverStop').onclick=async()=>{try{await api('/api/iperf/server','DELETE');}catch(e){toast(e.message);}};
+tick();logsLoop();
+</script>
+</body></html>

@@ -5,15 +5,18 @@ from contextlib import asynccontextmanager
 import ipaddress
 import json
 import math
+import os
+from datetime import datetime
 from pathlib import Path
 import re
 import time
 import uuid
 
-from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Request, Query, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 import websockets
+import yaml
 
 # Único lugar para ajustar nombres. No se suponen unidades para aliases ambiguos.
 FIELDS = {
@@ -26,7 +29,8 @@ FIELDS = {
     'dl_ok': ('dl_nof_ok', 'dl_ok'), 'dl_nok': ('dl_nof_nok', 'dl_nok'),
     'ul_ok': ('ul_nof_ok', 'ul_ok'), 'ul_nok': ('ul_nof_nok', 'ul_nok'),
     'bsr': ('bsr', 'buffer_status'), 'ta': ('ta', 'timing_advance'),
-    'phr': ('phr', 'power_headroom'),
+    'phr': ('last_phr', 'phr', 'power_headroom'),
+    **{k: (k,) for k in ('pusch_rsrp_db', 'pucch_snr_db', 'ta_ns', 'pusch_ta_ns', 'pucch_ta_ns', 'dl_ri', 'ul_ri', 'dl_bs')},
 }
 START = time.monotonic()
 START_WALL = time.time()
@@ -42,10 +46,58 @@ iperf = {'server': False, 'client': False, 'results': deque(maxlen=10)}
 processes = {}
 tasks = set()
 rt = Counter()
+rt_total = Counter()
+rt_window = deque(maxlen=60)
+log_buffers = {s: deque(maxlen=400) for s in ('gnb', 'core')}
+creations = deque(maxlen=256)
+registrations = deque(maxlen=256)
+associations = {}
+nf_seen = {}
+ANSI = re.compile(r'\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1b\\))')
+
+
+def private_text(text):
+    return re.sub(r'(?<!\d)\d{14,15}(?!\d)',
+                  lambda m: m[0] if m[0].startswith('00101') else '****'+m[0][-4:], text)
+
+
+def log_time(line):
+    m = re.search(r'\d{4}-\d\d-\d\d[T ]\d\d:\d\d:\d\d(?:[.,]\d+)?', line)
+    if m:
+        try:
+            return datetime.fromisoformat(m[0].replace(',', '.')).timestamp()
+        except ValueError:
+            pass
+    m = re.search(r'(\d\d/\d\d) (\d\d:\d\d:\d\d(?:[.,]\d+)?)', line)
+    if m:
+        try:
+            now = datetime.now()
+            dt = datetime.strptime(f'{now.year}/{m[1]} {m[2]}'.replace(',', '.'), '%Y/%m/%d %H:%M:%S.%f' if '.' in m[2] or ',' in m[2] else '%Y/%m/%d %H:%M:%S')
+            return dt.timestamp()
+        except ValueError:
+            pass
+    return None
+
+
+def associate():
+    # Recalcular por timestamp: el orden de lectura de ambos archivos no importa.
+    associations.clear()
+    used = set()
+    for stamp, imsi in sorted(registrations):
+        candidates = [(t, r) for t, r in creations if 0 <= stamp-t <= 5 and (t, r) not in used]
+        if candidates:
+            t, r = max(candidates)
+            used.add((t, r))
+            associations[r] = (imsi, t)
+    # Una creación posterior del mismo RNTI invalida la unión anterior.
+    for t, r in creations:
+        if r in associations and t > associations[r][1]:
+            del associations[r]
+
 
 
 def event(source, text):
-    events.append({'time': time.time(), 'source': source, 'text': text[:1000]})
+    events.append({'time': time.time(), 'source': source, 'text': private_text(text[:1000])})
 
 
 def number(value):
@@ -95,11 +147,15 @@ async def metrics():
                         state['raw'] = payload
                         state['metrics_at'] = time.time()
                         metrics_history.append({'time': time.time(), 'message': payload})
-                        rows = extract(payload)
-                        # Respuestas de control no borran el último conjunto de métricas.
-                        if not isinstance(payload, dict) or payload.get('cmd') != 'metrics_subscribe' or rows:
-                            state['radio_ues'] = rows
+                        cells = payload.get('cells', []) if isinstance(payload, dict) else []
+                        if any(isinstance(c, dict) and 'ue_list' in c for c in cells):
+                            state['radio_ues'] = extract([c.get('ue_list', []) for c in cells])
                             state['radio_at'] = time.time()
+                        for cell in cells:
+                            for item in cell.get('event_list', []):
+                                event('metrics', private_text(json.dumps(item, ensure_ascii=False)))
+                            if 'cell_metrics' in cell:
+                                state['cell_metrics'] = cell['cell_metrics']
                         state['errors'].pop('metrics', None)
                     except (ValueError, TypeError) as exc:
                         state['errors']['metrics'] = str(exc)
@@ -110,23 +166,35 @@ async def metrics():
         await asyncio.sleep(3)
 
 
-def log_line(source, line):
-    line = re.sub(r'\x1b\[[0-9;]*m', '', line)
+def log_line(source, line, replay=False):
+    line = ANSI.sub('', line)
+    log_buffers[source].append(private_text(line[:16384]))
+    stamp = log_time(line)
     if source == 'gnb':
-        for key, pattern in {'late': r'\blate\b', 'underflow': 'underflow', 'overflow': 'overflow',
-                             'ul_busy': 'UL processor is busy', 'received_late': 'Received late'}.items():
-            if re.search(pattern, line, re.I):
-                rt[key] += 1
-        if 'Real-time failure' in line:
+        created = re.search(r'c-rnti=(0x[0-9a-f]+): UE created', line, re.I)
+        if created and stamp is not None:
+            creations.append((stamp, int(created[1], 16)))
+            associate()
+        kind = next((k for k, pattern in (
+            ('ul_busy', r'UL processor is busy'), ('underflow', 'underflow'),
+            ('overflow', 'overflow'), ('late', r'\blate\b'),
+            ('other', 'Real-time failure')) if re.search(pattern, line, re.I)), None)
+        if kind and not replay:
+            rt[kind] += 1
             rt['total'] += 1
+            rt_total[kind] += 1
+            rt_total['total'] += 1
         if re.search(r'UE created|RLF detected|rrcRelease|PRACH.*detect|detect.*PRACH', line, re.I):
             event(source, line)
         if 'gNB started' in line:
-            state['gnb_since'] = time.time()
+            state['gnb_since'] = stamp
         match = re.search(r'(?:config(?:uration)?[^\n]*?)([\w./-]+\.yml)', line, re.I)
         if match:
             state['config'] = match[1]
     else:
+        nf = re.search(r'\[(amf|smf|upf|ausf|udm|udr|pcf|nssf|bsf|nrf|scp)\]', line, re.I)
+        if nf:
+            nf_seen[nf[1].upper()] = stamp if stamp is not None else (0 if replay else time.time())
         match = re.search(r'UE SUPI\[(?:imsi-)?(\d+)\].*DNN\[([^]]+)\].*IPv4\[([\d.]+)\]', line)
         imsi_match = re.search(r'(?:imsi-|IMSI[\s\[:=]*|SUPI\[|\[)(\d{14,15})(?!\d)', line, re.I)
         imsi = match[1] if match else imsi_match[1] if imsi_match else None
@@ -136,12 +204,20 @@ def log_line(source, line):
             ue = subscribers.setdefault(imsi, {'imsi': imsi, 'ip': None, 'since': None, 'connected': False})
             if match:
                 ue.update(ip=match[3], dnn=match[2])
+            if 'Registration complete' in line and stamp is not None:
+                registrations.append((stamp, imsi))
+                associate()
+            if match:
+                ue['pdu'] = True
+            if re.search(r'Session.*(?:Release|removed)|PDU.*Release', line, re.I):
+                ue['pdu'] = False
             if 'Registration complete' in line or match:
                 if not ue['connected']:
-                    ue['since'] = time.time()
+                    ue['since'] = stamp if stamp is not None else (None if replay else time.time())
                 ue['connected'] = True
             if 'Deregistration' in line:
                 ue['connected'] = False
+                ue['pdu'] = False
                 ue['seconds'] = time.time()-ue['since'] if ue['since'] else None
         if re.search(r'Registration complete|UE SUPI\[|Paging failed|Ue requested DNN.*Not Supported|Deregistration', line, re.I):
             event(source, line)
@@ -168,24 +244,33 @@ async def tail(source, path):
                     handle = path.open('rb')
                     identity = (stat.st_dev, stat.st_ino)
                     pending = b''
-                    # Al abrir el dashboard no se simulan registros viejos como conexiones nuevas.
-                    if first:
-                        if stat.st_mtime < START_WALL:
-                            handle.seek(0, 2)
-                        first = False
+                    # Bootstrap acotado; no contabiliza fallas históricas como nuevas.
+                    replay = first
+                    if first and stat.st_size > 256*1024:
+                        handle.seek(stat.st_size-256*1024)
+                        handle.readline()  # descartar primera línea incompleta
+                    first = False
+                    log_buffers[source].clear()
                     if source == 'gnb':
+                        creations.clear()
+                        associations.clear()
                         state['gnb_since'] = None
                         state['config'] = None
                     else:
+                        registrations.clear()
+                        associations.clear()
+                        nf_seen.clear()
                         for ue in subscribers.values():
                             ue['connected'] = False
+                            ue['pdu'] = False
                 prefix = head
                 chunk = handle.read(256*1024)
                 pending += chunk
                 lines = pending.split(b'\n')
                 pending = lines.pop()[-16384:]
                 for line in lines:
-                    log_line(source, line.decode(errors='replace'))
+                    log_line(source, line.decode(errors='replace'), replay=replay)
+                replay = False
                 state['errors'].pop(source+'_log', None)
             except (OSError, ValueError) as exc:
                 state['errors'][source+'_log'] = str(exc)[:300]
@@ -226,6 +311,9 @@ async def sample():
             state['errors']['host'] = str(exc)
         if not state['gnb_connected'] or not state['radio_at'] or time.time()-state['radio_at'] > 5:
             state['radio_ues'] = []
+        state['host'].update(host_details())
+        state['cell'] = read_cell()
+        rt_window.append(dict(rt))
         state['rt'] = dict(rt)
         state['alarm'] = rt['ul_busy'] > state['busy_threshold']
         rt.clear()
@@ -467,3 +555,90 @@ async def browser(ws: WebSocket):
             await asyncio.sleep(1)
     except (WebSocketDisconnect, RuntimeError, asyncio.TimeoutError):
         pass
+
+
+
+def read_cell():
+    try:
+        cfg = yaml.safe_load(Path('/config/gnb.yml').read_text()) or {}
+        c, rf = cfg.get('cell_cfg', {}), cfg.get('ru_sdr', {})
+        n = number(c.get('dl_arfcn'))
+        bw, scs = number(c.get('channel_bandwidth_MHz')), number(c.get('common_scs'))
+        band = c.get('band')
+        return {'file': os.environ.get('GNB_CONFIG'), 'band': 'n'+str(band) if band else None,
+                'duplex': {78: 'TDD', 3: 'FDD'}.get(band), 'arfcn': n,
+                'dlFreq': round(.005*n if n < 600000 else 3000+.015*(n-600000), 3) if n is not None and 0 <= n < 2016667 else None,
+                'bw': bw, 'scs': scs, 'prb': {(10, 15): 52, (10, 30): 24, (20, 15): 106, (20, 30): 51}.get((bw, scs)),
+                'pci': c.get('pci'), 'plmn': c.get('plmn'), 'tac': c.get('tac'),
+                'txGain': rf.get('tx_gain'), 'rxGain': rf.get('rx_gain'), 'clockPpm': rf.get('clock_ppm')}
+    except (OSError, ValueError, AttributeError, yaml.YAMLError):
+        return {}
+
+
+def host_details():
+    def read(path):
+        try:
+            return Path(path).read_text().strip()
+        except OSError:
+            return None
+    mem = {}
+    for line in (read('/proc/meminfo') or '').splitlines():
+        parts = line.split()
+        if len(parts) >= 2:
+            mem[parts[0].rstrip(':')] = number(parts[1])
+    total, available = mem.get('MemTotal'), mem.get('MemAvailable')
+    freq = number(read('/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq'))
+    temps = []
+    for path in Path('/sys/class/hwmon').glob('hwmon*/temp*_input'):
+        v = number(read(path))
+        if v is not None:
+            temps.append(v/1000)
+    return {'cpus': os.cpu_count(), 'ram_total_gib': total/1048576 if total else None,
+            'ram_used_gib': (total-available)/1048576 if total and available is not None else None,
+            'gov': read('/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor'),
+            'ghz': freq/1e6 if freq is not None else None, 'temp': max(temps) if temps else None}
+
+
+@app.get('/api/logs')
+async def get_logs(svc: str = Query(pattern='^(gnb|core)$'), tail: int = Query(default=160, ge=20, le=400)):
+    return {'log': '\n'.join(list(log_buffers[svc])[-tail:]), 'error': state['errors'].get(svc+'_log')}
+
+
+@app.get('/api/metrics')
+async def panel_metrics():
+    now = time.time()
+    fresh = bool(state['gnb_connected'] and state['radio_at'] and now-state['radio_at'] <= 5)
+    rows = []
+    names = {'001010000000003': 'Redmi Note 14', '001010000000004': 'OnePlus 13', '001010000000001': 'srsUE (sim)'}
+    for row in state['radio_ues'] if fresh else []:
+        value = row.get('rnti')
+        try:
+            rnti = int(value, 16) if isinstance(value, str) and value.startswith('0x') else int(value)
+        except (TypeError, ValueError):
+            continue
+        link = associations.get(rnti)
+        imsi = link[0] if link else None
+        ue = subscribers.get(imsi, {})
+        rows.append({**row, 'rnti': f'0x{rnti:04x}', 'imsi': private_text(imsi) if imsi else None,
+                     'name': names.get(imsi), 'estimated': bool(imsi), 'ip': ue.get('ip'),
+                     'dnn': ue.get('dnn'), 'status': ('registrado (observado)' if ue.get('connected') else 'sin registro observado'),
+                     'dl_mbps': number(row.get('dl_brate'))/1e6 if number(row.get('dl_brate')) is not None else None,
+                     'ul_mbps': number(row.get('ul_brate'))/1e6 if number(row.get('ul_brate')) is not None else None})
+    window = Counter()
+    for point in rt_window:
+        window.update(point)
+    # Ventana parcial normalizada por el tiempo realmente observado.
+    seconds = min(60, max(1, time.monotonic()-START))
+    rates = {k: v*60/seconds for k, v in window.items()}
+    core_rows = [{**u, 'imsi': private_text(u['imsi'])} for u in subscribers.values()]
+    return {'cell': state.get('cell', {}), 'sys': state['host'],
+            'core': {'ues': core_rows, 'reg': sum(u['connected'] for u in subscribers.values()) if subscribers else None,
+                     'pdu': sum(bool(u.get('pdu')) for u in subscribers.values()) if subscribers else None,
+                     'nf': {n: ('log reciente' if now-t < 10 else 'sin actividad reciente') for n, t in nf_seen.items()},
+                     'ogstun': state['ogstun'], 'slice': {'sst': 1, 'sd': '0xffffff', 'dnn': 'Metodos1'}},
+            'ues': rows, 'thr': [{'dl': h['ogstun'].get('tx_bytes_per_s', 0)*8/1e6 if 'tx_bytes_per_s' in h['ogstun'] else None,
+                                   'ul': h['ogstun'].get('rx_bytes_per_s', 0)*8/1e6 if 'rx_bytes_per_s' in h['ogstun'] else None} for h in list(history)[-60:]],
+            'rt': {'rates': rates, 'total': dict(rt_total), 'series': [p.get('total', 0)*60 for p in rt_window], 'alarm': state['alarm']},
+            'events': list(events), 'running': state['gnb_connected'], 'mode': 'métricas reales' if fresh else 'sin datos de radio',
+            'pings': {k: {**v, 'samples': list(v['samples'])} for k, v in pings.items()},
+            'iperf': {**iperf, 'results': list(iperf['results'])}, 'errors': state['errors']}

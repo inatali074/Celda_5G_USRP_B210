@@ -69,6 +69,14 @@ services:
     volumes:
       - gnb-logs:/logs/gnb:ro
       - core-logs:/logs/core:ro
+      - type: bind
+        source: ./config/gnb/${GNB_CONFIG:-gnb_b210.yml}
+        target: /config/gnb.yml
+        read_only: true
+        bind:
+          create_host_path: false
+    environment:
+      GNB_CONFIG: ${GNB_CONFIG:-gnb_b210.yml}
 
   gnb-radio:
     profiles: [radio]
