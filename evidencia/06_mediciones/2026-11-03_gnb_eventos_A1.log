@@ -1,0 +1,8 @@
+2026-11-03T22:35:16.495333 [GNB     ] [I] ==== gNB started ===
+2026-11-03T22:35:18.019871 [CU-CP   ] [I] ue=0 c-rnti=0x4601: UE created
+2026-11-03T22:35:18.942728 [CU-CP   ] [I] ue=1 c-rnti=0x4602: UE created
+2026-11-03T22:35:21.067832 [RRC     ] [I] ue=0 c-rnti=0x4601: DCCH DL rrcRelease
+2026-11-03T22:35:21.986822 [RRC     ] [I] ue=1 c-rnti=0x4602: DCCH DL rrcRelease
+2026-11-03T22:35:31.942699 [CU-CP   ] [I] ue=2 c-rnti=0x4603: UE created
+2026-11-03T22:38:39.132252 [CU-CP   ] [I] ue=3 c-rnti=0x4604: UE created
+2026-11-03T22:41:07.020381 [RRC     ] [I] ue=3 c-rnti=0x4604: DCCH DL rrcRelease

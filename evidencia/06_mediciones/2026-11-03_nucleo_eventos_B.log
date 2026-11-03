@@ -1,0 +1,8 @@
+11/03 22:46:53.649: [gmm] INFO: [imsi-001010000000003] Registration complete (../src/amf/gmm-sm.c:3165)
+11/03 22:46:54.279: [smf] INFO: UE SUPI[imsi-001010000000003] DNN[Metodos1] IPv4[10.45.0.2] IPv6[] (../src/smf/npcf-handler.c:647)
+11/03 22:46:54.282: [upf] INFO: UE F-SEID[UP:0x48a CP:0xf22] APN[Metodos1] PDN-Type[1] IPv4[10.45.0.2] IPv6[] (../src/upf/context.c:498)
+11/03 22:46:58.529: [amf] INFO: UE Context Release [Action:3] (../src/amf/ngap-handler.c:1961)
+11/03 22:46:59.285: [gmm] INFO: [imsi-001010000000004] Registration complete (../src/amf/gmm-sm.c:3165)
+11/03 22:47:01.706: [amf] INFO: UE Context Release [Action:2] (../src/amf/ngap-handler.c:1961)
+11/03 22:48:29.038: [smf] INFO: UE SUPI[imsi-001010000000004] DNN[Metodos1] IPv4[10.45.0.3] IPv6[] (../src/smf/npcf-handler.c:647)
+11/03 22:48:29.039: [upf] INFO: UE F-SEID[UP:0x7c6 CP:0x76f] APN[Metodos1] PDN-Type[1] IPv4[10.45.0.3] IPv6[] (../src/upf/context.c:498)
