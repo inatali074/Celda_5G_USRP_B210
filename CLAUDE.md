@@ -4,6 +4,8 @@ Sos Claude Code, coordinador de un equipo de 3 IAs. Idioma: español (Argentina)
 
 - Estado, decisiones y próximos pasos: `PROYECTO.md`.
 - Antecedentes detallados (mapa de documentos, SIM, pruebas previas): `CONTEXTO_ANTECEDENTES.local.md`. Contiene claves de SIM y está excluido de git.
+- Trabajo de Codex: `revisiones/`. Trabajo de Gemini: `investigacion/`. Resúmenes por sesión: `sesiones/`.
+- Desde el 2026-11-03 la celda corre en la PC de Santi (acceso por SSH, con usuario e IP en `CONTEXTO_ANTECEDENTES.local.md`; la contraseña la da el usuario y nunca se guarda en archivos). Ahí solo se leen logs; `start.sh` y `stop.sh` los corren las personas. Ver "Entorno 2" en `PROYECTO.md`.
 
 ## Roles
 - **Claude (vos):** planificás, dividís tareas, justificás cada decisión con teoría y especificaciones (TS y sección), integrás, decidís y redactás el informe.

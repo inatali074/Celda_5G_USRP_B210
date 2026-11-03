@@ -1,6 +1,6 @@
 # Proyecto: celda 5G NR SA con USRP B210
 
-*Memoria entre sesiones. Solo la edita Claude. Última actualización: 2026-11-02.*
+*Memoria entre sesiones. Solo la edita Claude. Última actualización: 2026-11-03.*
 
 ## Objetivo
 Desplegar desde cero una celda 5G NR Standalone (Opción 2, Release 15) en un entorno de RF autorizado o controlado, y lograr que un celular con SIM de laboratorio se registre, obtenga IP y navegue. Después, medir throughput, latencia y jitter y compararlos con 2G (EDGE) y 4G (LTE) del mismo grupo.
@@ -25,6 +25,9 @@ Desplegar desde cero una celda 5G NR Standalone (Opción 2, Release 15) en un en
 | Ajustes del host | governor `powersave`; `wmem_max` 1 MB y `rmem_max` 50 MB; `ip_forward` = 1 |
 | Docker | Contenedores 4G detenidos (`srsran-4g`, `srsran_4g`) |
 | `~/red5g` | **No existe en esta PC**: está en la PC de un compañero |
+
+## Entorno 2: PC de Santi (desde 2026-11-03)
+Acceso por SSH, con contraseña (usuario e IP en `CONTEXTO_ANTECEDENTES.local.md`, fuera del repo). **La contraseña no va en el repo: la da el usuario.** Ubuntu, kernel 6.14, 12 hilos con AVX2 y 60 GiB de RAM. Proyecto en `~/Descargas/Moviles/5G/red5g-docker`, con `screen` instalado. Claude puede leer por SSH, pero Claude Code le bloquea arrancar la celda allá: `start.sh` y `stop.sh` los corren las personas en esa PC. **Santi tiene su propio `srsran-5g`, con `restart: unless-stopped` y acceso al USB: si se levanta, compite por la B210.** Detalle en `sesiones/2026-11-03_pc-santi.md`.
 
 ## A definir (lo decide el usuario)
 1. **Entorno de RF:** definido: jaula de Faraday (2026-10-30). Falta confirmar que la B210 esté adentro antes de cada transmisión.
@@ -66,6 +69,7 @@ Estado al 2026-11-02 (K/OPc confirmadas por AUTHENTICATE en SIM 3 y SIM 4; ADM e
 | D-007 | 2026-11-02 | NG-RAN y PLMN se graban por APDU desde Linux (`scripts/grabar_ng_ran.py`, `grabar_plmn.py`). K y OPc solo con OYEI en Windows | Los archivos usan UPDATE BINARY con ADM (TS 31.102 §4.2.5, §4.2.53, §4.2.54). El Ki LTE usa un comando propietario | Claude, revisó Codex |
 | D-008 | 2026-11-02 | Para las pruebas con celulares se usa PLMN 001/01 en vez de 722/999. **Se aparta de lo fijado en Alcance; hay que justificarlo en el informe** | Con 722/999 el Redmi y el Motorola no generaron PRACH con NG-RAN grabado. Con 001/01 el Redmi registró al primer intento y el OnePlus también. No se identificó por qué el módem los trata distinto | Claude, aprobó usuario |
 | D-009 | 2026-11-02 | Consola de control con `start.sh`, `stop.sh` y GNU screen, 4 paneles | Pedido del usuario. `screen` ya estaba instalado; `tmux` no. Sin referencia a TS | Usuario, revisó Codex |
+| D-011 | 2026-11-03 | Se sigue en la PC de Santi. Prueba con log reducido: `gnb_b210_00101_csiaper_logw.yml` (`all_level: warning`; MAC, RRC y NGAP en `info`) | El i3 con 7 GiB tenía swap y fallas de tiempo real. El log en `info` escribía unos 3 MB por minuto, y la mitad era PHY. Sin referencia a TS | Usuario, Claude. Sin revisión de Codex |
 | D-010 | 2026-11-02 | Configuración activa de prueba: `gnb_b210_00101_csiaper.yml` (CSI aperiódico, tx_gain 80, clock_ppm −1,87) | Con CSI periódico el gNB corta a los 3 s por CSI sin decodificar. Sin CSI-RS hubo más reconexiones. No es la configuración final | Claude, aprobó usuario |
 
 ## Propuestas pendientes de decisión
@@ -78,7 +82,7 @@ Estado al 2026-11-02 (K/OPc confirmadas por AUTHENTICATE en SIM 3 y SIM 4; ADM e
 - **RF, criterio de los docentes (informado por el usuario, 2026-10-30):** la jaula puede dejar pasar señales de una torre cercana, y consideran que no llegaría a la población por la jaula, la lejanía del laboratorio de zonas urbanas, la baja potencia de la SDR y la poca ganancia de las antenas. Por eso ver señal comercial no prueba que la jaula esté abierta. No se puede comparar adentro y afuera: la jaula es del laboratorio y no se pueden abrir las puertas para probar, así que su atenuación queda sin medir y el barrido de hoy es solo la línea de base dentro de la jaula.
 - **RF:** ambas bandas están licenciadas. En pruebas previas, celulares de Personal intentaron registrarse en la celda, así que la señal salía del laboratorio. No se transmite hasta definir el entorno.
 - **SIM:** **una LY14 sin DF_5GS se registró en SA el 2026-10-30 en el Redmi, lo que refuta la causa raíz del docx. El Motorola la ignora con esa SIM, lo que apoya la hipótesis del perfil de módem.** Antes, las tarjetas LY14 sin DF_5GS ni servicios 5G en EF_UST no habían buscado la celda. El docx de antecedente lo da por causa raíz, pero también sigue abierto el perfil del módem para un PLMN desconocido. Hay que verificar en TS 31.102 y TS 33.501 si esos servicios son realmente obligatorios.
-- **CPU:** 2 núcleos a 20 MHz pueden no alcanzar. El host tiene el governor en `powersave` y buffers bajos, y cambiarlos requiere aprobación.
+- **CPU:** ~~2 núcleos a 20 MHz pueden no alcanzar~~. **Descartada como causa principal el 2026-11-03:** en la PC de Santi (12 hilos) el gNB usa ~110 % sobre 1200 % y los cortes son iguales.
 
 ## Antecedentes (no reutilizados, a reverificar)
 Según `Prueba_configuracion_Drive_5G.docx` (29/10): ZMQ + srsUE funcionó de punta a punta; por aire en n78 un celular de Personal llegó al AMF; n3 no tuvo ningún PRACH real; DFT-s-OFDM y NEA2 quedaron sin validar con celular; B210 serie 31677B2 con `clock_ppm` −1,87 medido.
@@ -86,7 +90,7 @@ Según `Prueba_configuracion_Drive_5G.docx` (29/10): ZMQ + srsUE funcionó de pu
 ## Estado actual
 **Camino completo logrado el 2026-11-02 con PLMN 001/01:** registro, sesión PDU, IP y navegación por NAT en un Redmi Note 14 5G y sesión con IP en un OnePlus 13, con la celda n78 TDD en Docker. **La conexión no es estable todavía:** se corta cada pocos segundos o decenas de segundos, por lo que aún no se puede medir throughput, latencia ni jitter.
 
-Lo que se sabe de los cortes: el teléfono deja de usar los permisos de PUSCH (SINR cerca de ruido) aunque sus SR llegan, y los PDSCH quedan sin ACK; hay errores de bajada aun en MCS bajos. Eso apunta a la bajada, sin causa confirmada. Saturación por `tx_gain` bastante descartada (60 no mejoró). Pendientes: reloj (`clock_ppm` 0 quedó sin concluir: corrida de 2 min con poco tráfico). También hubo fallas de tiempo real sostenidas que no se recuperan sin reiniciar el gNB, coincidentes con abrir un navegador en la PC, y una caída USB de la B210 sin causa conocida. La celda queda apagada.
+**2026-11-03:** el proyecto quedó instalado en la PC de Santi, con la B210 en USB 3. Con la misma configuración, **el patrón de cortes es igual:** unas 130 transmisiones de bajada por minuto agotan los 4 reintentos HARQ, hay unas 80 fallas de tiempo real (`late` y `underflow`) por minuto y unas 2 RLF por minuto, por CRC o HARQ-ACK. Todo eso con la CPU casi libre. La bajada falla más seguido que lo que explica el tiempo real, y eso apunta a la radio o a la sincronización. **La prueba con log reducido sigue pendiente:** en 3 intentos el gNB arrancó con la configuración vieja, porque `GNB_CONFIG` no llegó a `start.sh`. Al cerrar la sesión, la celda de la PC de Santi quedó **transmitiendo** con la configuración vieja.
 
 ## Próximos pasos
-Ver la sección "Para retomar" de `sesiones/2026-11-02_sim-001-01-y-datos.md`.
+Ver la sección "Para retomar" de `sesiones/2026-11-03_pc-santi.md`, que incluye lo pendiente de `sesiones/2026-11-02_sim-001-01-y-datos.md`.
