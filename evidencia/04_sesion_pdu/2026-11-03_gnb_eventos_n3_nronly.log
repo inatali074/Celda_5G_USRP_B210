@@ -1,0 +1,28 @@
+# Extracto del log del gNB 2026-11-03_174243 (PC de Santi): creación/liberación de UE, RRC y RLF. Horas en UTC.
+# PRACH detectados: 69   Real-time failures: 36974   de ellas 'UL processor is busy': 35161
+2026-11-03T20:34:37.845212 [NGAP    ] [I] "NG Setup Procedure" finished successfully
+2026-11-03T20:34:43.664395 [CU-CP   ] [I] ue=0 c-rnti=0x4601: UE created
+2026-11-03T20:34:43.707493 [RRC     ] [I] ue=0 c-rnti=0x4601: DCCH UL rrcSetupComplete
+2026-11-03T20:34:44.567575 [NGAP    ] [I] ue=0 ran_ue=0 amf_ue=1: "PDU Session Resource Setup Procedure" finished successfully
+2026-11-03T20:35:26.703742 [CU-CP   ] [I] ue=1 c-rnti=0x4602: UE created
+2026-11-03T20:35:26.748460 [RRC     ] [I] ue=1 c-rnti=0x4602: DCCH UL rrcSetupComplete
+2026-11-03T20:35:27.556867 [NGAP    ] [I] ue=1 ran_ue=1 amf_ue=2: "PDU Session Resource Setup Procedure" finished successfully
+2026-11-03T20:36:20.124861 [DU-MNG  ] [W] ue=1 rnti=0x4602: RLF detected with cause "MAC max consecutive HARQ NACKs/DTX reached". Timer of 4000 msec to release UE started...
+2026-11-03T20:36:24.126135 [RRC     ] [I] ue=1 c-rnti=0x4602: DCCH DL rrcRelease
+2026-11-03T20:36:50.542620 [CU-CP   ] [I] ue=2 c-rnti=0x4605: UE created
+2026-11-03T20:36:50.587415 [RRC     ] [I] ue=2 c-rnti=0x4605: DCCH UL rrcSetupComplete
+2026-11-03T20:36:51.587517 [NGAP    ] [I] ue=2 ran_ue=2 amf_ue=3: "PDU Session Resource Setup Procedure" finished successfully
+2026-11-03T20:37:57.077092 [DU-MNG  ] [W] ue=1 rnti=0x4605: RLF detected with cause "RLC max ReTxs reached", from DRB1. Timer of 4000 msec to release UE started...
+2026-11-03T20:38:01.078730 [RRC     ] [I] ue=2 c-rnti=0x4605: DCCH DL rrcRelease
+2026-11-03T20:39:33.739545 [CU-CP   ] [I] ue=3 c-rnti=0x4608: UE created
+2026-11-03T20:39:35.739350 [RRC     ] [I] ue=3 c-rnti=0x4608: DCCH DL rrcRelease
+2026-11-03T20:39:45.419461 [CU-CP   ] [I] ue=4 c-rnti=0x4609: UE created
+2026-11-03T20:39:46.326405 [RRC     ] [I] ue=4 c-rnti=0x4609: DCCH UL rrcSetupComplete
+2026-11-03T20:39:46.751309 [DU-MNG  ] [W] ue=1 rnti=0x4609: RLF detected with cause "RLC max ReTxs reached", from SRB1. Timer of 1000 msec to release UE started...
+2026-11-03T20:39:47.751858 [RRC     ] [I] ue=4 c-rnti=0x4609: DCCH DL rrcRelease
+2026-11-03T20:40:22.400662 [DU-MNG  ] [W] ue=0 rnti=0x4601: RLF detected with cause "RLC max ReTxs reached", from DRB1. Timer of 4000 msec to release UE started...
+2026-11-03T20:40:22.858772 [CU-CP   ] [I] ue=5 c-rnti=0x4611: UE created
+2026-11-03T20:40:22.926781 [RRC     ] [I] ue=5 c-rnti=0x4611: DCCH UL rrcSetupComplete
+2026-11-03T20:40:22.927337 [RRC     ] [I] ue=0 c-rnti=0x4601: DCCH DL rrcRelease
+2026-11-03T20:40:30.975962 [DU-MNG  ] [W] ue=1 rnti=0x4611: RLF detected with cause "MAC max consecutive CRC KOs reached". Timer of 4000 msec to release UE started...
+2026-11-03T20:40:34.976867 [RRC     ] [I] ue=5 c-rnti=0x4611: DCCH DL rrcRelease

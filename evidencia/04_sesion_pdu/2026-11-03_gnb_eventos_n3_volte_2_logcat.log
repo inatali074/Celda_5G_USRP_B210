@@ -1,0 +1,22 @@
+# Extracto del log del gNB 2026-11-03_165643 (PC de Santi): creación/liberación de UE, RRC y RLF. Horas en UTC.
+# PRACH detectados: 8   Real-time failures: 3601   de ellas 'UL processor is busy': 2550
+2026-11-03T19:52:46.113987 [NGAP    ] [I] "NG Setup Procedure" finished successfully
+2026-11-03T19:52:50.203783 [CU-CP   ] [I] ue=0 c-rnti=0x4601: UE created
+2026-11-03T19:52:50.245656 [RRC     ] [I] ue=0 c-rnti=0x4601: DCCH UL rrcSetupComplete
+2026-11-03T19:52:51.245835 [NGAP    ] [I] ue=0 ran_ue=0 amf_ue=1: "PDU Session Resource Setup Procedure" finished successfully
+2026-11-03T19:54:07.513552 [DU-MNG  ] [W] ue=0 rnti=0x4601: RLF detected with cause "MAC max consecutive HARQ NACKs/DTX reached". Timer of 4000 msec to release UE started...
+2026-11-03T19:54:10.681602 [CU-CP   ] [I] ue=1 c-rnti=0x4603: UE created
+2026-11-03T19:54:10.725547 [RRC     ] [I] ue=1 c-rnti=0x4603: DCCH UL rrcSetupComplete
+2026-11-03T19:54:10.726274 [RRC     ] [I] ue=0 c-rnti=0x4601: DCCH DL rrcRelease
+2026-11-03T19:54:11.585707 [NGAP    ] [I] ue=1 ran_ue=1 amf_ue=2: "PDU Session Resource Setup Procedure" finished successfully
+2026-11-03T19:54:23.481270 [CU-CP   ] [I] ue=2 c-rnti=0x4605: UE created
+2026-11-03T19:55:14.159498 [DU-MNG  ] [W] ue=0 rnti=0x4605: RLF detected with cause "MAC max consecutive HARQ NACKs/DTX reached". Timer of 4000 msec to release UE started...
+2026-11-03T19:55:18.160630 [RRC     ] [I] ue=2 c-rnti=0x4605: DCCH DL rrcRelease
+2026-11-03T19:55:22.360253 [CU-CP   ] [I] ue=3 c-rnti=0x4607: UE created
+2026-11-03T19:55:22.406429 [RRC     ] [I] ue=3 c-rnti=0x4607: DCCH UL rrcSetupComplete
+2026-11-03T19:55:24.146559 [NGAP    ] [I] ue=3 ran_ue=2 amf_ue=3: "PDU Session Resource Setup Procedure" finished successfully
+2026-11-03T19:56:23.298761 [DU-MNG  ] [W] ue=0 rnti=0x4607: RLF detected with cause "MAC max consecutive HARQ NACKs/DTX reached". Timer of 4000 msec to release UE started...
+2026-11-03T19:56:27.301475 [RRC     ] [I] ue=3 c-rnti=0x4607: DCCH DL rrcRelease
+2026-11-03T19:56:32.759206 [CU-CP   ] [I] ue=4 c-rnti=0x4608: UE created
+2026-11-03T19:56:32.806703 [RRC     ] [I] ue=4 c-rnti=0x4608: DCCH UL rrcSetupComplete
+2026-11-03T19:56:33.466292 [NGAP    ] [I] ue=4 ran_ue=3 amf_ue=4: "PDU Session Resource Setup Procedure" finished successfully

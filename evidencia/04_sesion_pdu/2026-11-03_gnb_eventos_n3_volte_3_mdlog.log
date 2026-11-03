@@ -1,0 +1,19 @@
+# Extracto del log del gNB 2026-11-03_170938 (PC de Santi): creación/liberación de UE, RRC y RLF. Horas en UTC.
+# PRACH detectados: 5   Real-time failures: 2701   de ellas 'UL processor is busy': 2311
+2026-11-03T20:06:55.207001 [NGAP    ] [I] "NG Setup Procedure" finished successfully
+2026-11-03T20:07:04.269249 [CU-CP   ] [I] ue=0 c-rnti=0x4601: UE created
+2026-11-03T20:07:04.312371 [RRC     ] [I] ue=0 c-rnti=0x4601: DCCH UL rrcSetupComplete
+2026-11-03T20:07:05.192616 [NGAP    ] [I] ue=0 ran_ue=0 amf_ue=1: "PDU Session Resource Setup Procedure" finished successfully
+2026-11-03T20:07:53.868659 [CU-CP   ] [I] ue=1 c-rnti=0x4602: UE created
+2026-11-03T20:07:53.912740 [RRC     ] [I] ue=1 c-rnti=0x4602: DCCH UL rrcSetupComplete
+2026-11-03T20:07:54.921820 [NGAP    ] [I] ue=1 ran_ue=1 amf_ue=2: "PDU Session Resource Setup Procedure" finished successfully
+2026-11-03T20:08:10.508387 [CU-CP   ] [I] ue=2 c-rnti=0x4603: UE created
+2026-11-03T20:08:10.613468 [RRC     ] [I] ue=2 c-rnti=0x4603: DCCH UL rrcSetupComplete
+2026-11-03T20:08:10.614069 [RRC     ] [I] ue=0 c-rnti=0x4601: DCCH DL rrcRelease
+2026-11-03T20:08:11.153608 [NGAP    ] [I] ue=2 ran_ue=2 amf_ue=3: "PDU Session Resource Setup Procedure" finished successfully
+2026-11-03T20:08:33.562961 [DU-MNG  ] [W] ue=1 rnti=0x4602: RLF detected with cause "RLC max ReTxs reached", from DRB1. Timer of 4000 msec to release UE started...
+2026-11-03T20:08:37.565186 [RRC     ] [I] ue=1 c-rnti=0x4602: DCCH DL rrcRelease
+2026-11-03T20:09:19.147337 [CU-CP   ] [I] ue=3 c-rnti=0x4604: UE created
+2026-11-03T20:09:19.333467 [RRC     ] [I] ue=3 c-rnti=0x4604: DCCH UL rrcSetupComplete
+2026-11-03T20:09:19.334301 [RRC     ] [I] ue=2 c-rnti=0x4603: DCCH DL rrcRelease
+2026-11-03T20:09:20.013612 [NGAP    ] [I] ue=3 ran_ue=3 amf_ue=4: "PDU Session Resource Setup Procedure" finished successfully

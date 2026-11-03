@@ -74,18 +74,23 @@ Estado al 2026-11-02 (K/OPc confirmadas por AUTHENTICATE en SIM 3 y SIM 4; ADM e
 | D-012 | 2026-11-03 | `clock_ppm: 0` en vez de −1,87 | En OCUDU `release_26_10`, `clock_ppm` corrige solo la portadora y no el muestreo (`ru_sdr_config_translator.cpp`). Con −1,87 el gNB pide TA positivos sin parar (+2,2 a +3,8 pasos/s, paso 0,26 µs, TS 38.213 §4.2) y las conexiones duran 3-10 s; con 0, ~0 pasos/s y ~60 s. El ejemplo oficial para B210 sin reloj externo usa 0. Ver `investigacion/2026-11-03_analisis-cortes-claude.md` | Claude, revisó Codex, aprobó usuario |
 | D-013 | 2026-11-03 | `start.sh` recibe la configuración como argumento, verifica el montaje y ya no pide `si` | `GNB_CONFIG` no llegó en 5 arranques. El usuario pidió quitar la confirmación: quien lo ejecuta ya decidió transmitir. Sin referencia a TS | Usuario, Codex, Claude |
 | D-014 | 2026-11-03 | Con el Redmi, CSI periódico con `pucch.max_consecutive_kos: 100000` | El Redmi no envía CSI ni aperiódico (0 PUSCH OK de ~10 000 con pedido de CSI) ni periódico (~0,4 % de F2 decodificados). El OnePlus sí. Con el umbral alto, el CSI faltante no dispara RLF | Claude, aprobó usuario |
+| D-015 | 2026-11-03 | En las pruebas, los celulares van con **VoLTE activado y tipo de red `NR only`** (`*#*#4636#*#*` → Información del teléfono). Es un arreglo del lado del teléfono, no de la red | El corte de los ~60 s lo decide el teléfono: con VoLTE, el Redmi deja la celda a los 60,00 ± 0,02 s del registro (7 de 7, `+CIEV: 3,0` y `+CSCON: 0` sin mensaje de la red) y busca LTE comercial. Open5GS v2.8.0 anuncia IMS VoPS = 1 fijo (`src/amf/gmm-build.c`) y no hay IMS: un UE "voice centric" sin voz en 5GS deshabilita N1 y busca E-UTRA (TS 24.501 §4.3, sección exacta a verificar). La guía de srsRAN para COTS UEs documenta el temporizador `NR_TIMER_WAIT_IMS_REGISTRATION` del Pixel 6. Sin VoLTE se van a los ~5 s. Con `NR only`: 5 min 38 s en n3 y más de 5 min 27 s en n78, sin el corte | Claude, propuesta de Gemini (`NR only`), aprobó usuario |
 
 ## Propuestas pendientes de decisión
 | ID | Propuesta | Justificación | Falta verificar |
 | :--- | :--- | :--- | :--- |
 | P-001 | Empezar por **n78 TDD, 20 MHz, μ=1, 51 PRB**, con UL DFT-s-OFDM como objetivo a validar | Es la única configuración con la que un celular comercial llegó al AMF. Numerología: TS 38.211 §4.2-4.3; SSB: TS 38.213 §4.1; precodificación: TS 38.211 §6.3.1.4 | Bandas SA de los celulares. Contradice el diseño n3 FDD del diagrama: cambia lo que se defiende ante el profesor |
 | P-002 | Definir la **frecuencia** recién con el entorno de RF elegido | 3489,42 MHz cae en el bloque de Personal y atrajo celulares ajenos | Bloques adjudicados, barrido en recepción |
+| P-003 | Arreglar la voz del lado de la red, para no depender de `NR only`: (a) IMS en Docker (Kamailio + PyHSS) más la DNN `ims`, o (b) parchear Open5GS para anunciar IMS VoPS = 0 | Es la causa de los cortes de 60 s (D-015). (b) probablemente no alcanza: sin voz, el teléfono con VoLTE apagado igual se fue en ~5 s | Esfuerzo de (a); si (b) cambia algo; requiere reconstruir imágenes |
+| P-004 | Ajustes de tiempo real en la PC de Santi: cerrar Brave y Spotify, governor `performance`, revisar buffers USB/red | El 2026-11-03 a las 20:40 el gNB acumuló ~36 000 fallas de tiempo real y el procesador de UL quedó trabado ("UL processor is busy"): 0 PUSCH y 0 PUCCH procesados en 2 min y nadie pudo entrar | Requiere sudo en una PC ajena; pedir permiso a Santi |
+| P-005 | `NR only` en el OnePlus por `adb shell am start -n com.android.phone/.settings.RadioInfo` | OxygenOS bloquea `*#*#4636#*#*`. En n78 el OnePlus se corta a los ~35-38 s del registro | Depuración USB en el OnePlus |
 
 ## Riesgos
 - **RF, criterio de los docentes (informado por el usuario, 2026-10-30):** la jaula puede dejar pasar señales de una torre cercana, y consideran que no llegaría a la población por la jaula, la lejanía del laboratorio de zonas urbanas, la baja potencia de la SDR y la poca ganancia de las antenas. Por eso ver señal comercial no prueba que la jaula esté abierta. No se puede comparar adentro y afuera: la jaula es del laboratorio y no se pueden abrir las puertas para probar, así que su atenuación queda sin medir y el barrido de hoy es solo la línea de base dentro de la jaula.
 - **RF:** ambas bandas están licenciadas. En pruebas previas, celulares de Personal intentaron registrarse en la celda, así que la señal salía del laboratorio. No se transmite hasta definir el entorno.
 - **SIM:** **una LY14 sin DF_5GS se registró en SA el 2026-10-30 en el Redmi, lo que refuta la causa raíz del docx. El Motorola la ignora con esa SIM, lo que apoya la hipótesis del perfil de módem.** Antes, las tarjetas LY14 sin DF_5GS ni servicios 5G en EF_UST no habían buscado la celda. El docx de antecedente lo da por causa raíz, pero también sigue abierto el perfil del módem para un PLMN desconocido. Hay que verificar en TS 31.102 y TS 33.501 si esos servicios son realmente obligatorios.
-- **CPU:** ~~2 núcleos a 20 MHz pueden no alcanzar~~. **Descartada como causa principal el 2026-11-03:** en la PC de Santi (12 hilos) el gNB usa ~110 % sobre 1200 % y los cortes son iguales.
+- **CPU:** ~~2 núcleos a 20 MHz pueden no alcanzar~~. **Descartada como causa principal el 2026-11-03:** en la PC de Santi (12 hilos) el gNB usa ~110 % sobre 1200 % y los cortes son iguales. **Pero el tiempo real sigue siendo un riesgo:** en una corrida n3 el procesador de UL se trabó y la celda dejó de aceptar UEs (P-004). Con Brave y Spotify abiertos hubo de 1300 a 36 000 fallas por corrida.
+- **Jaula:** desde adentro, el Redmi ve celdas LTE comerciales (B2, B4, B5, B7 y B28; PLMN 722-310 en el MDLog) y la PC mantiene el WiFi. Confirma que la atenuación es limitada.
 
 ## Antecedentes (no reutilizados, a reverificar)
 Según `Prueba_configuracion_Drive_5G.docx` (29/10): ZMQ + srsUE funcionó de punta a punta; por aire en n78 un celular de Personal llegó al AMF; n3 no tuvo ningún PRACH real; DFT-s-OFDM y NEA2 quedaron sin validar con celular; B210 serie 31677B2 con `clock_ppm` −1,87 medido.
@@ -95,8 +100,18 @@ Según `Prueba_configuracion_Drive_5G.docx` (29/10): ZMQ + srsUE funcionó de pu
 
 **2026-11-03:** el proyecto quedó instalado en la PC de Santi, con la B210 en USB 3. Con la misma configuración, **el patrón de cortes es igual:** unas 130 transmisiones de bajada por minuto agotan los 4 reintentos HARQ, hay unas 80 fallas de tiempo real (`late` y `underflow`) por minuto y unas 2 RLF por minuto, por CRC o HARQ-ACK. Todo eso con la CPU casi libre. La bajada falla más seguido que lo que explica el tiempo real, y eso apunta a la radio o a la sincronización. **La prueba con log reducido sigue pendiente:** en 3 intentos el gNB arrancó con la configuración vieja, porque `GNB_CONFIG` no llegó a `start.sh`. La celda quedó apagada al cerrar la sesión: `stop.sh` corrió a las 18:43 UTC y se verificó por SSH.
 
+**2026-11-03, tarde:**
+- **Causa de los cortes encontrada y resuelta del lado del teléfono (D-015).** `clock_ppm 0` (D-012) los llevó de 3-10 s a ~60 s, y el kos alto (D-014) quitó las RLF por CSI.
+- Lo que quedaba era el teléfono: con `adb logcat` y el MDLog de MediaTek se vio que el módem deja la celda solo a los 60,0 s del registro y busca LTE, porque espera voz IMS que no tenemos. Con `NR only`, el Redmi quedó estable más de 5 min en n3 y en n78.
+- **n3 FDD funciona por primera vez** (`gnb_b210_00101_n3_ppm0_kos.yml`).
+- Pendientes:
+  - el OnePlus sin `NR only` (P-005);
+  - el tiempo real en la PC de Santi (P-004);
+  - la solución de red (P-003);
+  - las mediciones de throughput, latencia y jitter, que ya se pueden intentar.
+
 ## Punto de retorno TDD (2026-11-03)
-Mejor configuración n78 TDD hasta hoy: **`config/gnb/gnb_b210_00101_csiper_ppm0_kos.yml`** (n78, ARFCN 635000, 20 MHz, μ=1, PLMN 00101, tx 80, `clock_ppm 0`, CSI periódico con `pucch.max_consecutive_kos 100000`). Sigue con un corte cada ~60 s, del lado del teléfono, con degradación del PUSCH ~30 s antes. Variantes: `_csiaper_ppm0.yml` (CSI aperiódico, el valor por defecto de `start.sh`) y `_csiper_ppm0.yml`. Etiqueta git: **`tdd-ppm0-2026-11-03`**. Para volver: `./start.sh gnb_b210_00101_csiper_ppm0_kos.yml`. Las pruebas en n3 FDD van en archivos aparte y no tocan estos.
+Mejor configuración n78 TDD hasta hoy: **`config/gnb/gnb_b210_00101_csiper_ppm0_kos.yml`** (n78, ARFCN 635000, 20 MHz, μ=1, PLMN 00101, tx 80, `clock_ppm 0`, CSI periódico con `pucch.max_consecutive_kos 100000`). El corte de cada ~60 s se resuelve con el teléfono en `NR only` (D-015): Redmi estable más de 5 min 27 s el 2026-11-03. Variantes: `_csiaper_ppm0.yml` (CSI aperiódico, el valor por defecto de `start.sh`) y `_csiper_ppm0.yml`. Etiqueta git: **`tdd-ppm0-2026-11-03`**. Para volver: `./start.sh gnb_b210_00101_csiper_ppm0_kos.yml`. Las pruebas en n3 FDD van en archivos aparte y no tocan estos.
 
 ## Próximos pasos
-Ver la sección "Para retomar" de `sesiones/2026-11-03_pc-santi.md`, que incluye lo pendiente de `sesiones/2026-11-02_sim-001-01-y-datos.md`.
+Ver la sección "Para retomar" de `sesiones/2026-11-03_cortes-60s-volte.md`. Lo anterior sigue en `sesiones/2026-11-03_pc-santi.md`.

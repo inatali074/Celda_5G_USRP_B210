@@ -1,0 +1,16 @@
+# Extracto del log del gNB 2026-11-03_175149 (PC de Santi): creación/liberación de UE, RRC y RLF. Horas en UTC.
+# PRACH detectados: 4   Real-time failures: 351   de ellas 'UL processor is busy': 0
+2026-11-03T20:46:01.351191 [NGAP    ] [I] "NG Setup Procedure" finished successfully
+2026-11-03T20:46:04.384121 [CU-CP   ] [I] ue=0 c-rnti=0x4601: UE created
+2026-11-03T20:46:04.427705 [RRC     ] [I] ue=0 c-rnti=0x4601: DCCH UL rrcSetupComplete
+2026-11-03T20:46:05.327795 [NGAP    ] [I] ue=0 ran_ue=0 amf_ue=1: "PDU Session Resource Setup Procedure" finished successfully
+2026-11-03T20:47:16.932692 [CU-CP   ] [I] ue=1 c-rnti=0x4602: UE created
+2026-11-03T20:47:16.966702 [RRC     ] [I] ue=1 c-rnti=0x4602: DCCH UL rrcSetupComplete
+2026-11-03T20:47:17.906728 [NGAP    ] [I] ue=1 ran_ue=1 amf_ue=2: "PDU Session Resource Setup Procedure" finished successfully
+2026-11-03T20:47:55.240822 [DU-MNG  ] [W] ue=1 rnti=0x4602: RLF detected with cause "MAC max consecutive HARQ NACKs/DTX reached". Timer of 4000 msec to release UE started...
+2026-11-03T20:47:59.242399 [RRC     ] [I] ue=1 c-rnti=0x4602: DCCH DL rrcRelease
+2026-11-03T20:48:24.571381 [CU-CP   ] [I] ue=2 c-rnti=0x4604: UE created
+2026-11-03T20:48:24.605485 [RRC     ] [I] ue=2 c-rnti=0x4604: DCCH UL rrcSetupComplete
+2026-11-03T20:48:24.925577 [NGAP    ] [I] ue=2 ran_ue=2 amf_ue=3: "PDU Session Resource Setup Procedure" finished successfully
+2026-11-03T20:48:59.934678 [DU-MNG  ] [W] ue=1 rnti=0x4604: RLF detected with cause "MAC max consecutive HARQ NACKs/DTX reached". Timer of 4000 msec to release UE started...
+2026-11-03T20:49:03.935523 [RRC     ] [I] ue=2 c-rnti=0x4604: DCCH DL rrcRelease

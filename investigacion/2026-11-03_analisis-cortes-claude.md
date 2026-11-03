@@ -63,3 +63,6 @@ Notación: `ack=2` en PUCCH es compatible con DTX, pero la codificación no se v
 - https://docs.srsran.com/projects/project/en/latest/user_manuals/source/config_ref.html
 - https://docs.srsran.com/projects/project/en/latest/tutorials/source/cotsUE/source/index.html (recomienda reloj externo)
 - TS 38.213 §4.2 (paso de TA)
+
+## Hallazgo 5 (tarde): el corte de ~60 s es el teléfono buscando voz
+Con `adb logcat` en el Redmi: deja la celda a los 60,00 ± 0,02 s de obtener servicio (7 de 7). Lo hace sin mensajes de la red (`+CIEV: 3,0`, `+CSCON: 0`) y escanea LTE. El OnePlus también se corta. Open5GS v2.8.0 anuncia IMS VoPS = 1 fijo (`src/amf/gmm-build.c`) y no hay IMS. Con el teléfono en `NR only`, más de 5 min estable en n3 y en n78. Detalle en `sesiones/2026-11-03_cortes-60s-volte.md` y D-015. La "degradación gradual del PUSCH" anterior al corte queda como fenómeno aparte, sin explicar.

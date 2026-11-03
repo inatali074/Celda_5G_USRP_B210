@@ -1,0 +1,41 @@
+# Extracto del log del gNB 2026-11-03_173406 (PC de Santi): creación/liberación de UE, RRC y RLF. Horas en UTC.
+# PRACH detectados: 78   Real-time failures: 13998   de ellas 'UL processor is busy': 12226
+2026-11-03T20:26:17.283065 [NGAP    ] [I] "NG Setup Procedure" finished successfully
+2026-11-03T20:26:52.003485 [CU-CP   ] [I] ue=0 c-rnti=0x4601: UE created
+2026-11-03T20:26:52.046682 [RRC     ] [I] ue=0 c-rnti=0x4601: DCCH UL rrcSetupComplete
+2026-11-03T20:26:52.946573 [NGAP    ] [I] ue=0 ran_ue=0 amf_ue=1: "PDU Session Resource Setup Procedure" finished successfully
+2026-11-03T20:26:54.052541 [DU-MNG  ] [W] ue=0 rnti=0x4601: RLF detected with cause "MAC max consecutive CRC KOs reached". Timer of 4000 msec to release UE started...
+2026-11-03T20:26:57.443389 [CU-CP   ] [I] ue=1 c-rnti=0x4602: UE created
+2026-11-03T20:26:57.487416 [RRC     ] [I] ue=1 c-rnti=0x4602: DCCH UL rrcSetupComplete
+2026-11-03T20:26:57.488301 [RRC     ] [I] ue=0 c-rnti=0x4601: DCCH DL rrcRelease
+2026-11-03T20:27:03.519245 [DU-MNG  ] [W] ue=1 rnti=0x4602: RLF detected with cause "MAC max consecutive HARQ NACKs/DTX reached". Timer of 4000 msec to release UE started...
+2026-11-03T20:27:07.520482 [RRC     ] [I] ue=1 c-rnti=0x4602: DCCH DL rrcRelease
+2026-11-03T20:27:12.003550 [CU-CP   ] [I] ue=2 c-rnti=0x4603: UE created
+2026-11-03T20:27:12.048156 [RRC     ] [I] ue=2 c-rnti=0x4603: DCCH UL rrcSetupComplete
+2026-11-03T20:27:32.482766 [CU-CP   ] [I] ue=3 c-rnti=0x4604: UE created
+2026-11-03T20:27:32.528948 [RRC     ] [I] ue=3 c-rnti=0x4604: DCCH UL rrcSetupComplete
+2026-11-03T20:27:35.529023 [RRC     ] [I] ue=3 c-rnti=0x4604: DCCH DL rrcRelease
+2026-11-03T20:27:35.682774 [CU-CP   ] [I] ue=4 c-rnti=0x4605: UE created
+2026-11-03T20:27:35.729819 [RRC     ] [I] ue=4 c-rnti=0x4605: DCCH UL rrcSetupComplete
+2026-11-03T20:27:38.729977 [RRC     ] [I] ue=4 c-rnti=0x4605: DCCH DL rrcRelease
+2026-11-03T20:28:04.642252 [CU-CP   ] [I] ue=5 c-rnti=0x4606: UE created
+2026-11-03T20:28:05.030202 [RRC     ] [I] ue=5 c-rnti=0x4606: DCCH UL rrcSetupComplete
+2026-11-03T20:28:05.810477 [NGAP    ] [I] ue=5 ran_ue=5 amf_ue=6: "PDU Session Resource Setup Procedure" finished successfully
+2026-11-03T20:28:11.961346 [DU-MNG  ] [W] ue=1 rnti=0x4606: RLF detected with cause "MAC max consecutive HARQ NACKs/DTX reached". Timer of 4000 msec to release UE started...
+2026-11-03T20:28:15.962229 [RRC     ] [I] ue=5 c-rnti=0x4606: DCCH DL rrcRelease
+2026-11-03T20:28:26.948786 [DU-MNG  ] [W] ue=0 rnti=0x4603: RLF detected with cause "MAC max consecutive HARQ NACKs/DTX reached". Timer of 4000 msec to release UE started...
+2026-11-03T20:28:30.949947 [RRC     ] [I] ue=2 c-rnti=0x4603: DCCH DL rrcRelease
+2026-11-03T20:29:30.080990 [CU-CP   ] [I] ue=6 c-rnti=0x4609: UE created
+2026-11-03T20:29:30.210131 [RRC     ] [I] ue=6 c-rnti=0x4609: DCCH UL rrcSetupComplete
+2026-11-03T20:29:31.316041 [DU-MNG  ] [W] ue=0 rnti=0x4609: RLF detected with cause "RLC max ReTxs reached", from SRB1. Timer of 1000 msec to release UE started...
+2026-11-03T20:29:31.681888 [CU-CP   ] [I] ue=7 c-rnti=0x460a: UE created
+2026-11-03T20:29:31.810975 [RRC     ] [I] ue=7 c-rnti=0x460a: DCCH UL rrcSetupComplete
+2026-11-03T20:29:32.316067 [RRC     ] [I] ue=6 c-rnti=0x4609: DCCH DL rrcRelease
+2026-11-03T20:29:33.851212 [NGAP    ] [I] ue=7 ran_ue=7 amf_ue=8: "PDU Session Resource Setup Procedure" finished successfully
+2026-11-03T20:30:11.181076 [DU-MNG  ] [W] ue=1 rnti=0x460a: RLF detected with cause "RLC max ReTxs reached", from DRB1. Timer of 4000 msec to release UE started...
+2026-11-03T20:30:15.183198 [RRC     ] [I] ue=7 c-rnti=0x460a: DCCH DL rrcRelease
+2026-11-03T20:30:31.359876 [CU-CP   ] [I] ue=8 c-rnti=0x460c: UE created
+2026-11-03T20:30:31.410994 [RRC     ] [I] ue=8 c-rnti=0x460c: DCCH UL rrcSetupComplete
+2026-11-03T20:30:32.751095 [NGAP    ] [I] ue=8 ran_ue=8 amf_ue=9: "PDU Session Resource Setup Procedure" finished successfully
+2026-11-03T20:31:12.603157 [DU-MNG  ] [W] ue=0 rnti=0x460c: RLF detected with cause "RLC max ReTxs reached", from DRB1. Timer of 4000 msec to release UE started...
+2026-11-03T20:31:16.604193 [RRC     ] [I] ue=8 c-rnti=0x460c: DCCH DL rrcRelease
