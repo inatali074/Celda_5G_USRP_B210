@@ -1,0 +1,70 @@
+# SPDX-FileCopyrightText: Copyright (C) 2021-2026 Software Radio Systems Limited
+# SPDX-License-Identifier: BSD-3-Clause-Open-MPI
+# Variante csiper_ppm0 con pucch.max_consecutive_kos alto.
+# clock_ppm 0 (prueba 2026-11-03).
+
+
+# This example configuration outlines how to configure the OCUDU gNB to create a single TDD cell
+# transmitting in band 78, with 20 MHz bandwidth and 30 kHz sub-carrier-spacing. A USRP B200 is configured
+# as the RF frontend using split 8. Note in this example an external clock source is not used, so the sync
+# is not defined and the default is used.
+
+cu_cp:
+  amf:
+    addrs: 10.53.1.2
+    port: 38412
+    bind_addrs: 10.53.1.3
+    supported_tracking_areas:
+      - tac: 7
+        plmn_list:
+          - plmn: '00101'
+            tai_slice_support_list:
+              - sst: 1
+
+cu_up:
+  ngu:
+    socket:
+      - bind_addr: 10.53.1.3
+
+ru_sdr:
+  device_driver: uhd
+  device_args: type=b200
+  srate: 23.04
+  otw_format: sc12
+  # Jaula de Faraday a corta distancia; ajustar según medición.
+  tx_gain: 80
+  rx_gain: 40
+  # Prueba 2026-11-03: sin correccion. En OCUDU clock_ppm solo corrige la portadora, no el muestreo (ru_sdr_config_translator.cpp); ver investigacion/2026-11-03_analisis-cortes-claude.md
+  clock_ppm: 0
+
+cell_cfg:
+  dl_arfcn: 635000  # 3525 MHz; n78, raster de 30 kHz.
+  band: 78
+  channel_bandwidth_MHz: 20
+  common_scs: 30
+  plmn: '00101'
+  tac: 7
+  pci: 1
+  # CSI por defecto de OCUDU: CSI-RS (incluye TRS) y reportes periodicos por PUCCH formato 2.
+  # Prueba 2026-11-03: el Redmi no envia CSI por PUCCH F2; umbral alto para que el CSI faltante no dispare RLF (OCUDU: configure_cli11_pucch_args).
+  pucch:
+    max_consecutive_kos: 100000
+  pusch:
+    # UL CP-OFDM; probar DFT-s-OFDM después cambiando solo este valor.
+    enable_transform_precoding: false
+
+# The USRP clock may introduce some CFO: configure the channel estimator to compensate for it.
+# With good clocks (e.g., external ones), the default setup may provide better performance.
+expert_phy:
+  pusch_channel_estimator_td_strategy: average
+  pusch_channel_estimator_cfo_compensation: true
+
+log:
+  filename: /tmp/gnb.log
+  all_level: info
+
+pcap:
+  mac_enable: false
+  mac_filename: /tmp/gnb_mac.pcap
+  ngap_enable: false
+  ngap_filename: /tmp/gnb_ngap.pcap

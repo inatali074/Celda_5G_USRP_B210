@@ -1,15 +1,65 @@
 #!/bin/bash
 # Levanta la red 5G en Docker y abre la consola de control con 4 paneles.
-# TRANSMITE por la B210: pide confirmación cada vez.
+# TRANSMITE por la B210 apenas se ejecuta: no pide confirmación (pedido del usuario, 2026-11-03).
 #
-# Uso: ./start.sh
-# Otra configuración: GNB_CONFIG=gnb_b210.yml OPEN5GS_CONFIG=open5gs-5gc.yml ./start.sh
+# Uso: ./start.sh [ARCHIVO_GNB.yml]. --confirmado se acepta por compatibilidad y no hace nada.
+# Acepta también config/gnb/ARCHIVO_GNB.yml. Prioridad: argumento > GNB_CONFIG > defecto.
+# Otra configuración del núcleo: OPEN5GS_CONFIG=open5gs-5gc.yml ./start.sh gnb_b210.yml
 set -eu
 
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
 
-# Configuración con la que hoy funciona la navegación: PLMN 001/01, CSI aperiódico.
-export GNB_CONFIG="${GNB_CONFIG:-gnb_b210_00101_csiaper.yml}"
+uso() {
+    echo "Uso: ./start.sh [ARCHIVO_GNB.yml] [--confirmado] (en cualquier orden)" >&2
+}
+
+parsear_argumentos() {
+    local argumento archivo_argumento=''
+    confirmado=no
+    for argumento in "$@"; do
+        case "$argumento" in
+            --confirmado) confirmado=si ;;
+            *.yml)
+                if [[ -n $archivo_argumento ]]; then
+                    echo "Indicá un solo archivo de configuración del gNB." >&2
+                    uso
+                    return 1
+                fi
+                case "$argumento" in
+                    config/gnb/*.yml) archivo_argumento=${argumento#config/gnb/} ;;
+                    *) archivo_argumento=$argumento ;;
+                esac
+                if [[ $archivo_argumento == */* || $archivo_argumento == -* ]]; then
+                    uso
+                    return 1
+                fi
+                ;;
+            *) uso; return 1 ;;
+        esac
+    done
+
+    origen_config='por defecto'
+    if [[ -n $archivo_argumento ]]; then
+        if [[ ${GNB_CONFIG+x} && $GNB_CONFIG != "$archivo_argumento" ]]; then
+            echo "Aviso: GNB_CONFIG='$GNB_CONFIG'; se usa el argumento '$archivo_argumento'." >&2
+        fi
+        GNB_CONFIG=$archivo_argumento
+        origen_config=argumento
+    elif [[ -n ${GNB_CONFIG:-} ]]; then
+        origen_config=variable
+    else
+        # En prueba desde 2026-11-03: igual a _csiaper.yml pero con clock_ppm 0
+        # (ver investigacion/2026-11-03_analisis-cortes-claude.md).
+        GNB_CONFIG=gnb_b210_00101_csiaper_ppm0.yml
+    fi
+    export GNB_CONFIG
+}
+
+parsear_argumentos "$@"
+if [[ ${START_SH_SOLO_ARGS:-0} == 1 ]]; then
+    printf 'GNB_CONFIG=%s\norigen=%s\nconfirmado=%s\n' "$GNB_CONFIG" "$origen_config" "$confirmado"
+    exit 0
+fi
 export OPEN5GS_CONFIG="${OPEN5GS_CONFIG:-open5gs-5gc-zmq.yml}"
 SESION=red5g
 
@@ -25,17 +75,12 @@ fi
 frecuencia=$(awk '/dl_arfcn:/{print $2}' "config/gnb/$GNB_CONFIG")
 ganancia=$(awk '/tx_gain:/{print $2}' "config/gnb/$GNB_CONFIG")
 plmn=$(awk -F"'" '/^  plmn:/{print $2}' "config/gnb/$GNB_CONFIG")
-echo "Configuración: $GNB_CONFIG"
-echo "  dl_arfcn $frecuencia, tx_gain $ganancia, PLMN $plmn"
+clock_ppm=$(awk '/clock_ppm:/{print $2}' "config/gnb/$GNB_CONFIG")
+echo "=== CONFIGURACIÓN gNB: config/gnb/$GNB_CONFIG (origen: $origen_config) ==="
+echo "  dl_arfcn $frecuencia, tx_gain $ganancia, PLMN $plmn, clock_ppm $clock_ppm"
 echo
 echo "ESTO TRANSMITE por la B210. La antena tiene que estar dentro de la jaula."
-# --confirmado: la confirmación ya se dio antes de lanzar el script, para esta corrida.
-if [[ ${1:-} == --confirmado ]]; then
-    echo "Transmisión confirmada al lanzar el script."
-else
-    read -r -p "¿Transmitir ahora? Escribí 'si' para seguir: " respuesta
-    [[ $respuesta == si ]] || { echo "Cancelado: no se levantó nada."; exit 0; }
-fi
+# Sin confirmación: quien ejecuta el script ya decidió transmitir (pedido del usuario, 2026-11-03).
 
 gobernador=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo desconocido)
 if [[ $gobernador != performance ]]; then
@@ -66,6 +111,15 @@ echo
 echo "--- gNB (empieza a transmitir) ---"
 inicio_gnb=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 docker compose --profile radio up -d --no-build --no-deps --force-recreate gnb-radio
+
+archivo_esperado="$PWD/config/gnb/$GNB_CONFIG"
+montajes=$(docker inspect -f '{{range .Mounts}}{{.Source}} {{end}}' 5g-gnb-radio-1) || montajes=''
+if [[ " $montajes " != *" $archivo_esperado "* ]]; then
+    echo "ERROR: el gNB no montó el archivo elegido: $archivo_esperado" >&2
+    echo "Montajes informados por Docker: ${montajes:-no disponibles}. Se detiene el gNB." >&2
+    docker compose --profile radio stop gnb-radio
+    exit 1
+fi
 
 printf 'Esperando conexión con el AMF'
 conectado=no

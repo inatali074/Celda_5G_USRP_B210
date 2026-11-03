@@ -20,3 +20,4 @@ __pycache__/
 
 # Logs de start.sh/stop.sh: pueden tener identificadores
 logs/
+revisiones/.codex*.err
