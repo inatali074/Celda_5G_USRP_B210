@@ -85,7 +85,7 @@ El recurso elemental es el \textbf{resource element} (RE): una subportadora dura
 Todas las grillas se referencian al \textbf{punto A}, una frecuencia común a todas las numerologías. A partir de él se numeran los CRB (\emph{common resource blocks}), y una \emph{bandwidth part} (BWP) es un subconjunto contiguo de CRB con una numerología dada. En esta celda hay una sola BWP, que ocupa los 51~PRB del canal.
 
 \subsection{Cálculo de PRB y de banda de guarda}\label{sec:guarda}
-TS~38.101-1 fija, para cada ancho de banda de canal y SCS, la cantidad máxima de PRB $N_\text{RB}$ (tabla~5.3.2-1) y la banda de guarda mínima a cada lado (tabla~5.3.3-1) \cite{ts38101}\verif. La banda de guarda mínima se obtiene de
+TS~38.101-1 fija, para cada ancho de banda de canal y SCS, la cantidad máxima de PRB $N_\text{RB}$ (tabla~5.3.2-1) y la banda de guarda mínima a cada lado (tabla~5.3.3-1) \cite[§5.3.2 y §5.3.3]{ts38101}. Según la nota de la tabla~5.3.3-1, la banda de guarda mínima se obtiene de
 \begin{equation}
 G_\text{BW} = \frac{\text{BW}_\text{canal} - N_\text{RB}\cdot 12\cdot\Delta f}{2} - \frac{\Delta f}{2},
 \label{eq:guarda}

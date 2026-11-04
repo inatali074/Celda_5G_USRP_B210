@@ -28,7 +28,7 @@ La \cref{fig:arquitectura} (en la \cref{sec:impl}) muestra la arquitectura imple
 \end{itemize}
 
 \subsection{Rangos de frecuencia y bandas usadas}
-NR define dos rangos de frecuencia: \textbf{FR1} (por debajo de 7,125~GHz) y \textbf{FR2} (ondas milimétricas, desde 24,25~GHz) \cite{ts38101}. Los límites exactos de FR1 cambiaron entre releases \verif. Este trabajo usa dos bandas de FR1:
+NR define dos rangos de frecuencia: \textbf{FR1} (por debajo de 7,125~GHz) y \textbf{FR2} (ondas milimétricas, desde 24,25~GHz) \cite[tabla~5.1-1]{ts38101}: en la versión 15.31.0, FR1 va de 410 a 7125~MHz y FR2, de 24\,250 a 52\,600~MHz. Este trabajo usa dos bandas de FR1:
 \begin{itemize}
   \item \textbf{n78} (3300--3800~MHz, TDD): la banda media típica de 5G. En TDD, la subida y la bajada comparten la misma portadora y se alternan en el tiempo según un patrón de slots (\cref{sec:tdd}). Admite SCS de 15, 30 y 60~kHz para datos.
   \item \textbf{n3} (subida 1710--1785~MHz, bajada 1805--1880~MHz, FDD): la banda de 1800~MHz heredada de 2G y 4G. En FDD, la subida y la bajada usan portadoras distintas separadas 95~MHz y transmiten en simultáneo.

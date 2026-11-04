@@ -68,7 +68,7 @@ C &= \left\lceil \frac{N'_\text{info}+24}{8424}\right\rceil = \left\lceil\frac{5
 Es decir, cada slot de bajada completo transporta $\approx 6{,}8$~kB. La fórmula elige el TBS de modo que, sumado el CRC del TB, se divida exactamente en $C$ code blocks de igual tamaño: $(54\,296+24)/7 = 7760$~bits por CB.
 
 \subsection{Segmentación en code blocks}\label{sec:cb}
-\paragraph{Elección del base graph.} Para el DL-SCH, se usa el BG2 si $A\le 292$, si $A\le 3824$ y $R\le 0{,}67$, o si $R\le 0{,}25$; en otro caso, el BG1 \cite[§7.2.2]{ts38212}\verif. Con $A = 54\,296$ y $R=0{,}926$ corresponde el \textbf{BG1}, con $K_\text{cb} = 8448$.
+\paragraph{Elección del base graph.} Para el DL-SCH, se usa el BG2 si $A\le 292$, si $A\le 3824$ y $R\le 0{,}67$, o si $R\le 0{,}25$; en otro caso, el BG1 \cite[§7.2.2]{ts38212}. Con $A = 54\,296$ y $R=0{,}926$ corresponde el \textbf{BG1}, con $K_\text{cb} = 8448$.
 
 \paragraph{Cantidad de CB} \cite[§5.2.2]{ts38212}:
 \begin{align}

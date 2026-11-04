@@ -139,7 +139,7 @@ Como la señal tarda $d/c$ en llegar al UE y otro tanto en volver, un UE a dista
 T_\text{TA} = (N_\text{TA} + N_\text{TA,offset})\,T_c.
 \label{eq:tta}
 \end{equation}
-$N_\text{TA,offset}$ es un adelanto fijo que deja tiempo de conmutación al gNB. En FR1 TDD vale $25\,600\,T_c\approx 13~\mu$s \cite{ts38133}\verif. $N_\text{TA}$ compensa la ida y vuelta:
+$N_\text{TA,offset}$ es un adelanto fijo que deja tiempo de conmutación al gNB. En FR1 sin coexistencia LTE-NR vale $25\,600\,T_c\approx 13~\mu$s, y es el valor por defecto en FR1 cuando la red no señaliza \texttt{n-TimingAdvanceOffset} \cite[§7.1.2, tabla~7.1.2-2]{ts38133}. $N_\text{TA}$ compensa la ida y vuelta:
 \begin{equation}
 N_\text{TA}\,T_c = \frac{2d}{c}\quad\Longrightarrow\quad d = \frac{c\,N_\text{TA}\,T_c}{2}.
 \label{eq:ta_d}
@@ -186,7 +186,7 @@ Para reducir esa latencia, NR prevé el \textbf{configured grant} \cite[§5.8.2]
 Mantener al UE escuchando el PDCCH en todos los slots consume batería. NR escalona los estados según la actividad:
 \begin{itemize}
   \item \textbf{DRX en RRC\_CONNECTED} \cite[§5.7]{ts38321}: el UE monitorea el PDCCH solo durante el \emph{on duration} de cada ciclo DRX (corto o largo). Cada vez que recibe un DCI con datos nuevos, arranca el \texttt{drx-InactivityTimer} y se queda despierto mientras haya actividad. Al vencer, vuelve al ciclo. El costo es latencia: un paquete que llega mientras el UE duerme espera al siguiente \emph{on duration}.
-  \item \textbf{Paso a RRC\_INACTIVE o RRC\_IDLE} \cite[§4.2.1]{ts38331}\verif: después de un período sin tráfico (temporizador de inactividad del gNB), la red libera la conexión con un \texttt{RRCRelease}. En RRC\_INACTIVE, el UE y la red guardan el contexto (seguridad, configuración) y la reanudación es rápida (\texttt{RRCResumeRequest}). En RRC\_IDLE se pierde el contexto de acceso radio y hay que volver a establecer la conexión.
+  \item \textbf{Paso a RRC\_INACTIVE o RRC\_IDLE} \cite[§4.2.1]{ts38331}: después de un período sin tráfico (temporizador de inactividad del gNB), la red libera la conexión con un \texttt{RRCRelease}. En RRC\_INACTIVE, el UE y la red guardan el contexto (seguridad, configuración) y la reanudación es rápida (\texttt{RRCResumeRequest}). En RRC\_IDLE se pierde el contexto de acceso radio y hay que volver a establecer la conexión.
   \item \textbf{Paging} \cite{ts38304}: en INACTIVE o IDLE, el UE se despierta solo en su \emph{paging occasion}, una vez por ciclo de paging (en la celda, 128 tramas = 1,28~s). Si la red tiene datos para él, lo llama por el PDCCH con el P-RNTI, y el UE inicia el acceso aleatorio.
   \item \textbf{Vencimiento del temporizador de TA} \cite[§5.2]{ts38321}: el TA que mantiene el gNB solo es válido mientras el UE se mueve poco. Si no recibe comandos de TA durante \texttt{timeAlignmentTimer}, el UE considera que perdió el sincronismo de subida: vacía los buffers HARQ, libera el PUCCH, el SRS y los configured grants, y \textbf{para volver a transmitir tiene que pasar otra vez por el RACH}. En la celda, \texttt{timeAlignmentTimerCommon} = \texttt{infinity} en el SIB1.
 \end{itemize}
@@ -245,7 +245,7 @@ La simulación ilustrativa de la \cref{fig:papr} (derecha), con 612 subportadora
   \item CP-OFDM: $\approx 11{,}6$~dB, prácticamente igual con QPSK, 16QAM o 256QAM;
   \item DFT-s-OFDM: 7,9~dB con QPSK, 8,9~dB con 16QAM y 9,2~dB con 256QAM.
 \end{itemize}
-En esa simulación, la ventaja es de 2,5 a 3,7~dB, mayor cuanto más simple es la modulación. No es una medición del teléfono. Para el UE eso significa un back-off menor: con el mismo amplificador puede transmitir más potencia media (la norma le permite una reducción de potencia máxima, MPR, menor con DFT-s-OFDM \cite[§6.2.2]{ts38101}\verif), o la misma potencia con más eficiencia.
+En esa simulación, la ventaja es de 2,5 a 3,7~dB, mayor cuanto más simple es la modulación. No es una medición del teléfono. Para el UE eso significa un back-off menor: con el mismo amplificador puede transmitir más potencia media (la norma le permite una reducción de potencia máxima, MPR, menor con DFT-s-OFDM: con QPSK, hasta 1~dB contra hasta 3~dB de CP-OFDM en las asignaciones de borde y externas \cite[§6.2.2, tabla~6.2.2-1]{ts38101}), o la misma potencia con más eficiencia.
 
 \subsubsection{Cuándo conviene cada una}
 \begin{itemize}
