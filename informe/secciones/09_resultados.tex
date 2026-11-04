@@ -1,0 +1,82 @@
+\section{Resultados y análisis frente a la teoría}\label{sec:resultados}
+
+\subsection{Resumen de mediciones}
+La \cref{tab:resultados} reúne las mediciones de la celda n78 con el Redmi en ``NR only'' y las compara con las referencias aproximadas de la \cref{sec:tput}. Las mediciones TCP duran 10~s y son una transcripción hecha durante la sesión: no se conservaron los archivos originales de iperf3 ni del ping.
+
+\begin{table}[htbp]
+\centering
+\caption{Mediciones de la celda n78 frente a la teoría.}
+\label{tab:resultados}
+\begin{tabular}{lccc}
+\toprule
+Magnitud & Medido & Teórico (TS~38.306) & Medido/teórico \\
+\midrule
+Bajada TCP (celda limpia, tasa del emisor) & $\approx 54$~Mbit/s & 71,7~Mbit/s & 75~\% \\
+Subida TCP (CP-OFDM, A2) & 14,8~Mbit/s & 35~Mbit/s (26 con 64QAM) & 42~\% (57~\%) \\
+Subida TCP (DFT-s-OFDM, B) & 12,7~Mbit/s & 34,3~Mbit/s (50~PRB) & 37~\% \\
+RTT mín. / mediano$^\dagger$ & 16,7 / 27,7~ms & --- & --- \\
+RTT p90 / máx.$^\dagger$ & 44,9 / 1052~ms & --- & --- \\
+Jitter$^\ddagger$ / pérdida$^\dagger$ & 52,3~ms / 21,7~\% & --- & --- \\
+\bottomrule
+\multicolumn{4}{l}{\footnotesize $^\dagger$ Con la celda ya degradada por ``UL processor is busy''; una sola corrida.}\\
+\multicolumn{4}{l}{\footnotesize $^\ddagger$ Media de las diferencias entre RTT sucesivos.}
+\end{tabular}
+\end{table}
+
+\subsection{Bajada: 75~\% de la referencia teórica}
+Los $\approx 54$~Mbit/s representan el 75~\% de los 71,7~Mbit/s de la \cref{eq:dlmax}. La eficiencia espectral efectiva es $54/20 = 2{,}7$~bit/s/Hz, contra $71{,}7/20 = 3{,}6$~bit/s/Hz teóricos. La diferencia se explica por varios factores:
+\begin{itemize}
+  \item \textbf{MCS no siempre máximo:} solo el 72,6~\% de los PDSCH usó 256QAM (\cref{tab:modulaciones}), y no siempre con el MCS~27.
+  \item \textbf{Retransmisiones HARQ:} cada TB que falla ocupa un slot sin aportar datos nuevos.
+  \item \textbf{Overhead real distinto del 14~\% supuesto:} SSB, CSI-RS y TRS, PDCCH, DM-RS y los slots del SIB1 y del paging.
+  \item \textbf{TCP:} el control de congestión no mantiene el enlace lleno todo el tiempo, y sus ACK viajan por la subida, que es más lenta y tiene más latencia.
+\end{itemize}
+Con todo, alcanzar el 75~\% de la referencia con una radio definida por software y una sola antena es compatible con que la cadena de bajada (sincronización, estimación de canal, LDPC y 256QAM) funcione según lo previsto.
+
+\subsection{Asimetría bajada/subida}
+La bajada fue $54/14{,}8\approx 3{,}6$ veces más rápida que la subida. La teoría explica esta asimetría con tres causas:
+\begin{enumerate}
+  \item \textbf{Patrón TDD:} el 65,7~\% de los símbolos es de bajada y solo el 30~\% de subida (\cref{eq:fdl,eq:ful}). Esto solo ya explica un factor de 2,2.
+  \item \textbf{Potencia:} el gNB reparte su potencia sobre una EPRE constante (\cref{sec:potencia_dl}), mientras que el UE ajusta la suya en lazo abierto y cerrado para llegar a una densidad objetivo (\cref{sec:potencia_ul}). La SINR del PUSCH no la elige el UE, sino el control de potencia, y la subida también sufre los errores de temporización y la carga de procesamiento del receptor del gNB.
+  \item \textbf{Acceso planificado:} cuando el UE no tiene un grant vigente, una nueva ráfaga de subida necesita el ciclo SR $\to$ grant $\to$ PUSCH, con $k_2\ge 4$ slots (\cref{sec:grant}); con tráfico sostenido, los BSR mantienen los grants sin nuevos SR. En la bajada, el gNB planifica directamente.
+\end{enumerate}
+
+\subsection{Subida medida contra teórica}
+Los 14,8~Mbit/s son el 42~\% del máximo de 35~Mbit/s (57~\% si se toma como referencia 64QAM). Las causas probables son:
+\begin{itemize}
+  \item \textbf{Errores de PUSCH y BLER:} el PUSCH tuvo más fallas en la primera transmisión. Cada fallo exige una retransmisión, que en TDD solo puede ir en un slot de subida, a menudo del período siguiente.
+  \item \textbf{Planificación por SR/BSR:} el gNB solo asigna lo que el BSR le informa, y con un retardo de varios slots. Si el buffer del UE se vacía entre grants, quedan slots de subida sin usar.
+  \item \textbf{Dinámica de TCP:} la ventana de congestión crece según los ACK, que llegan con el RTT del enlace. Con un RTT de decenas de milisegundos y pérdidas por errores de radio, TCP no llega a llenar el canal en 10~s.
+  \item \textbf{Recursos compartidos en los slots de subida:} el PUCCH, el PRACH del slot~19 y la carga del procesador de subida reducen los PRB y los slots útiles para el PUSCH.
+\end{itemize}
+
+\subsection{Latencia y TDD}\label{sec:latencia}
+El RTT mínimo de 16,7~ms es coherente con la estructura de la celda. Un ping recorre la bajada y la subida, y cada sentido tiene sus esperas. Las siguientes son estimaciones de orden de magnitud para un UE sin grant vigente; dependen del período y el desfase de las ocasiones de SR, que no se relevaron:
+\begin{itemize}
+  \item \textbf{Bajada:} el paquete espera un slot de bajada (en promedio, poco, porque son el 65,7~\% del tiempo). Después, el PDSCH y el HARQ-ACK, que espera un slot de subida.
+  \item \textbf{Subida (la respuesta):} el UE tiene que esperar una ocasión de SR en un slot de subida. Los slots de subida están agrupados al final de cada período de 5~ms, así que la espera hasta el próximo es del orden de algunos milisegundos. Después, el grant en un slot de bajada y el PUSCH $k_2\ge 4$ slots más tarde, que en la práctica cae en el período de subida siguiente: $\approx 5$~ms más.
+\end{itemize}
+Sumando el procesamiento del gNB, el UPF y el teléfono, una decena de milisegundos de RTT solo por la interfaz radio es plausible, y el mínimo medido está en ese orden. Si el teléfono entra en DRX entre pings, a esto se suma la espera hasta el próximo \emph{on duration} (\cref{sec:callado}). La mediana (27,7~ms), el jitter (52,3~ms), el máximo de 1052~ms y la pérdida del 21,7~\% no son representativos de la tecnología: se midieron con el procesador de subida del gNB saturado (``UL processor is busy''), que descarta subidas enteras. Por eso deben repetirse con la celda limpia.
+
+\subsection{Comparación con 2G y 4G}
+La \cref{tab:comparacion} queda preparada para la comparación con las mediciones de EDGE y LTE del mismo grupo. La columna de NR tiene los valores de este trabajo.
+
+\begin{table}[htbp]
+\centering
+\caption{Comparación entre tecnologías. Las columnas de EDGE y LTE se completan con las mediciones correspondientes.}
+\label{tab:comparacion}
+\begin{tabular}{lccc}
+\toprule
+Magnitud & EDGE (2G) & LTE (4G) & NR SA (este trabajo) \\
+\midrule
+Ancho de banda de canal & & & 20~MHz (n78, TDD) \\
+Bajada TCP & & & $\approx 54$~Mbit/s (emisor) \\
+Subida TCP & & & 14,8~Mbit/s \\
+Referencia teórica DL / UL & & & 71,7 / 35~Mbit/s \\
+RTT mínimo / mediano & & & 16,7 / 27,7~ms$^\dagger$ \\
+Jitter & & & 52,3~ms$^\dagger$ \\
+Pérdida de paquetes & & & 21,7~\%$^\dagger$ \\
+\bottomrule
+\multicolumn{4}{l}{\footnotesize $^\dagger$ Con la celda degradada; hay que repetirlo con la celda limpia.}
+\end{tabular}
+\end{table}

@@ -1,0 +1,67 @@
+% Informe final: celda 5G NR SA con USRP B210 (Comunicaciones Móviles, UNRC)
+% Compilar desde informe/:  pdflatex informe_final.tex  (dos veces, para índice y referencias)
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[provide=*,spanish]{babel}
+\usepackage{mathpazo}
+\usepackage{microtype}
+\usepackage[a4paper,margin=2.4cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs,longtable,array,tabularx}
+\usepackage{enumitem}
+\usepackage[table]{xcolor}
+\usepackage{caption}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,shapes.geometric,backgrounds,decorations.pathreplacing}
+\usepackage[hidelinks]{hyperref}
+\usepackage{cleveref}
+
+\captionsetup{font=small,labelfont=bf}
+\AtBeginDocument{\renewcommand{\tablename}{Tabla}}
+\crefname{figure}{figura}{figuras}
+\crefname{table}{tabla}{tablas}
+\crefname{section}{sección}{secciones}
+\crefname{subsection}{sección}{secciones}
+\crefname{equation}{ecuación}{ecuaciones}
+\creflabelformat{equation}{(#2#1#3)}
+\numberwithin{equation}{section}
+\setlist{itemsep=2pt,topsep=4pt}
+\setlength{\parskip}{3pt}
+
+\definecolor{azul}{HTML}{2a78d6}
+\definecolor{naranja}{HTML}{eb6834}
+\definecolor{verde}{HTML}{1baf7a}
+\definecolor{ocre}{HTML}{eda100}
+\definecolor{gris}{HTML}{52514e}
+
+% [verificar]: cita 3GPP que el grupo todavía no contrastó con el texto de la especificación
+\newcommand{\verif}{\textbf{[verificar]}}
+\newcommand{\ts}[1]{TS~#1}
+
+\title{\textbf{Implementación de una celda 5G NR Standalone\\con una USRP B210}\\[4pt]
+\large Informe final del trabajo práctico\\Comunicaciones Móviles --- Universidad Nacional de Río Cuarto}
+\author{Grupo de trabajo 5G}
+\date{Noviembre de 2026}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+\clearpage
+\input{secciones/01_consigna}
+\input{secciones/00_resumen}
+\input{secciones/02_marco}
+\input{secciones/03_numerologia}
+\input{secciones/04_downlink}
+\input{secciones/05_uplink}
+\input{secciones/06_flujos}
+\input{secciones/07_implementacion}
+\input{secciones/08_cronologia}
+\input{secciones/09_resultados}
+\input{secciones/10_preguntas}
+\input{secciones/11_conclusiones}
+\input{secciones/12_referencias}
+
+\end{document}

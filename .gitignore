@@ -21,3 +21,7 @@ __pycache__/
 # Logs de start.sh/stop.sh: pueden tener identificadores
 logs/
 revisiones/.codex*.err
+
+# Excepción: el informe final y sus figuras sí se versionan
+!informe/*.pdf
+!informe/figuras/*.pdf

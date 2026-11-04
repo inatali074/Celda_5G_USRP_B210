@@ -1,6 +1,6 @@
 # Proyecto: celda 5G NR SA con USRP B210
 
-*Memoria entre sesiones. Solo la edita Claude. Última actualización: 2026-11-03.*
+*Memoria entre sesiones. Solo la edita Claude. Última actualización: 2026-11-04.*
 
 ## Objetivo
 Desplegar desde cero una celda 5G NR Standalone (Opción 2, Release 15) en un entorno de RF autorizado o controlado, y lograr que un celular con SIM de laboratorio se registre, obtenga IP y navegue. Después, medir throughput, latencia y jitter y compararlos con 2G (EDGE) y 4G (LTE) del mismo grupo.
@@ -32,7 +32,7 @@ Acceso por SSH, con contraseña (usuario e IP en `CONTEXTO_ANTECEDENTES.local.md
 ## A definir (lo decide el usuario)
 1. **Entorno de RF:** definido: jaula de Faraday (2026-10-30). Falta confirmar que la B210 esté adentro antes de cada transmisión.
 2. **Celulares:** definidos: OnePlus 13, Motorola Edge 30, Xiaomi Redmi Note 14 5G. Falta confirmar sus bandas SA.
-3. **Entregable:** por ahora sin formato ni fecha.
+3. **Entregable:** informe final en LaTeX/PDF (`informe/informe_final.pdf`), redactado el 2026-11-04 a partir de `informe/prompt_informe_final.md`. Fecha de entrega sin definir.
 4. **SIM:** se usan las que hay; falta leerlas (el usuario las conecta al lector). Ver Riesgos.
 5. **Acceso a `~/red5g`:** copia de solo lectura, si se quiere consultar más allá del docx.
 
@@ -122,8 +122,19 @@ Según `Prueba_configuracion_Drive_5G.docx` (29/10): ZMQ + srsUE funcionó de pu
 - **DFT-s-OFDM funciona con los dos teléfonos.** La prueba A/B/A no da evidencia para adoptarlo por rendimiento (D-017).
 - **"UL processor is busy" también aparece sin las métricas JSON:** no son una condición necesaria, y su contribución no se determinó. Aparece después de perturbaciones de tiempo real y persiste (P-004). Hay que medir con la celda recién arrancada. Revisión: `revisiones/2026-11-03_codex-revision-dfts-ulbusy.md`.
 
+**2026-11-04: informe final.**
+- `informe/informe_final.pdf` (45 páginas, LaTeX en `informe/secciones/`, figuras con `informe/figuras/generar_figuras.py`).
+- Revisado por Codex (`revisiones/2026-11-04_codex-revision-informe.md`, 29 hallazgos, ninguno crítico). Se integraron casi todos. Codex se equivocó en el reparto del rate matching: son 6 CB de 8392 bits y 1 de 8400.
+- **Errores del prompt corregidos con la evidencia:**
+  - en n3 con `NR only`, la sesión terminó por RLF a los 338,7 s, no al detener el gNB;
+  - la bajada TCP es la tasa del emisor;
+  - K/OPc se grabaron con OYEI, no por APDU.
+- **Verificado en TS 38.211:** `prach-ConfigurationIndex` 159 = formato B4, subtrama 9 (slot 19). El alcance geométrico del PRACH es de ~2 km.
+- **Hipótesis nueva para P-004:** con `zeroCorrelationZoneConfig` 0, los 64 preámbulos salen de 64 raíces ZC, y eso podría cargar el slot 19. Se prueba subiendo ese parámetro.
+- Quedan 13 citas marcadas [verificar], de TS que no están en el proyecto, y la tabla EDGE/LTE para completar.
+
 ## Punto de retorno TDD (2026-11-03)
 Mejor configuración n78 TDD hasta hoy: **`config/gnb/gnb_b210_00101_csiper_ppm0_kos.yml`** (n78, ARFCN 635000, 20 MHz, μ=1, PLMN 00101, tx 80, `clock_ppm 0`, CSI periódico con `pucch.max_consecutive_kos 100000`). El corte de cada ~60 s se evita con el teléfono en `NR only` (D-015): el Redmi duró 5 min 45 s el 2026-11-03, sin RLF hasta parar el gNB. Variantes: `_csiaper_ppm0.yml` (CSI aperiódico, el valor por defecto de `start.sh`) y `_csiper_ppm0.yml`. Etiqueta git: **`tdd-ppm0-2026-11-03`**. Para volver: `./start.sh gnb_b210_00101_csiper_ppm0_kos.yml`. Las pruebas en n3 FDD van en archivos aparte y no tocan estos.
 
 ## Próximos pasos
-Ver la sección "Para retomar" de `sesiones/2026-11-03_dashboard-dfts.md`. Siguen vigentes los puntos abiertos de `sesiones/2026-11-03_cortes-60s-volte.md` (voz IMS, OnePlus).
+Ver la sección "Para retomar" de `sesiones/2026-11-04_informe-final.md` y de `sesiones/2026-11-03_dashboard-dfts.md`. Siguen vigentes los puntos abiertos de `sesiones/2026-11-03_cortes-60s-volte.md` (voz IMS, OnePlus).

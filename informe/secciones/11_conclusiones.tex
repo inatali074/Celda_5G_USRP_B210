@@ -1,0 +1,28 @@
+\section{Conclusiones y trabajo futuro}\label{sec:conclusiones}
+
+\subsection{Conclusiones}
+\begin{enumerate}
+  \item \textbf{Se cumplió el objetivo principal.} Una celda 5G NR SA (Release~15), implementada por completo en contenedores Docker con una USRP B210, registró un teléfono comercial con una SIM de laboratorio, le asignó una IP y le dio salida a Internet, tanto en n78 TDD como en n3 FDD.
+  \item \textbf{La teoría de capa física explicó las decisiones de diseño.}
+  \begin{itemize}
+    \item La numerología y la frecuencia de muestreo ($1536\times 15$~kHz $=$ 23,04~MS/s) fijaron la FFT, el CP y el caudal por USB.
+    \item El cálculo de PRB y guardas dio los 51 y 106~PRB.
+    \item El análisis del formato B4 permitió estimar el alcance geométrico orientativo del PRACH.
+  \end{itemize}
+  \item \textbf{La sincronización fue el problema más difícil y el más instructivo.} Una corrección de reloj aplicada solo a la portadora, y no al muestreo, coincidía con una deriva constante del timing advance y con cortes a los pocos segundos; al anularla, el TA se estabilizó. El grupo lo explica porque se rompe el vínculo entre portadora y muestreo que el UE usa para mantener la temporización. Se detectó por la tendencia de los comandos de TA y se explicó con la teoría de TA de TS~38.213 §4.2.
+  \item \textbf{Las señales piloto de NR son específicas.} Deshabilitar los CSI-RS eliminó también el TRS y empeoró el enlace, lo que es coherente con que, sin la CRS de LTE, el UE dependa del TRS para el seguimiento fino.
+  \item \textbf{El rendimiento es compatible con la referencia teórica.} La bajada alcanzó el 75~\% de la referencia aproximada derivada de TS~38.306. La asimetría con la subida se explica con el patrón TDD, el acceso planificado y el control de potencia.
+  \item \textbf{DFT-s-OFDM no es mejor en todos los casos.} Funcionó, pero con SINR alta no mejoró el throughput. Esto es coherente con el análisis probabilístico de la PAPR (su ventaja, de 2,5 a 3,7~dB en la simulación, importa cuando el UE está limitado en potencia), aunque que el Redmi no lo estuviera sigue siendo una hipótesis sin PHR.
+  \item \textbf{Parte de los problemas no fueron de radio,} sino de la interacción del teléfono con la red: el PLMN no aceptado y el corte cada 60~s, que se mitigó con ``NR only'' y cuya relación con la voz IMS sigue siendo una hipótesis. Para un despliegue de laboratorio, la configuración del núcleo y de la SIM es tan importante como la de la capa física.
+\end{enumerate}
+
+\subsection{Trabajo futuro}\label{sec:trabajo_futuro}
+\begin{itemize}
+  \item Repetir el ping y la bajada con la celda recién arrancada, para obtener latencia, jitter y pérdida representativos.
+  \item Identificar la causa de ``UL processor is busy''. Una prueba concreta, derivada de la \cref{sec:crono}: subir \texttt{zeroCorrelationZoneConfig} para que los 64 preámbulos salgan de pocas raíces ZC, y ver si la falla deja de concentrarse en el slot del PRACH.
+  \item Confirmar la hipótesis de voz cambiando solo el anuncio de IMS en el núcleo, o montar un IMS.
+  \item Forzar ``NR only'' en el OnePlus (por ejemplo, con los menús de prueba del módem).
+  \item Repetir la comparación de DFT-s-OFDM en bloques alternados (ABAB/BABA), con más corridas y registrando el PHR, y en una condición de UE limitado en potencia (más atenuación o menos ganancia de recepción).
+  \item Justificar formalmente el uso del PLMN de prueba 001/01 con la normativa de numeración.
+  \item Completar la tabla comparativa con EDGE y LTE.
+\end{itemize}

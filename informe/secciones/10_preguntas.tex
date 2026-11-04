@@ -1,0 +1,33 @@
+\section{Preguntas de la cátedra}\label{sec:preguntas}
+
+Esta sección responde brevemente cada pregunta e indica dónde se desarrolla.
+
+\paragraph{1. ¿Cómo son los flujos, cuántos bits por segundo y cuál es el peso de las palabras?}
+Por cada slot asignado, la MAC entrega un bloque de transporte. Para 51~PRB, MCS~27 en 256QAM y una capa, el TBS es de 54\,296~bits (\cref{eq:tbs}), que con su CRC se segmentan en 7 code blocks LDPC del BG1: cada uno lleva 7760~bits del TB, 24 de CRC y 664 de relleno, es decir, 8448~bits de entrada al codificador ($Z_c=384$). Al ritmo de 2000 slots por segundo y con el 65,7~\% de símbolos de bajada, la referencia aproximada es de 71,7~Mbit/s en la bajada y $\approx 35$~Mbit/s en la subida. Se midieron $\approx 54$ y 14,8~Mbit/s (\cref{sec:flujos,sec:resultados}).
+
+\paragraph{2. ¿Cómo se asigna el presupuesto de potencia?}
+En la bajada, con el modelo simplificado de carga completa, el gNB reparte su potencia total con una EPRE aproximadamente constante sobre las 612~RE de cada símbolo ($-27{,}9$~dB respecto del total). En lugar de un lazo de potencia por usuario, se adapta el MCS con el CQI. Hay relaciones fijas o señalizadas entre la EPRE del PSS, el SSS, el CSI-RS y la DM-RS (\cref{sec:potencia_dl}). En la subida, cada UE fija su potencia con la \cref{eq:ppusch}: compensación fraccional de la pérdida de trayecto en lazo abierto, escalada con los PRB asignados y corregida en lazo cerrado con los comandos TPC, hasta $P_\text{CMAX}$. El PHR informa el margen (\cref{sec:potencia_ul}). El PRACH usa lazo abierto con rampa de potencia (\cref{eq:ramping}).
+
+\paragraph{3. ¿Qué pasa apenas se prende el celular y en qué momento se engancha?}
+El UE elige las bandas según la SIM y sus capacidades, recorre el sync raster (GSCN) buscando el PSS, se sincroniza en tiempo de símbolo y frecuencia gruesa con el PSS, obtiene el PCI con el SSS y se sincroniza a la trama al decodificar el PBCH (SFN e índice de SSB). Se ``engancha'' a la celda cuando decodifica el SIB1 y comprueba el PLMN y el nivel mínimo; recién entonces puede iniciar el RACH (\cref{sec:encendido}). En este trabajo, con el PLMN 722/999 el proceso se detenía antes del RACH (\cref{sec:crono}).
+
+\paragraph{4. ¿Por qué se hace el scrambling?}
+Para que la interferencia de otras celdas y de otros usuarios se vea como ruido después de la desaleatorización (la secuencia depende del PCI y del RNTI), para balancear los bits y evitar líneas espectrales, y, en el PBCH, para transportar información implícita del SFN y del SSB (\cref{sec:scrambling}).
+
+\paragraph{5. ¿Por qué hay diferencia entre CP-OFDM y DFT-s-OFDM?}
+DFT-s-OFDM antepone una DFT de $M$ puntos que convierte la señal en una portadora única interpolada: su envolvente sigue a la constelación y su PAPR es de 2,5 a 3,7~dB menor que la de CP-OFDM. Eso le permite al UE trabajar con menos back-off cuando está limitado en potencia. CP-OFDM admite MIMO y asignaciones flexibles, conserva la SINR de cada subportadora y suele rendir más con SINR alta (\cref{sec:dfts}). La prueba A/B/A fue coherente con eso: con SINR alta, DFT-s-OFDM no mejoró el rendimiento, aunque con una sola corrida por tramo (\cref{tab:aba}).
+
+\paragraph{6. En OFDMA, ¿cuál tiene mayor PAPR y por qué crece con $N$?}
+La señal con más subportadoras activas: en OFDMA, la del gNB, que suma las de todos los usuarios, y en general CP-OFDM frente a DFT-s-OFDM. No es que cada símbolo tenga más PAPR: cada muestra es aproximadamente gaussiana con la misma potencia media, independientemente de $N$. Al aumentar $N$ hay más muestras independientes por símbolo y \textbf{aumenta la probabilidad} de que alguna supere un umbral dado: $\Pr\{\text{PAPR}>\gamma_0\}\approx \alpha N e^{-\gamma_0}$ (\cref{eq:ccdf_aprox}). El umbral para una probabilidad fija crece como $\ln N$: de 9,7 a 11,7~dB al nivel $10^{-3}$ entre $N=16$ y $N=1024$ (\cref{sec:papr}, \cref{fig:papr}).
+
+\paragraph{7. ¿Cuál es el valor mínimo del prefijo cíclico?}
+El CP tiene que ser mayor que el delay spread del canal (más el error residual de sincronización): $T_\text{CP}\ge \tau_\text{max}$ (\cref{eq:cpmin}). Así la ISI queda dentro del CP y la convolución con el canal se vuelve circular. El ejercicio de la cátedra y su comparación con NR están en la \cref{sec:ejercicio_cp}. En la celda, 2,34~$\mu$s tolera $\approx 703$~m de diferencia de camino.
+
+\paragraph{8. ¿Cuánto vale la frecuencia de muestreo en 5G?}
+La norma define una unidad $T_c = 1/(480~\text{kHz}\cdot 4096)$, es decir, una ``frecuencia básica'' de 1,966~GHz que no se usa físicamente. Un equipo muestrea a $f_s = N_\text{FFT}\cdot\Delta f$. En esta celda, $f_s = 1536\times 15~\text{kHz} = 768\times 30~\text{kHz} = 23{,}04$~MS/s (\cref{sec:fs}, \cref{tab:fs}).
+
+\paragraph{9. ¿Cómo se relaciona el timing advance con el radio de cobertura?}
+El TA compensa el retardo de ida y vuelta: $d = c\,N_\text{TA}T_c/2$. Con $\mu=1$, cada paso es de 0,26~$\mu$s, unos 39~m, y el TA máximo de la RAR (1~ms) corresponde a $\approx 150$~km. El radio real lo limita el PRACH, que se transmite \emph{sin} TA: el retardo de ida y vuelta tiene que caber en el CP del preámbulo y en el tiempo de guarda. Para el formato B4 de la celda, eso da un alcance geométrico orientativo de $\approx 2$~km (\cref{sec:ta}).
+
+\paragraph{10. En DFT-s-OFDM, ¿se ecualiza antes o después de la IDFT?}
+\textbf{Antes.} En el receptor se ecualiza en frecuencia, después de la FFT de $N$ puntos y del demapeo de las $M$ subportadoras, y antes de la IDFT de $M$ puntos que deshace la precodificación. Ahí el canal es diagonal (un coeficiente por subportadora, gracias al CP), y después de la IDFT dejaría de serlo (\cref{sec:ecualizacion}, \cref{fig:dfts}).

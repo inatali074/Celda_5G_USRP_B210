@@ -1,0 +1,101 @@
+\section{Implementación}\label{sec:impl}
+
+\subsection{Arquitectura}
+La \cref{fig:arquitectura} muestra la arquitectura implementada. Todos los componentes de red corren en contenedores Docker sobre un mismo host Linux, como pide la consigna. Lo que no se puede hacer dentro de un contenedor (el firmware de la USRP, los buffers de red del kernel, el governor de la CPU y la NAT) se configuró en el host.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[font=\footnotesize,>=Stealth,
+  c/.style={draw,rounded corners=3pt,fill=white,minimum height=0.8cm,align=center},
+  nf/.style={draw,rounded corners=2pt,fill=naranja!15,minimum width=1.2cm,minimum height=0.65cm,align=center}]
+  \node[c,fill=azul!15] (ue) at (0,0) {Celular\\(SIM 001/01)};
+  \node[c,fill=gris!15] (usrp) at (3.9,0) {USRP B210\\23,04 MS/s};
+  \draw[<->,dashed] (ue) -- node[above]{NR-Uu} node[below]{n78 / n3} (usrp);
+  \node[draw,dotted,gris,fit=(ue)(usrp),inner sep=8pt,label={[gris]above:jaula de Faraday}] {};
+  \node[c,fill=azul!10,minimum width=2.4cm,minimum height=2.2cm] (gnb) at (7.8,0) {gNB OCUDU\\(CU + DU)\\\texttt{release\_26\_10}};
+  \draw[<->] (usrp) -- node[above]{USB 3.0} node[below]{UHD} (gnb);
+  \node[nf] (amf) at (12.0,0.8) {AMF};
+  \node[nf] (smf) at (13.8,0.8) {SMF};
+  \node[nf] (aus) at (15.8,0.8) {AUSF\\UDM/UDR};
+  \node[nf] (upf) at (12.0,-0.8) {UPF};
+  \node[c,fill=verde!15] (mongo) at (15.8,-0.8) {MongoDB};
+  \draw[<->] (gnb.east |- amf) -- node[above]{N2 (NGAP/SCTP)} (amf);
+  \draw[<->] (gnb.east |- upf) -- node[below]{N3 (GTP-U)} (upf);
+  \draw[<->] (amf) -- (smf); \draw[<->] (smf) -- node[right]{N4} (upf);
+  \draw[<->] (smf) -- (aus); \draw[<->] (aus) -- (mongo);
+  \node[draw,dashed,rounded corners,fit=(amf)(smf)(upf)(aus)(mongo),inner sep=6pt,label={above:Open5GS v2.8.0 (5GC)}] (core) {};
+  \node[c,fill=ocre!20] (nat) at (12.0,-2.7) {NAT del kernel (host)};
+  \node[c] (inet) at (15.8,-2.7) {Internet};
+  \draw[->] (upf) -- node[right]{N6} (nat); \draw[->] (nat) -- (inet);
+  \node[c,fill=gris!10] (dash) at (7.8,-2.7) {Panel web (métricas,\\logs, ping, iperf3)};
+  \draw[->,gris] (gnb) -- (dash);
+  \node[draw,dashed,rounded corners,fit=(gnb)(core)(dash),inner sep=10pt,label={[gris]below:contenedores Docker en el host Linux}] {};
+\end{tikzpicture}}
+\caption{Arquitectura implementada. El celular y la antena de la B210 están dentro de la jaula de Faraday; el gNB, el núcleo, la base de datos y el panel de monitoreo corren en contenedores. La salida a Internet es por NAT del kernel del host.}
+\label{fig:arquitectura}
+\end{figure}
+
+\subsection{Equipamiento y software}
+\begin{table}[htbp]
+\centering
+\caption{Equipamiento y software.}
+\label{tab:equipos}
+\begin{tabularx}{\linewidth}{lX}
+\toprule
+Componente & Detalle \\
+\midrule
+Radio & USRP B210 sin GPSDO, por USB~3.0. 23,04~MS/s, formato \texttt{sc12}. Ganancia de TX 80~dB y de RX 40~dB. 1 antena de transmisión y 1 de recepción (1~capa) \\
+gNB & OCUDU (ex srsRAN Project), versión \texttt{release\_26\_10}, en Docker \\
+Núcleo & Open5GS v2.8.0 con MongoDB, en Docker \\
+Salida a Internet & NAT del kernel Linux (N6) \\
+PC principal & Intel i3-1005G1 (2 núcleos, 4 hilos), 7,3~GiB de RAM, Debian~13 \\
+PC secundaria & PC del laboratorio con 12 hilos y 60~GiB de RAM \\
+Teléfonos & Xiaomi Redmi Note~14~5G (el medido), OnePlus~13, Motorola Edge~30~Neo \\
+SIM & Programables de laboratorio. Lista de PLMN y tecnologías de acceso grabadas por el grupo con comandos APDU desde Linux; claves, con la herramienta del fabricante \\
+Monitoreo & Panel web propio en un contenedor sin privilegios: métricas y logs del gNB, ping e iperf3 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Parámetros de la celda}
+\begin{table}[htbp]
+\centering
+\caption{Parámetros de las dos celdas.}
+\label{tab:celda}
+\begin{tabular}{lll}
+\toprule
+Parámetro & Celda principal (n78) & Celda n3 \\
+\midrule
+Duplexado & TDD & FDD \\
+Rango & FR1 & FR1 \\
+NR-ARFCN DL & 635\,000 (3525~MHz) & 368\,500 (1842,5~MHz) \\
+Frecuencia UL & 3525~MHz & 1747,5~MHz \\
+SSB (ARFCN / GSCN) & 634\,656 / 7860 & 368\,410 / 4604 \\
+Ancho de canal & 20~MHz & 20~MHz \\
+Numerología & $\mu=1$, 30~kHz & $\mu=0$, 15~kHz \\
+PRB & 51 & 106 \\
+FFT a 23,04~MS/s & 768 & 1536 \\
+PLMN / TAC / PCI & 001/01 / 7 / 1 & 001/01 / 7 / 1 \\
+Patrón TDD & 5~ms: 6~D, 1~S (8~D + 6~G), 3~U & --- \\
+PRACH & índice 159 (B4), $L_\text{RA}=139$, 30~kHz & índice 1 \\
+Forma de onda & DL CP-OFDM; UL CP-OFDM & ídem \\
+Modulación máxima DL & 256QAM & 256QAM \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Decisiones de diseño justificadas}
+\begin{itemize}
+  \item \textbf{Banda n78 y 3525~MHz.} n78 es la banda media característica de 5G y la de la configuración de referencia del gNB para TDD. Primero se usó 3489,42~MHz, pero esa frecuencia cae en el bloque de un operador comercial y atraía a celulares ajenos. Por eso se pasó a 3525~MHz (ARFCN 635\,000, múltiplo del raster de 30~kHz de n78).
+  \item \textbf{20~MHz y 30~kHz.} 20~MHz exige 23,04~MS/s, un caudal que la B210 sostiene por USB~3.0 y que la CPU disponible puede procesar; anchos mayores multiplican ambos (\cref{sec:fs}). 30~kHz es la SCS típica de n78 y deja un CP de 2,34~$\mu$s, sobrado para la jaula (\cref{sec:cp}).
+  \item \textbf{Frecuencia de muestreo de 23,04~MS/s.} Es la mínima que contiene las 612 subportadoras con una FFT eficiente (768 puntos) y reduce en un 25~\% el caudal de muestras por USB frente a 30,72~MS/s (\cref{sec:fs}). Es de esperar que también baje la carga de CPU, pero no se midió.
+  \item \textbf{Patrón TDD de 5~ms DDDDDDSUUU.} Es el patrón que el gNB usa por defecto, con predominio de la bajada (65,7~\%), adecuado para navegación. El slot especial deja 6 símbolos de guarda (214~$\mu$s), mucho más que lo que hace falta en la jaula.
+  \item \textbf{PRACH formato B4 (índice 159).} Es el valor que el gNB usa por defecto para esta configuración. Es un formato corto (139 subportadoras de 30~kHz, igual a la SCS de los datos), sin largos preámbulos de 1,25~kHz que exigirían otra numerología en el PRACH. Ocupa un único slot de subida por trama y su alcance geométrico orientativo es de $\approx 2$~km (\cref{sec:ta}), más que suficiente para la jaula.
+  \item \textbf{PLMN de prueba 001/01.} Con el PLMN 722/999 los teléfonos no generaban PRACH. El MCC~001 está reservado para redes de prueba \verif, y con él los teléfonos se registraron (\cref{sec:crono}).
+  \item \textbf{1 TX y 1 RX.} La B210 tiene dos cadenas, pero con dos antenas se duplican el caudal por USB y la carga de procesamiento. Con una sola capa la configuración es más simple y la referencia teórica (71,7~Mbit/s) alcanza para los objetivos del trabajo.
+  \item \textbf{CP-OFDM en la subida.} Se probó DFT-s-OFDM y no mejoró el rendimiento en estas condiciones (\cref{sec:dfts,sec:crono}).
+\end{itemize}
+
+\subsection{SIM de laboratorio}
+La lista de PLMN con tecnología de acceso (con el bit de NG-RAN activado) y el PLMN se grabaron desde Linux con comandos APDU \cite{ts31102}. Las claves del abonado ($K$ y OPc) se grabaron con la herramienta del fabricante de las tarjetas. La implementación de Milenage se contrastó con los vectores de prueba de TS~35.208 \cite{ts35208}, lo que valida el algoritmo pero no que las claves coincidan. Que coincidían entre las tarjetas y el núcleo se comprobó aparte, con un comando de autenticación a cada SIM, y finalmente con el registro exitoso. Las claves no se incluyen en este informe.

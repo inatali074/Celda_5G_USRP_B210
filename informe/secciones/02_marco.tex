@@ -1,0 +1,42 @@
+\section{Marco teórico: 3GPP y conceptos básicos de 5G NR}\label{sec:marco}
+
+\subsection{3GPP y las releases}
+El 3GPP (\emph{3rd Generation Partnership Project}) agrupa a los organismos regionales de normalización y publica las especificaciones técnicas (TS) de los sistemas móviles. Cada TS se identifica por serie: la serie~38 corresponde a la red de acceso NR, la~23 a la arquitectura del sistema, la~24 a los protocolos con el terminal (NAS), la~31 a la tarjeta (U)SIM y la~33/35 a la seguridad y sus algoritmos. Las especificaciones evolucionan por \emph{releases}, y cada una congela un conjunto coherente de funciones:
+\begin{itemize}
+  \item \textbf{Release~15:} primera release de 5G NR. Definió primero la operación no autónoma (NSA, anclada en LTE) y después la autónoma (SA), con el núcleo 5GC. Es la release que pide la consigna.
+  \item \textbf{Release~16:} mejoras para comunicaciones de baja latencia y alta confiabilidad (URLLC), IoT industrial, V2X y NR en espectro sin licencia.
+  \item \textbf{Release~17:} terminales de capacidad reducida (RedCap), redes no terrestres y extensión de frecuencias.
+  \item \textbf{Release~18:} primera release de \emph{5G-Advanced}.
+\end{itemize}
+La capa física que se describe en este informe es la de Release~15 (TS~38.211, 38.212, 38.213 y 38.214), que es la que implementan el gNB usado y los teléfonos.
+
+\subsection{NSA contra SA}
+En la opción~3 (NSA, también llamada EN-DC) el teléfono se conecta a la vez a un eNB LTE, que actúa como ancla de control, y a un gNB que aporta capacidad de datos. El núcleo sigue siendo el EPC de LTE. En la \textbf{opción~2 (SA)}, en cambio, el gNB se conecta directamente al núcleo 5G (5GC) y toda la señalización (RRC y NAS) viaja por NR \cite{ts38300}. Para este trabajo SA tiene dos consecuencias prácticas:
+\begin{enumerate}
+  \item el teléfono tiene que encontrar, sincronizarse y acampar en la celda NR sin ayuda de LTE, así que el SSB, el MIB y el SIB1 tienen que estar bien configurados (\cref{sec:dl});
+  \item hace falta un núcleo 5GC completo, y el teléfono tiene que aceptar la SIM para el acceso NG-RAN (\cref{sec:impl}).
+\end{enumerate}
+
+\subsection{Arquitectura: gNB y 5GC}
+La \cref{fig:arquitectura} (en la \cref{sec:impl}) muestra la arquitectura implementada. Solo se describen las funciones necesarias para seguir el informe \cite{ts38300}:
+\begin{itemize}
+  \item \textbf{gNB:} termina la interfaz radio (PHY, MAC, RLC, PDCP, SDAP y RRC). En el gNB usado, las funciones se dividen en CU y DU, pero corren en un mismo proceso.
+  \item \textbf{AMF} (\emph{Access and Mobility Management Function}): termina la señalización NAS del UE (registro, autenticación, movilidad) y la interfaz \textbf{N2} con el gNB (protocolo NGAP sobre SCTP).
+  \item \textbf{SMF} (\emph{Session Management Function}): gestiona las sesiones PDU (asignación de IP, DNN) y controla al UPF.
+  \item \textbf{UPF} (\emph{User Plane Function}): reenvía el tráfico de usuario. Lo recibe del gNB por la interfaz \textbf{N3} (túneles GTP-U sobre UDP) y lo entrega a la red de datos por \textbf{N6}. En este trabajo, N6 termina en la NAT del kernel Linux, que da salida a Internet.
+  \item \textbf{AUSF, UDM y UDR:} autentican al abonado con 5G-AKA y guardan sus credenciales. En Open5GS, el UDR usa MongoDB.
+\end{itemize}
+
+\subsection{Rangos de frecuencia y bandas usadas}
+NR define dos rangos de frecuencia: \textbf{FR1} (por debajo de 7,125~GHz) y \textbf{FR2} (ondas milimétricas, desde 24,25~GHz) \cite{ts38101}. Los límites exactos de FR1 cambiaron entre releases \verif. Este trabajo usa dos bandas de FR1:
+\begin{itemize}
+  \item \textbf{n78} (3300--3800~MHz, TDD): la banda media típica de 5G. En TDD, la subida y la bajada comparten la misma portadora y se alternan en el tiempo según un patrón de slots (\cref{sec:tdd}). Admite SCS de 15, 30 y 60~kHz para datos.
+  \item \textbf{n3} (subida 1710--1785~MHz, bajada 1805--1880~MHz, FDD): la banda de 1800~MHz heredada de 2G y 4G. En FDD, la subida y la bajada usan portadoras distintas separadas 95~MHz y transmiten en simultáneo.
+\end{itemize}
+
+La frecuencia de una portadora se expresa con el NR-ARFCN $N_\text{REF}$, según \cite[§5.4.2.1]{ts38101}:
+\begin{equation}
+F_\text{REF} = F_\text{REF-Offs} + \Delta F_\text{Global}\,(N_\text{REF}-N_\text{REF-Offs}),
+\label{eq:arfcn}
+\end{equation}
+con $\Delta F_\text{Global}=5$~kHz y $F_\text{REF-Offs}=0$ por debajo de 3~GHz, y $\Delta F_\text{Global}=15$~kHz, $F_\text{REF-Offs}=3000$~MHz y $N_\text{REF-Offs}=600\,000$ entre 3 y 24,25~GHz. Para la celda n78, $N_\text{REF}=635\,000$ da $3000 + 0{,}015\cdot 35\,000 = 3525$~MHz. Para la n3, $N_\text{REF}=368\,500$ da $0{,}005\cdot 368\,500=1842{,}5$~MHz en la bajada y, con la separación dúplex de 95~MHz, 1747,5~MHz en la subida.

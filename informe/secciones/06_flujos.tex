@@ -1,0 +1,115 @@
+\section{Flujos y tasas}\label{sec:flujos}
+
+Esta sección responde cómo son los flujos de bits, cuántos bits por segundo se pueden transportar y cuánto ``pesan'' las palabras: el bloque de transporte y sus code blocks.
+
+\subsection{Cadena de procesamiento de un bloque de transporte}
+Por cada slot asignado, la MAC le entrega a la capa física un \textbf{bloque de transporte} (TB) de TBS bits. La capa física lo procesa así \cite{ts38212}:
+\begin{enumerate}
+  \item le agrega un CRC de 24~bits (16~bits si el TB tiene hasta 3824~bits);
+  \item si el bloque supera el tamaño máximo del código LDPC, lo segmenta en \textbf{code blocks} (CB), cada uno con su propio CRC de 24~bits;
+  \item codifica cada CB con LDPC y adapta la tasa (\emph{rate matching}) a las RE disponibles;
+  \item concatena y aleatoriza los CB (\cref{sec:scrambling}), los modula y los mapea a la grilla.
+\end{enumerate}
+
+\subsection{MCS, modulación y tasa de código}
+El gNB elige el índice MCS de cada transmisión según el CQI que reporta el UE (en la bajada) o según la SINR que mide (en la subida). El MCS fija dos números \cite[§5.1.3.1]{ts38214}:
+\begin{itemize}
+  \item el \textbf{orden de modulación} $Q_m$ (bits por símbolo): 2 para QPSK, 4 para 16QAM, 6 para 64QAM y 8 para 256QAM;
+  \item la \textbf{tasa de código} $R$, expresada como $R\times 1024$.
+\end{itemize}
+Su producto $Q_m R$ es la eficiencia espectral por RE. En la tabla de 256QAM (tabla~5.1.3.1-2 de TS~38.214), el máximo es el MCS~27: $Q_m=8$ y $R = 948/1024 = 0{,}926$, o sea, 7,41~bits por RE.
+
+En una corrida de la celda n78, la distribución de los PDSCH por modulación fue la de la \cref{tab:modulaciones}. Casi tres de cada cuatro transmisiones usaron 256QAM, lo que indica una SINR de bajada alta, coherente con un teléfono a corta distancia dentro de la jaula. El 7,9~\% en QPSK incluye los mensajes de control y señalización, que siempre van con MCS robustos.
+
+\begin{table}[htbp]
+\centering
+\caption{PDSCH por modulación en una corrida de la celda n78.}
+\label{tab:modulaciones}
+\begin{tabular}{lrr}
+\toprule
+Modulación & PDSCH & Proporción \\
+\midrule
+256QAM & 44\,882 & 72,6~\% \\
+64QAM & 10\,506 & 17,0~\% \\
+16QAM & 1530 & 2,5~\% \\
+QPSK & 4901 & 7,9~\% \\
+\midrule
+Total & 61\,819 & 100~\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Tamaño del bloque de transporte: ejemplo para 51~PRB}\label{sec:tbs}
+El procedimiento de TS~38.214 §5.1.3.2 se aplica a un caso típico de la celda: un slot de bajada completo con 51~PRB, MCS~27 de la tabla de 256QAM y una capa. Se supone un PDSCH de 13 símbolos (el primero es del CORESET), un símbolo de DM-RS con los dos grupos CDM sin datos ($N_\text{DMRS}^\text{PRB}=12$ RE por PRB) y $N_\text{oh}^\text{PRB}=0$. Son supuestos razonables, pero la configuración exacta de la DM-RS de la celda no se relevó.
+
+\paragraph{Paso 1: RE por PRB.}
+\begin{equation}
+N'_\text{RE} = N_\text{sc}^\text{RB}\, N_\text{symb}^\text{sh} - N_\text{DMRS}^\text{PRB} - N_\text{oh}^\text{PRB} = 12\cdot 13 - 12 - 0 = 144~\text{RE}.
+\end{equation}
+\paragraph{Paso 2: RE totales.}
+\begin{equation}
+N_\text{RE} = \min(156, N'_\text{RE})\cdot n_\text{PRB} = 144\cdot 51 = 7344~\text{RE}.
+\end{equation}
+\paragraph{Paso 3: bits de información intermedios.}
+\begin{equation}
+N_\text{info} = N_\text{RE}\cdot R\cdot Q_m\cdot \upsilon = 7344\cdot \frac{948}{1024}\cdot 8\cdot 1 = 54\,391{,}5~\text{bits}.
+\end{equation}
+\paragraph{Paso 4: cuantización.} Como $N_\text{info} > 3824$,
+\begin{align}
+n &= \left\lfloor \log_2(N_\text{info} - 24)\right\rfloor - 5 = \lfloor \log_2 54\,367{,}5\rfloor - 5 = 15 - 5 = 10,\\
+N'_\text{info} &= \max\left(3840,\; 2^{n}\cdot\mathrm{round}\!\left(\frac{N_\text{info}-24}{2^n}\right)\right) = 1024\cdot\mathrm{round}(53{,}09) = 54\,272~\text{bits}.
+\end{align}
+\paragraph{Paso 5: TBS.} Como $R > 1/4$ y $N'_\text{info} > 8424$,
+\begin{align}
+C &= \left\lceil \frac{N'_\text{info}+24}{8424}\right\rceil = \left\lceil\frac{54\,296}{8424}\right\rceil = \lceil 6{,}45\rceil = 7,\\
+\text{TBS} &= 8C\left\lceil\frac{N'_\text{info}+24}{8C}\right\rceil - 24 = 56\cdot\left\lceil\frac{54\,296}{56}\right\rceil - 24 = 56\cdot 970 - 24 = \mathbf{54\,296~bits}.
+\label{eq:tbs}
+\end{align}
+Es decir, cada slot de bajada completo transporta $\approx 6{,}8$~kB. La fórmula elige el TBS de modo que, sumado el CRC del TB, se divida exactamente en $C$ code blocks de igual tamaño: $(54\,296+24)/7 = 7760$~bits por CB.
+
+\subsection{Segmentación en code blocks}\label{sec:cb}
+\paragraph{Elección del base graph.} Para el DL-SCH, se usa el BG2 si $A\le 292$, si $A\le 3824$ y $R\le 0{,}67$, o si $R\le 0{,}25$; en otro caso, el BG1 \cite[§7.2.2]{ts38212}\verif. Con $A = 54\,296$ y $R=0{,}926$ corresponde el \textbf{BG1}, con $K_\text{cb} = 8448$.
+
+\paragraph{Cantidad de CB} \cite[§5.2.2]{ts38212}:
+\begin{align}
+B &= A + 24 = 54\,296 + 24 = 54\,320~\text{bits (con el CRC del TB)},\\
+C &= \left\lceil\frac{B}{K_\text{cb} - L}\right\rceil = \left\lceil\frac{54\,320}{8448-24}\right\rceil = \lceil 6{,}45\rceil = 7~\text{code blocks},\\
+B' &= B + C\cdot L = 54\,320 + 7\cdot 24 = 54\,488~\text{bits},\\
+K' &= B'/C = 54\,488/7 = 7784~\text{bits por CB (con su CRC)}.
+\end{align}
+\paragraph{Tamaño de elevación.} En el BG1, $K_b = 22$. Se busca el menor $Z_c$ de las tablas de TS~38.212 tal que $22\,Z_c\ge K' = 7784$, es decir, $Z_c\ge 353{,}8$. El valor 352 no alcanza, así que $Z_c = 384$ y $K = 22\cdot 384 = 8448$. Cada CB lleva $8448 - 7784 = 664$ bits de relleno (\emph{filler}), que el codificador conoce y no transmite.
+
+\paragraph{Peso de las palabras.} En resumen, la cadena es $A=54\,296$, $B=54\,320$, $C=7$, $K'=7784$ y $K=8448$. Cada CB lleva 7760~bits del TB (con su CRC), 24~bits de CRC propio y 664 de relleno: 8448~bits de entrada al codificador LDPC. Con la tasa madre de 1/3 del BG1, la salida del codificador es de $66\cdot 384 = 25\,344$~bits por CB, y el rate matching toma de ella los bits que caben en las RE asignadas \cite[§5.4.2]{ts38212}. Las 7344~RE en 256QAM son $G = 7344\cdot 8 = 58\,752$~bits; como $7344 \bmod 7 = 1$, seis CB reciben $E = 8\cdot 1049 = 8392$~bits y el último $8\cdot 1050 = 8400$ ($6\cdot 8392 + 8400 = 58\,752$). La tasa efectiva es $7784/8392\approx 0{,}93$, coherente con el MCS~27. Segmentar tiene ventajas: limita la complejidad del decodificador, permite decodificar los CB en paralelo y, con retransmisión por grupos de CB (CBG), permite reenviar solo los CB que fallaron.
+
+\subsection{Throughput teórico máximo}\label{sec:tput}
+TS~38.306 §4.1.2 da la tasa máxima aproximada de una portadora \cite{ts38306}:
+\begin{equation}
+\text{tasa}~[\text{Mbit/s}] = 10^{-6}\cdot \upsilon_\text{capas}\cdot Q_m\cdot f\cdot R_\text{max}\cdot \frac{12\,N_\text{PRB}^{\text{BW},\mu}}{T_s^\mu}\cdot (1-\text{OH}),
+\label{eq:38306}
+\end{equation}
+con $T_s^\mu = 10^{-3}/(14\cdot 2^\mu)$ (duración media de un símbolo), $R_\text{max}=948/1024$, $f=1$ (factor de escala) y un \emph{overhead} OH de 0,14 en la bajada y 0,08 en la subida, en FR1. Para la celda n78 ($\upsilon=1$, $Q_m=8$, $N_\text{PRB}=51$, $\mu=1$):
+\begin{equation}
+\frac{12\cdot 51}{T_s^1} = \frac{612}{10^{-3}/28} = 612\cdot 28\,000 = 17{,}136\cdot 10^6~\text{RE/s}.
+\end{equation}
+\paragraph{Bajada.}
+\begin{equation}
+\text{DL}_\text{sin TDD} = 1\cdot 8\cdot 1\cdot 0{,}926\cdot 17{,}136\cdot 10^6\cdot 0{,}86 \approx 109{,}2~\text{Mbit/s},
+\end{equation}
+y con la fracción de bajada del patrón TDD (\cref{eq:fdl}),
+\begin{equation}
+\text{DL}_\text{max} = 109{,}2\cdot 0{,}657 \approx \mathbf{71{,}7~Mbit/s}.
+\label{eq:dlmax}
+\end{equation}
+Como aproximación cruzada, con el TBS de la \cref{eq:tbs}: $54\,296~\text{bits}\cdot 2000~\text{slots/s}\cdot 0{,}657 \approx 71{,}3$~Mbit/s. No es exacta, porque el slot especial tiene su propio TBS (con los mismos supuestos y 7 símbolos de PDSCH, 27\,144~bits), pero da el mismo orden.
+
+\paragraph{Subida.}
+\begin{equation}
+\text{UL}_\text{sin TDD} = 1\cdot 8\cdot 0{,}926\cdot 17{,}136\cdot 10^6\cdot 0{,}92 \approx 116{,}8~\text{Mbit/s},
+\end{equation}
+\begin{equation}
+\text{UL}_\text{max} = 116{,}8\cdot 0{,}30 \approx \mathbf{35~Mbit/s}\quad(\approx 26~\text{Mbit/s con 64QAM, } Q_m = 6).
+\label{eq:ulmax}
+\end{equation}
+TS~38.306 da una tasa \emph{aproximada}, y la multiplicación por la fracción TDD es una adaptación del grupo: estos valores son referencias de capacidad de capa física, no el goodput TCP esperable. Suponen el MCS más alto en todos los slots, sin errores, sin retransmisiones y sin pérdidas por la planificación. En la \cref{sec:resultados} se comparan con lo medido.
+
+\paragraph{Celda n3.} Con 106~PRB, $\mu=0$ y FDD, sin fracción TDD, la misma fórmula da $8\cdot 0{,}926\cdot (1272\cdot 14\,000)\cdot 0{,}86 \approx 113{,}4$~Mbit/s en la bajada. Es más que en n78, porque en FDD la bajada dispone de todos los slots, aunque el canal tenga el mismo ancho. No se midió el throughput en n3.

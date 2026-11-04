@@ -1,0 +1,133 @@
+\section{Desarrollo cronológico: problemas detectados y soluciones}\label{sec:crono}
+
+Esta sección relata el trabajo en el orden en que se hizo; la \cref{tab:evidencia} indica dónde está la evidencia de cada etapa. Para cada problema se presentan el síntoma observado, la explicación teórica y la solución adoptada. Las hipótesis que no pudieron demostrarse se señalan como tales.
+
+\begin{table}[htbp]
+\centering
+\caption{Evidencia de cada etapa (carpetas del repositorio del grupo). Los identificadores de terceros están anonimizados.}
+\label{tab:evidencia}
+\begin{tabularx}{\linewidth}{lXX}
+\toprule
+Etapa & Evidencia & Qué muestra \\
+\midrule
+1. Sincronización & \texttt{evidencia/01\_sincronizacion} & Arranque del gNB, SSB, MIB/SIB1 y TDD \\
+2. Acceso & \texttt{evidencia/02\_acceso} & PRACH y acceso de teléfonos con SIM de laboratorio y comercial \\
+3. Registro & \texttt{evidencia/03\_registro} & NG Setup, registro y RLF por CSI \\
+4. Sesión PDU & \texttt{evidencia/04\_sesion\_pdu} & Sesiones PDU, cortes de 60~s, logcat del módem y corridas con ``NR only'' \\
+5. Tráfico IP & (en los logs de la etapa 4) & Primera navegación por NAT \\
+6. Mediciones & \texttt{evidencia/06\_mediciones} & Prueba A/B/A, iperf3 y ping. Los JSON de iperf3 y la salida del ping no se conservaron: los valores son una transcripción hecha durante la sesión \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection*{Antecedente}
+Una prueba previa de otro grupo había funcionado de punta a punta con un UE simulado por software y un enlace de radio también simulado. Por aire, en cambio, solo un celular comercial ajeno a la prueba había llegado al núcleo. Ese antecedente atribuía el fracaso a que las SIM no tenían el directorio de 5G (DF\_5GS). El grupo tomó esa conclusión como hipótesis a verificar, no como un hecho.
+
+\subsection{30/10: entorno, contenedores y primera celda}
+\paragraph{1. La B210 en USB~2.0.} Al conectarse, la B210 se enumeraba como dispositivo USB~2.0, y recién después de cargarle el firmware pasaba a USB~3.0 (5~Gb/s). Como 23,04~MS/s en \texttt{sc12} exigen $\approx 69$~MB/s en cada sentido (\cref{sec:fs}), más de lo que USB~2.0 sostiene en la práctica, se adoptó como procedimiento cargar el firmware después de cada conexión y verificar la velocidad del enlace antes de arrancar la celda.
+
+\paragraph{2. Imágenes Docker y NG Setup.} Se construyeron las imágenes del gNB, del núcleo y de un UE simulado. El gNB y el AMF completaron el \emph{NG Setup} por la interfaz N2, lo que validó la conectividad SCTP entre contenedores y la coherencia del PLMN y el TAC entre el gNB y el núcleo.
+
+\paragraph{3. Prueba con UE simulado, abandonada.} La prueba sin radio, con UE simulado y enlace por software, no avanzó. Además, el UE simulado solo admite una SCS de 15~kHz y no servía para la celda n78 a 30~kHz. El grupo la abandonó y pasó directamente a la celda real.
+
+\paragraph{4. Primera celda por aire.} En la jaula se levantó la celda n78 en 3525~MHz. Antes se había usado 3489,42~MHz, pero esa frecuencia caía en el bloque de un operador comercial y atraía celulares ajenos.
+\begin{itemize}
+  \item El Redmi completó un registro una sola vez, sin sesión PDU.
+  \item El Motorola con SIM de laboratorio no generó ningún PRACH.
+  \item Con un chip comercial, el Motorola llegó al núcleo y fue rechazado, como se esperaba.
+\end{itemize}
+
+\paragraph{5. Conclusión de la etapa.} Que un teléfono con chip comercial llegara al núcleo muestra que la cadena de bajada y de acceso funcionaba al menos para ese teléfono: SSB, MIB, SIB1, PRACH, RAR, RRC y NGAP. Eso apoya la hipótesis de que el problema estaba en cómo trataba el teléfono a la SIM de laboratorio. La hipótesis del antecedente quedó \textbf{refutada}: una SIM sin DF\_5GS se registró.
+
+\subsection{02/11: SIM, PLMN y primera navegación}
+\paragraph{6. Sin PRACH con el PLMN 722/999.} Aun con el bit de NG-RAN grabado en la lista de PLMN y tecnologías de acceso de la SIM, los teléfonos no generaban ningún PRACH con el PLMN 722/999: 0 preámbulos en 2 minutos. Según la \cref{sec:encendido}, el UE solo inicia el acceso aleatorio si el PLMN difundido en el SIB1 le resulta aceptable. La ausencia de preámbulos detectados apoya la hipótesis de que el módem descartaba la celda antes del acceso, en la selección de PLMN o de celda; por sí sola no excluye un problema de detección, pero con 001/01 y la misma radio los teléfonos sí accedieron. Se cambió al PLMN de prueba 001/01, regrabando las SIM y el núcleo, y el Redmi se registró al primer intento. El OnePlus también. No se pudo identificar la causa dentro del módem.
+
+\paragraph{7. Falla de enlace por CSI.} Con el CSI periódico, el gNB declaraba una falla de enlace (RLF) a los 3~s: había 100 reportes de CSI sin decodificar. Ese criterio de RLF es propio de la implementación del gNB: cuenta las recepciones fallidas consecutivas del PUCCH. No es el procedimiento de RLF del UE (T310/N310, \cite[§5.3.10]{ts38331}\verif). Se pasó al CSI aperiódico. Pero sin CSI-RS se perdía también el TRS, y la conexión empeoraba: como se explicó en la \cref{sec:pilotos}, NR no tiene una CRS siempre presente, y el TRS es la referencia con la que el UE corrige finamente tiempo y frecuencia.
+
+\paragraph{8. Primera navegación.} Con esa configuración, el Redmi descargó $\approx 27$~MB por NAT, y el OnePlus obtuvo IP. Fue el primer camino completo: registro, sesión PDU, IP y tráfico.
+
+\paragraph{9. Cortes cada 18--65~s.} La conexión se cortaba cada 18 a 65~s. Entre el 73 y el 92~\% de los PUSCH tenían error. Al abrir un navegador en la PC aparecían fallas de tiempo real ($\approx 900$ por minuto), y una vez la B210 perdió la conexión USB. En una radio definida por software, cada slot de 0,5~ms tiene un plazo estricto: si el procesamiento no llega a tiempo (\emph{late}) o el buffer de transmisión se vacía (\emph{underflow}), se transmiten o reciben símbolos incompletos y las transmisiones fallan. El problema quedó abierto.
+
+\subsection{03/11, mañana: una PC más potente}
+\paragraph{10. La CPU no era la causa principal.} En la segunda PC (12 hilos), el patrón fue el mismo, con el gNB usando $\approx 110~\%$ sobre 1200~\%. Por minuto hubo $\approx 130$ transmisiones de bajada que agotaron los 4 reintentos HARQ, $\approx 80$ fallas de tiempo real (\emph{late} y \emph{underflow}) y $\approx 2$ RLF. La bajada fallaba bastante más de lo que explicaban las fallas de tiempo real, y la CPU estaba casi libre en promedio (no se descarta que algún hilo crítico se saturara). \textbf{La CPU dejó de considerarse la causa principal}: el problema apuntaba a la radio o a la sincronización.
+
+\paragraph{11. Configuración equivocada.} El script de arranque cargaba una configuración vieja. Se corrigió pasando la configuración como argumento y verificando qué archivo quedaba montado en el contenedor antes de cada prueba.
+
+\subsection{03/11, tarde: las tres causas de los cortes}
+\paragraph{12. Corrección de reloj (\texttt{clock\_ppm}).}
+\textbf{Síntoma.} El gNB enviaba comandos de TA positivos sin parar, de $+2{,}2$ a $+3{,}8$ pasos de 0,26~$\mu$s por segundo, y las conexiones duraban de 3 a 10~s.
+
+\textbf{Causa.} El grupo la verificó en el código del gNB: el parámetro \texttt{clock\_ppm} ($-1{,}87$~ppm, heredado del antecedente) corregía la frecuencia de portadora, pero no la de muestreo.
+
+\textbf{Modelo explicativo propuesto.} Lo verificado es el efecto de \texttt{clock\_ppm} en el código y la mejora al anularlo; el mecanismo siguiente es la explicación que propone el grupo, porque no se pudo observar cómo acopla el módem del teléfono la corrección de frecuencia y la de tiempo. En la B210 sin referencia externa, la portadora y el reloj de muestreo derivan del mismo oscilador de referencia. Si este tiene un error relativo $\varepsilon$, ambos se desvían en la misma proporción:
+\begin{equation}
+f_c' = f_c(1+\varepsilon),\qquad f_s' = f_s(1+\varepsilon).
+\end{equation}
+Un teléfono también deriva portadora y muestreo de un único oscilador. Se sincroniza a la portadora que recibe (corrige el CFO con el PSS, el SSS y el TRS) y, al hacerlo, su reloj de muestreo queda escalado en la misma proporción. Si los dos extremos tienen un oscilador común, la base de tiempo que deduce el UE de la portadora coincide con la del gNB.
+
+Al aplicar la corrección solo a la portadora, ese vínculo se rompe: la portadora del gNB queda desplazada en $\delta = 1{,}87$~ppm respecto de lo que implica su reloj de muestreo. El UE ajusta su oscilador a la portadora corregida, y su base de tiempo queda desfasada $\delta$ respecto de la del gNB. La temporización relativa deriva a razón de
+\begin{equation}
+\dot{\tau} = \delta = 1{,}87\cdot 10^{-6}~\text{s/s} = 1{,}87~\mu\text{s por segundo} \approx \frac{1{,}87~\mu\text{s}}{0{,}260~\mu\text{s}} \approx 7~\text{pasos de TA por segundo}.
+\end{equation}
+Es del mismo orden que lo observado (2,2 a 3,8 pasos por segundo, es decir, 0,6 a 1,0~$\mu$s/s), aunque no coincide: el modelo no explica el valor exacto, que depende de cómo el módem reparte la corrección entre la bajada y la subida. El gNB ve llegar la subida cada vez más tarde y responde con comandos de TA (\cref{sec:ta}, \cite[§4.2]{ts38213}). Si la corrección se retrasa, el error de temporización supera el CP de 2,34~$\mu$s en pocos segundos: aparece ISI, los PUSCH fallan y la conexión cae. Eso coincide con los cortes a los 3--10~s.
+
+En frecuencia, la corrección configurada de 1,87~ppm desplazaba la portadora $1{,}87\cdot 10^{-6}\cdot 3525~\text{MHz}\approx 6{,}6$~kHz, el 22~\% de la SCS. Ese valor es el de la corrección, no una medición del error real del oscilador de la B210.
+
+\textbf{Solución.} Con \texttt{clock\_ppm} = 0, portadora y muestreo vuelven a tener el mismo error relativo y el UE los sigue juntos. El TA quedó estable y las conexiones pasaron a durar $\approx 60$~s.
+
+\paragraph{13. El Redmi no envía CSI.} De $\approx 10\,000$ pedidos de CSI aperiódico (por PUSCH), el gNB no decodificó ninguno. Del CSI periódico por PUCCH formato~2 se decodificó solo el $\approx 0{,}4~\%$. El OnePlus sí lo enviaba, lo que apoya que el comportamiento era propio del Redmi, aunque no demuestra que la configuración fuera la ideal para él. Se volvió al CSI periódico, que mantiene los CSI-RS y el TRS, y se elevó mucho el umbral de recepciones fallidas consecutivas del PUCCH del gNB. Así, el CSI faltante ya no dispara RLF, a costa de que el gNB elija el MCS sin CQI, solo con el HARQ.
+
+\paragraph{14. Corte casi exacto cada 60~s.} Con los dos cambios anteriores, la conexión se cortaba casi exactamente cada 60~s, tanto en n78 TDD como en n3 FDD. En esta etapa, la celda \textbf{n3 FDD funcionó por primera vez}.
+\begin{itemize}
+  \item Con los registros del módem (\texttt{adb logcat}) se vio que el Redmi perdía el servicio entre 59,99 y 60,02~s después de obtenerlo, en 5 ciclos, sin una liberación previa de la red. Después buscaba LTE comercial.
+  \item Un período tan exacto y el mismo en dos bandas y dos duplexados apunta a un temporizador del teléfono o del protocolo más que a una causa de radio, aunque no la descarta del todo.
+  \item \textbf{Hipótesis principal (no demostrada):} el núcleo anuncia soporte de voz sobre IMS (\emph{IMS voice over PS}~=~1, en el IE \emph{5GS network feature support} del Registration Accept \cite[§9.11.3.5]{ts24501}\verif) sin tener un IMS. Un UE configurado como \emph{voice centric}, que no consigue servicio de voz en 5GS, abandona 5G y busca E-UTRA \cite[§4.3.2]{ts24501}\verif. Los 60~s serían el tiempo que este módem espera el registro IMS antes de rendirse; la norma no fija un temporizador universal de 60~s para esto.
+  \item \textbf{Mitigación:} se activaron VoLTE y el tipo de red ``NR only'' en el teléfono. Con eso, el Redmi se mantuvo conectado 5~min~39~s en n3, donde la sesión terminó por una RLF, y 5~min~45~s en n78, sin RLF, hasta que se detuvo el gNB.
+\end{itemize}
+
+\paragraph{15. Quedaron abiertos.}
+\begin{itemize}
+  \item El OnePlus no permite forzar ``NR only'' desde el menú y se corta a los $\approx 35$--37~s. Pide la DNN \texttt{ims}, lo que es coherente con la hipótesis de voz.
+  \item Una falla de tiempo real del gNB, ``UL processor is busy''.
+\end{itemize}
+
+\subsection{03/11, noche: monitoreo, DFT-s-OFDM y mediciones}
+\paragraph{16. Panel de monitoreo.} El grupo armó un panel web en un contenedor sin privilegios. Lee las métricas y los logs del gNB, y lanza ping e iperf3 hacia el teléfono, sin tocar la configuración de la celda.
+
+\paragraph{17. ``UL processor is busy''.}
+\begin{itemize}
+  \item Aparece después de ráfagas de fallas de tiempo real y persiste hasta que se detiene la celda, a razón de 10 a 60 por segundo.
+  \item Cae en los slots de subida (7, 8, 9, 17, 18 y 19), sobre todo en el 19, que es el del PRACH (\cref{fig:tdd}).
+  \item Ocurrió en 2 de 3 corridas y degrada la celda.
+\end{itemize}
+Que se concentre en el slot~19 tiene una posible explicación teórica, que el grupo deja como \textbf{hipótesis a verificar}. Con $N_\text{CS}=0$ (\cref{sec:rach}), los 64 preámbulos salen de 64 raíces ZC distintas. Un detector que correlaciona en frecuencia obtiene \emph{todos} los desplazamientos cíclicos de una raíz con una sola correlación, pero necesita una por raíz. Además, en el formato B4 el preámbulo se repite 12 veces. El procesamiento del slot del PRACH sería, entonces, el más pesado de la trama, y el primero en atrasarse después de una perturbación.
+
+La mitigación adoptada fue medir con la celda recién arrancada, poner el governor de la CPU en \texttt{performance} y no ejecutar aplicaciones pesadas durante las mediciones. La causa de fondo quedó abierta.
+
+\paragraph{18. Prueba A/B/A de la forma de onda de subida.} Se comparó CP-OFDM con DFT-s-OFDM en la subida, con el Redmi y subidas TCP de 10~s, alternando la configuración A, B, A para detectar derivas (\cref{tab:aba}).
+
+\begin{table}[htbp]
+\centering
+\caption{Prueba A/B/A de la forma de onda de subida (subida TCP de 10~s, Redmi). Una corrida de la celda por tramo.}
+\label{tab:aba}
+\begin{tabular}{llcccc}
+\toprule
+Tramo & UL & Promedio [Mbit/s] & Desvío [Mbit/s] & Pruebas & SINR PUSCH media \\
+\midrule
+A1 & CP-OFDM & 8,66 & 0,40 & 2 & $\approx 19$~dB \\
+B & DFT-s-OFDM & 12,70 & 1,35 & 4 & $\approx 27$~dB \\
+A2 & CP-OFDM & 14,84 & 1,18 & 4 & $\approx 27$~dB \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{itemize}
+  \item \textbf{DFT-s-OFDM funciona:} los dos teléfonos entraron a la celda, y se usó 256QAM con transform precoding. La asignación máxima fue de 50~PRB, como exige la \cref{eq:235}.
+  \item \textbf{No mejoró el rendimiento.} B quedó entre A1 y A2. Con la misma SINR ($\approx 27$~dB), A2 superó a B en $\approx 2{,}1$~Mbit/s. Parte de la diferencia puede deberse a la asignación (50 contra 51~PRB: un 2~\%). El resto no se puede separar de la variabilidad entre corridas, de la implementación del receptor ni de las condiciones no controladas: la prueba no permite atribuirlo a la forma de onda.
+  \item \textbf{Interpretación.} Con SINR alta y un UE sin limitación de potencia (\cref{sec:potencia_ul}), la menor PAPR de DFT-s-OFDM no aporta nada: su beneficio aparece en el borde de la celda, cuando el amplificador del UE trabaja cerca de la saturación. Es una \textbf{hipótesis}, porque no se registró el PHR que la confirmaría. Por eso se mantuvo CP-OFDM.
+  \item A1 tuvo peor enlace (SINR $\approx 19$~dB) por una causa no identificada. Hubo una sola corrida por tramo, así que la prueba no permite separar el efecto de la forma de onda de la variabilidad entre corridas.
+\end{itemize}
+
+\paragraph{19. Bajada TCP de 10~s (tramo A2).} Se midió con iperf3 en modo inverso: el servidor, en el panel, transmitía hacia el teléfono, y el valor informado es la tasa del emisor, no el goodput recibido. Se obtuvieron 55,2, 52,7 y 42,2~Mbit/s. La tercera coincidió con la aparición de ``UL processor is busy''. Con la celda limpia, la bajada fue de $\approx 54$~Mbit/s.
+
+\paragraph{20. Ping al teléfono, con la celda ya degradada.} El RTT mínimo fue de 16,7~ms, el mediano de 27,7~ms, el percentil 90 de 44,9~ms y el máximo de 1052~ms, con un 21,7~\% de pérdida (60 paquetes enviados cada 0,5~s, 47 recibidos) y un jitter de 52,3~ms, calculado como la media de las diferencias entre RTT sucesivos (no es jitter unidireccional). Como la celda ya presentaba ``UL processor is busy'', es el resultado de una sola corrida degradada y hay que repetirlo con la celda limpia.

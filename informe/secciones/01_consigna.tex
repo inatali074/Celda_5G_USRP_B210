@@ -1,0 +1,28 @@
+\section{Consigna y objetivos}\label{sec:consigna}
+
+\subsection{Consigna}
+La consigna de la cátedra fue \emph{desplegar desde cero una celda 5G NR Standalone (opción~2, Release~15) en un entorno de RF controlado, lograr que un celular comercial con SIM de laboratorio se registre, obtenga una dirección IP y navegue, y medir throughput, latencia y jitter para compararlos con 2G (EDGE) y 4G (LTE)}. Además, se fijaron tres condiciones de método:
+\begin{enumerate}
+  \item toda la implementación (gNB, núcleo y base de datos) corre dentro de contenedores Docker;
+  \item cada decisión de configuración se justifica con las especificaciones 3GPP, citando la TS y la sección;
+  \item cada etapa (sincronización, acceso, registro, sesión PDU, tráfico IP y mediciones) se cierra con evidencia: logs, capturas o mediciones.
+\end{enumerate}
+
+\subsection{Objetivos}
+\begin{itemize}
+  \item \textbf{Objetivo general:} poner en servicio una celda NR SA funcional con hardware de radio definida por software y un teléfono comercial, y explicar su funcionamiento desde la capa física.
+  \item \textbf{Objetivos específicos:}
+  \begin{itemize}
+    \item dimensionar la celda: banda, ancho de banda, numerología, cantidad de PRB, frecuencia de muestreo, patrón TDD y configuración del PRACH;
+    \item preparar SIM de laboratorio que el teléfono acepte para 5G SA, y cargar los abonados en el núcleo;
+    \item lograr el camino completo: sincronización, acceso aleatorio, registro, sesión PDU, IP y navegación;
+    \item diagnosticar los problemas de estabilidad con la teoría de sincronización, acceso y control de enlace;
+    \item medir throughput y latencia y contrastarlos con los máximos teóricos de TS~38.306;
+    \item comparar CP-OFDM y DFT-s-OFDM en la subida.
+  \end{itemize}
+\end{itemize}
+
+\subsection{Organización del informe}
+Siguiendo las indicaciones de la cátedra, el informe empieza por la consigna; a continuación se resumen los resultados, y después se presentan 3GPP y los conceptos básicos (\cref{sec:marco}) y la numerología y los recursos de capa física (\cref{sec:numerologia}). Después trata primero el \emph{downlink}, empezando por las señales piloto que el teléfono busca al encenderse (\cref{sec:dl}), y luego el \emph{uplink} y los métodos de acceso (\cref{sec:ul}). La \cref{sec:flujos} calcula tamaños de bloque y tasas. Las \cref{sec:impl,sec:crono,sec:resultados} describen la implementación, el desarrollo cronológico y los resultados. La \cref{sec:preguntas} responde las preguntas de la cátedra con referencias a donde se desarrolla cada una.
+
+Las citas a especificaciones marcadas como \verif{} no fueron contrastadas todavía con el texto de la norma. Las de TS~38.211 (v15.10.0), TS~38.213 (v15.15.0) y TS~38.321 (v15.14.0) sin esa marca se comprobaron sobre las versiones Release~15 de esos documentos.
