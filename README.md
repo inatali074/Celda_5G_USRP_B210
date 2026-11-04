@@ -50,7 +50,7 @@ Trabajo práctico de **Comunicaciones Móviles (UNRC)**: implementación desde c
 ./stop.sh
 ```
 
-Antes de transmitir hacen falta algunos ajustes del host (governor de CPU y buffers de red), que requieren `sudo` y se describen en [`docs/LEVANTAR_EN_OTRA_PC.md`](docs/LEVANTAR_EN_OTRA_PC.md).
+Antes de transmitir hacen falta algunos ajustes del host (governor de CPU y buffers de red), que requieren `sudo`. Están descritos en [`docs/LEVANTAR_EN_OTRA_PC.md`](docs/LEVANTAR_EN_OTRA_PC.md), junto con cómo funciona y cómo se comprueba la salida a Internet por NAT.
 
 Para recompilar el informe:
 
