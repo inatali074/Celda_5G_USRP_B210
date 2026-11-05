@@ -192,6 +192,60 @@ services:
       ran:
         ipv4_address: 10.53.1.6
 
+  sip:
+    profiles: [voz]
+    build: ./docker/sip
+    restart: 'no'
+    # La imagen usa USER asterisk: no necesita SETUID ni SETGID.
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes:
+      - type: bind
+        source: ./config/sip/pjsip.conf
+        target: /etc/asterisk/pjsip.conf
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./config/sip/extensions.conf
+        target: /etc/asterisk/extensions.conf
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./config/sip/rtp.conf
+        target: /etc/asterisk/rtp.conf
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./config/sip/modules.conf
+        target: /etc/asterisk/modules.conf
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./config/sip/logger.conf
+        target: /etc/asterisk/logger.conf
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./config/sip/asterisk.conf
+        target: /etc/asterisk/asterisk.conf
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./config/secretos/sip_credenciales.conf
+        target: /etc/asterisk/secretos/sip_credenciales.conf
+        read_only: true
+        bind:
+          create_host_path: false
+    networks:
+      ran:
+        ipv4_address: 10.53.1.10
+
 volumes:
   mongodb-data:
   gnb-logs:
