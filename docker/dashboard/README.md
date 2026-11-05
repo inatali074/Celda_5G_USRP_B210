@@ -15,6 +15,16 @@ Levantar/Frenar muestran únicamente `./start.sh <config.yml>` y `./stop.sh`.
   y TA explícitamente en ns. No se deducen unidades de aliases ambiguos.
   Un mensaje sin `ue_list` conserva la tabla; lista vacía la vacía. Después de
   5 s sin muestras de UEs o al perder el WebSocket, deja de mostrar radio vieja.
+- **EVM de subida (PUSCH):** historial por RNTI de hasta 120 reportes del UE,
+  con tiempo de recepción, SINR en dB, EVM en % y MCS UL. Se elimina tras más
+  de 30 s sin reportes. EVM = 100×10^(−SINR/20); sólo se identifica como medido
+  si `/config/gnb.yml` declara `expert_phy.pusch_sinr_calc_method: evm`.
+  Con otro método o sin la opción, se muestra como estimación y la columna
+  EVM UL queda gris e itálica. Valores ausentes o inválidos: “—”.
+  Curvas con escala fija 0–30 % (valores mayores se dibujan en el borde;
+  la leyenda conserva el valor completo y la SINR en dB). Referencias TX 3GPP:
+  QPSK 17,5 %, 16QAM 12,5 %, 64QAM 8 % y 256QAM 3,5 %; son referencias de
+  transmisor, no una prueba de conformidad del enlace recibido.
 - **Identidad y núcleo:** registro, IP y DNN observados en `/logs/core/core.log`.
   La asociación es **estimada**, uno a uno: creación `c-rnti=0x…: UE created`
   y registro posterior dentro de 5 s, priorizando la creación más cercana.
@@ -83,7 +93,9 @@ Normal envía desde el núcleo; reverse recibe en el núcleo. TCP o UDP, duraci�
 El servidor se relanza entre pruebas completas (`-1 -J`); detener puede perder
 el resultado parcial. Estas herramientas agregan carga durante las mediciones.
 
-- `GET /api/metrics`: cell, sys, core, ues, thr, rt, events, running, mode y tests.
+- `GET /api/metrics`: cell, sys, core, ues, evm, thr, rt, events, running, mode y tests.
+  `evm` contiene `method`, `measured` y `series` por RNTI hexadecimal; cada
+  serie incluye `name` y `points` (`time`, `sinr_db`, `evm_pct`, `ul_mcs`).
   `running` significa conexión WebSocket al gNB, no estado Docker confirmado.
 - `GET /api/logs?svc=gnb|core&tail=160`: buffer, tail entre 20 y 400.
 - Se mantienen `/api/state`, `/ws`, `/api/ping`, `/api/iperf/*` y sus validaciones.

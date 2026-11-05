@@ -118,7 +118,7 @@
     <div style="overflow:auto">
       <table id="ueTable"><thead><tr>
         <th>UE / IMSI</th><th>IP</th><th>Estado</th><th>CQI</th><th>MCS↓/↑</th><th>RSRP PUSCH (rel.)</th>
-        <th>SINR↑</th><th>↓ Mbps</th><th>↑ Mbps</th><th>BLER↓</th><th>TA</th>
+        <th>SINR↑</th><th>EVM UL</th><th>↓ Mbps</th><th>↑ Mbps</th><th>BLER↓</th><th>TA</th>
       </tr></thead><tbody id="ueBody"></tbody></table>
     </div>
     <div class="note">Tocá una fila para HARQ, PHR, RI, BSR, SNR PUCCH y BLER UL. Asociación IMSI estimada, nunca por orden de tabla.</div>
@@ -185,6 +185,13 @@
       <span style="margin-left:auto" class="mono" id="thrNow"></span></div>
   </section>
 
+  <section class="card span8">
+    <h2>📡 EVM de subida (PUSCH)</h2>
+    <svg class="chart" id="evmChart" viewBox="0 0 600 180" preserveAspectRatio="none"></svg>
+    <div class="legend" id="evmLegend"></div>
+    <div class="note" id="evmNote"></div>
+  </section>
+
   <section class="card span4">
     <h2>🧠 Núcleo 5G (Open5GS)</h2>
     <div class="chips" id="nfChips" style="margin-bottom:12px"></div>
@@ -217,6 +224,25 @@ const clamp=v=>Math.max(0,Math.min(100,Number(v)||0));
 async function api(path,method='GET',body){const r=await fetch(path,{method,headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});const data=await r.json();if(!r.ok)throw Error(typeof data.detail==='string'?data.detail:JSON.stringify(data.detail));return data;}
 function toast(msg){text('#toast',msg);$('#toast').className='show';setTimeout(()=>$('#toast').className='',6000);}
 function spark(values,color){let valid=values.filter(v=>typeof v==='number'&&Number.isFinite(v));if(!valid.length)return '<text x="10" y="55" fill="gray">sin datos</text>';const max=Math.max(1,...valid);let pen=false,d='';values.forEach((v,i)=>{if(typeof v!=='number'||!Number.isFinite(v)){pen=false;return;}d+=(pen?'L':'M')+(i*600/Math.max(1,values.length-1)).toFixed(1)+' '+(105-v/max*100).toFixed(1)+' ';pen=true;});return `<path d="${d}" fill="none" stroke="${color}" stroke-width="2"/>`;}
+const finite=v=>typeof v==='number'&&Number.isFinite(v);
+const evmValue=(v,unit)=>finite(v)?fmt(v,2)+' '+unit:'—';
+function renderEvm(E){
+ const entries=Object.entries(E.series||{}).sort(([a],[b])=>a.localeCompare(b)),colors=['#4ea1ff','#3ddc84','#ffb454','#c084fc','#ff5d5d','#22d3ee'];
+ const points=entries.flatMap(([,s])=>s.points||[]),times=points.map(p=>p.time).filter(finite),end=Math.max(0,...times),start=Math.min(end-1,...times);
+ const y=v=>165-v/30*150;
+ let svg=[0,30].map(v=>`<text x="2" y="${y(v)}" fill="gray" font-size="10">${v} %</text>`).join('');
+ svg+=[[17.5,'QPSK'],[12.5,'16QAM'],[8,'64QAM'],[3.5,'256QAM']].map(([v,q])=>`<line x1="35" x2="590" y1="${y(v)}" y2="${y(v)}" stroke="gray" stroke-dasharray="4 4"/><text x="38" y="${y(v)-3}" fill="gray" font-size="10">${String(v).replace('.',',')} % ${q} · límite TX 3GPP (ref.)</text>`).join('');
+ const legend=entries.map(([r,s],i)=>{
+  const color=colors[i%colors.length],ps=s.points||[];let pen=false,path='';
+  for(const p of ps){if(!finite(p.evm_pct)||!finite(p.time)){pen=false;continue;}const x=35+(p.time-start)/(end-start)*555,py=y(Math.max(0,Math.min(30,p.evm_pct)));path+=(pen?'L':'M')+x.toFixed(1)+' '+py.toFixed(1)+' ';pen=true;svg+=`<circle cx="${x.toFixed(1)}" cy="${py.toFixed(1)}" r="2" fill="${color}"/>`;}
+  svg+=`<path d="${path}" fill="none" stroke="${color}" stroke-width="2"/>`;
+  const last=ps.at(-1)||{};
+  return `<span><i style="background:${color}"></i>${escapeHtml(s.name||r)} · ${evmValue(last.evm_pct,'%')} · SINR ${evmValue(last.sinr_db,'dB')}</span>`;
+ });
+ if(!points.some(p=>finite(p.evm_pct)))svg+='<text x="250" y="25" fill="gray">sin datos</text>';
+ $('#evmChart').innerHTML=svg;$('#evmLegend').innerHTML=legend.join('');
+ text('#evmNote',E.measured?'EVM medido por el gNB (pusch_sinr_calc_method: evm), promedio por reporte de 1 s':'Estimado: la SINR viene del método '+(E.method||'por defecto')+', no del EVM. Para medirlo, arrancar con gnb_b210_00101_csiper_ppm0_kos_evm.yml');
+}
 let expanded=new Set();
 function render(d){
  const C=d.cell||{},S=d.sys||{},K=d.core||{},R=d.rt||{},U=d.ues||[],T=d.thr||[],rates=R.rates||{};
@@ -224,11 +250,12 @@ function render(d){
  $('#kpis').innerHTML=kpis.map(([k,v])=>`<div class="kpi"><div class="l">${escapeHtml(k)}</div><div class="v mono">${escapeHtml(v)}</div></div>`).join('');
  text('#ueCount',U.length+' con métricas');
  $('#ueBody').innerHTML=U.map((u,i)=>{
+ const point=d.evm?.series?.[u.rnti]?.points?.at(-1);
  const ta=u.ta_ns!=null?fmt(u.ta_ns)+' ns':'–';
- const cols=[(u.name||u.rnti)+(u.imsi?' · '+u.imsi+' (estimada)':''),u.ip,u.status,u.cqi,fmt(u.dl_mcs,0)+' / '+fmt(u.ul_mcs,0),fmt(u.pusch_rsrp_db)+' dB',fmt(u.sinr)+' dB',fmt(u.dl_mbps),fmt(u.ul_mbps),fmt(u.dl_bler)+' %',ta];
+ const cols=[(u.name||u.rnti)+(u.imsi?' · '+u.imsi+' (estimada)':''),u.ip,u.status,u.cqi,fmt(u.dl_mcs,0)+' / '+fmt(u.ul_mcs,0),fmt(u.pusch_rsrp_db)+' dB',fmt(u.sinr)+' dB',evmValue(point?.evm_pct,'%'),fmt(u.dl_mbps),fmt(u.ul_mbps),fmt(u.dl_bler)+' %',ta];
  const details=[['RNTI',u.rnti],['DNN',u.dnn],['HARQ DL OK/NOK',fmt(u.dl_ok,0)+' / '+fmt(u.dl_nok,0)],['HARQ UL OK/NOK',fmt(u.ul_ok,0)+' / '+fmt(u.ul_nok,0)],['BLER UL',fmt(u.ul_bler)+' %'],['SNR PUCCH',fmt(u.pucch_snr_db)+' dB'],['PHR',fmt(u.phr)+' dB'],['RI DL/UL',fmt(u.dl_ri,0)+' / '+fmt(u.ul_ri,0)],['BSR',u.bsr],['DL buffer',u.dl_bs],['TA PUSCH',fmt(u.pusch_ta_ns)+' ns'],['TA PUCCH',fmt(u.pucch_ta_ns)+' ns']];
- return `<tr class="ue" data-i="${i}">${cols.map(v=>`<td>${escapeHtml(v)}</td>`).join('')}</tr><tr class="detail" id="det${i}" style="display:${expanded.has(u.rnti)?'table-row':'none'}"><td colspan="11"><div class="inner">${details.map(([k,v])=>`<div class="m">${escapeHtml(k)}<b>${escapeHtml(v)}</b></div>`).join('')}</div></td></tr>`;
- }).join('')||'<tr><td colspan="11">Sin datos de UEs</td></tr>';
+ return `<tr class="ue" data-i="${i}">${cols.map((v,j)=>`<td${j===7&&!d.evm?.measured?' style="color:gray;font-style:italic"':''}>${escapeHtml(v)}</td>`).join('')}</tr><tr class="detail" id="det${i}" style="display:${expanded.has(u.rnti)?'table-row':'none'}"><td colspan="12"><div class="inner">${details.map(([k,v])=>`<div class="m">${escapeHtml(k)}<b>${escapeHtml(v)}</b></div>`).join('')}</div></td></tr>`;
+ }).join('')||'<tr><td colspan="12">Sin datos de UEs</td></tr>';
  document.querySelectorAll('tr.ue').forEach(tr=>tr.onclick=()=>{const u=U[Number(tr.dataset.i)];expanded.has(u.rnti)?expanded.delete(u.rnti):expanded.add(u.rnti);$('#det'+tr.dataset.i).style.display=expanded.has(u.rnti)?'table-row':'none';});
  kv('#sysKv',[['USB / serie','no disponible'],['clock_ppm',C.clockPpm],['TX/RX gain',`${C.txGain??'–'} / ${C.rxGain??'–'} dB`],['Governor',S.gov],['Frecuencia CPU',fmt(S.ghz)+' GHz'],['Temperatura hwmon (máxima)',fmt(S.temp)+' °C']]);
  text('#cpuTxt',fmt(S.cpu_percent)+' % · '+(S.cpus??'–')+' CPU lógicas (100% total)');$('#cpuBar').style.width=clamp(S.cpu_percent)+'%';
@@ -241,6 +268,7 @@ function render(d){
  $('#nfChips').innerHTML=['AMF','SMF','UPF','AUSF','UDM','UDR','PCF','NSSF','BSF','NRF','SCP'].map(n=>`<span class="chip down">${n}: ${escapeHtml(K.nf?.[n]||'desconocido')}</span>`).join('');
  kv('#coreKv',[['Registros observados',K.reg],['PDU observadas',K.pdu],['N6 TX bytes (DL)',K.ogstun?.tx_bytes],['N6 RX bytes (UL)',K.ogstun?.rx_bytes],['Estado NF','Actividad de log; no prueba de proceso vivo']]);
  $('#thrChart').innerHTML=spark(T.map(t=>t.dl),'#4ea1ff')+spark(T.map(t=>t.ul),'#3ddc84');text('#thrNow','↓ '+fmt(T.at(-1)?.dl)+' ↑ '+fmt(T.at(-1)?.ul)+' Mbit/s');
+ renderEvm(d.evm||{});
  $('#rtChart').innerHTML=spark(R.series||[],'#ff5d5d');text('#rtCmp','60 puntos: tasa instantánea por minuto, según segundo de lectura del log. Alarma: UL busy >10/s.');
  $('#log').innerHTML=(d.events||[]).slice().reverse().map(e=>`<div class="row"><span class="t">${escapeHtml(new Date(e.time*1000).toLocaleTimeString('es-AR'))}</span><span class="ev">${escapeHtml(e.source+': '+e.text)}</span></div>`).join('');
  text('#cellState',d.running?'WebSocket conectado':'sin conexión al gNB');text('#modeTxt',d.mode);text('#srcTag','datos reales');text('#cellTag',`${C.band??'–'} · ${C.dlFreq??'–'} MHz · ${C.plmn??'–'}`);text('#offHint',d.running?'':'Sin datos de radio; ver consolas');$('#statusDot').className='dot'+(d.running?' on':'');

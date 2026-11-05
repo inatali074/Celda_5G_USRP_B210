@@ -32,6 +32,8 @@ FIELDS = {
     'phr': ('last_phr', 'phr', 'power_headroom'),
     **{k: (k,) for k in ('pusch_rsrp_db', 'pucch_snr_db', 'ta_ns', 'pusch_ta_ns', 'pucch_ta_ns', 'dl_ri', 'ul_ri', 'dl_bs')},
 }
+UE_NAMES = {'001010000000003': 'Redmi Note 14', '001010000000004': 'OnePlus 13', '001010000000001': 'srsUE (sim)'}
+evm_history = {}
 START = time.monotonic()
 START_WALL = time.time()
 state = {'gnb_connected': False, 'metrics_at': None, 'raw': None, 'radio_ues': [],
@@ -108,6 +110,27 @@ def number(value):
         return None
 
 
+def evm_pct(value):
+    sinr = number(value)
+    try:
+        return number(100*10**(-sinr/20)) if sinr is not None else None
+    except OverflowError:
+        return None
+
+
+def radio_rnti(value):
+    try:
+        return int(value, 16) if isinstance(value, str) and value.startswith('0x') else int(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+
+
+def prune_evm(now):
+    for rnti in list(evm_history):
+        if now-evm_history[rnti][-1]['time'] > 30:
+            del evm_history[rnti]
+
+
 def extract(payload):
     """Busca registros identificables recursivamente, incluso dentro de listas desconocidas."""
     rows = {}
@@ -151,6 +174,13 @@ async def metrics():
                         if any(isinstance(c, dict) and 'ue_list' in c for c in cells):
                             state['radio_ues'] = extract([c.get('ue_list', []) for c in cells])
                             state['radio_at'] = time.time()
+                            prune_evm(state['radio_at'])
+                            for row in state['radio_ues']:
+                                rnti = radio_rnti(row.get('rnti'))
+                                if rnti is not None:
+                                    evm_history.setdefault(rnti, deque(maxlen=120)).append({
+                                        'time': state['radio_at'], 'sinr_db': number(row.get('sinr')),
+                                        'evm_pct': evm_pct(row.get('sinr')), 'ul_mcs': number(row.get('ul_mcs'))})
                         for cell in cells:
                             for item in cell.get('event_list', []):
                                 event('metrics', private_text(json.dumps(item, ensure_ascii=False)))
@@ -313,6 +343,7 @@ async def sample():
             state['radio_ues'] = []
         state['host'].update(host_details())
         state['cell'] = read_cell()
+        prune_evm(time.time())
         rt_window.append(dict(rt))
         state['rt'] = dict(rt)
         state['alarm'] = rt['ul_busy'] > state['busy_threshold']
@@ -566,6 +597,7 @@ def read_cell():
         bw, scs = number(c.get('channel_bandwidth_MHz')), number(c.get('common_scs'))
         band = c.get('band')
         return {'file': os.environ.get('GNB_CONFIG'), 'band': 'n'+str(band) if band else None,
+                'sinrMethod': (cfg.get('expert_phy') or {}).get('pusch_sinr_calc_method'),
                 'duplex': {78: 'TDD', 3: 'FDD'}.get(band), 'arfcn': n,
                 'dlFreq': round(.005*n if n < 600000 else 3000+.015*(n-600000), 3) if n is not None and 0 <= n < 2016667 else None,
                 'bw': bw, 'scs': scs, 'prb': {(10, 15): 52, (10, 30): 24, (20, 15): 106, (20, 30): 51}.get((bw, scs)),
@@ -609,18 +641,17 @@ async def panel_metrics():
     now = time.time()
     fresh = bool(state['gnb_connected'] and state['radio_at'] and now-state['radio_at'] <= 5)
     rows = []
-    names = {'001010000000003': 'Redmi Note 14', '001010000000004': 'OnePlus 13', '001010000000001': 'srsUE (sim)'}
+    prune_evm(now)
+    method = state.get('cell', {}).get('sinrMethod')
     for row in state['radio_ues'] if fresh else []:
-        value = row.get('rnti')
-        try:
-            rnti = int(value, 16) if isinstance(value, str) and value.startswith('0x') else int(value)
-        except (TypeError, ValueError):
+        rnti = radio_rnti(row.get('rnti'))
+        if rnti is None:
             continue
         link = associations.get(rnti)
         imsi = link[0] if link else None
         ue = subscribers.get(imsi, {})
         rows.append({**row, 'rnti': f'0x{rnti:04x}', 'imsi': private_text(imsi) if imsi else None,
-                     'name': names.get(imsi), 'estimated': bool(imsi), 'ip': ue.get('ip'),
+                     'name': UE_NAMES.get(imsi), 'estimated': bool(imsi), 'ip': ue.get('ip'),
                      'dnn': ue.get('dnn'), 'status': ('registrado (observado)' if ue.get('connected') else 'sin registro observado'),
                      'dl_mbps': number(row.get('dl_brate'))/1e6 if number(row.get('dl_brate')) is not None else None,
                      'ul_mbps': number(row.get('ul_brate'))/1e6 if number(row.get('ul_brate')) is not None else None})
@@ -636,6 +667,9 @@ async def panel_metrics():
                      'pdu': sum(bool(u.get('pdu')) for u in subscribers.values()) if subscribers else None,
                      'nf': {n: ('log reciente' if now-t < 10 else 'sin actividad reciente') for n, t in nf_seen.items()},
                      'ogstun': state['ogstun'], 'slice': {'sst': 1, 'sd': '0xffffff', 'dnn': 'Metodos1'}},
+            'evm': {'method': method, 'measured': method == 'evm',
+                    'series': {f'0x{rnti:04x}': {'name': UE_NAMES.get(associations.get(rnti, (None,))[0]),
+                                               'points': list(points)} for rnti, points in evm_history.items()}},
             'ues': rows, 'thr': [{'dl': h['ogstun'].get('tx_bytes_per_s', 0)*8/1e6 if 'tx_bytes_per_s' in h['ogstun'] else None,
                                    'ul': h['ogstun'].get('rx_bytes_per_s', 0)*8/1e6 if 'rx_bytes_per_s' in h['ogstun'] else None} for h in list(history)[-60:]],
             'rt': {'rates': rates, 'total': dict(rt_total), 'series': [p.get('total', 0)*60 for p in rt_window], 'alarm': state['alarm']},
