@@ -48,9 +48,9 @@ parsear_argumentos() {
     elif [[ -n ${GNB_CONFIG:-} ]]; then
         origen_config=variable
     else
-        # En prueba desde 2026-11-03: igual a _csiaper.yml pero con clock_ppm 0
-        # (ver investigacion/2026-11-03_analisis-cortes-claude.md).
-        GNB_CONFIG=gnb_b210_00101_csiaper_ppm0.yml
+        # Recomendada desde 2026-11-03: CSI periódico, clock_ppm 0 y max_consecutive_kos alto
+        # (D-012 y D-014 en PROYECTO.md).
+        GNB_CONFIG=gnb_b210_00101_csiper_ppm0_kos.yml
     fi
     export GNB_CONFIG
 }

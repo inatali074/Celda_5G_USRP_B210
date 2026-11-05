@@ -37,7 +37,7 @@ services:
     # Referencia: pool UE 10.45.0.0/16, ogstun 10.45.0.1/16; valores reales en config/.
     env_file:
       - ./config/open5gs/network.env
-    command: ["5gc", "-c", "/config/${OPEN5GS_CONFIG:-open5gs-5gc.yml}"]
+    command: ["5gc", "-c", "/config/${OPEN5GS_CONFIG:-open5gs-5gc-zmq.yml}"]
     # Espera al NRF (SBI :7777), como el compose oficial, para que el gNB no corra antes que el núcleo.
     healthcheck:
       test: ["CMD-SHELL", "ss -ltn | grep -q ':7777'"]
@@ -70,13 +70,13 @@ services:
       - gnb-logs:/logs/gnb:ro
       - core-logs:/logs/core:ro
       - type: bind
-        source: ./config/gnb/${GNB_CONFIG:-gnb_b210.yml}
+        source: ./config/gnb/${GNB_CONFIG:-gnb_b210_00101_csiper_ppm0_kos.yml}
         target: /config/gnb.yml
         read_only: true
         bind:
           create_host_path: false
     environment:
-      GNB_CONFIG: ${GNB_CONFIG:-gnb_b210.yml}
+      GNB_CONFIG: ${GNB_CONFIG:-gnb_b210_00101_csiper_ppm0_kos.yml}
 
   gnb-radio:
     profiles: [radio]
@@ -105,7 +105,7 @@ services:
       - gnb-logs:/tmp
       - /dev/bus/usb:/dev/bus/usb
       - type: bind
-        source: ./config/gnb/${GNB_CONFIG:-gnb_b210.yml}
+        source: ./config/gnb/${GNB_CONFIG:-gnb_b210_00101_csiper_ppm0_kos.yml}
         target: /config/gnb.yml
         read_only: true
         bind:

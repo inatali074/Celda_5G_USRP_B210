@@ -60,7 +60,7 @@ Estado al 2026-11-02 (K/OPc confirmadas por AUTHENTICATE en SIM 3 y SIM 4; ADM e
 ## Decisiones
 | ID | Fecha | Decisión | Justificación | Aportó |
 | :--- | :--- | :--- | :--- | :--- |
-| D-001 | 2026-10-30 | El repo git es solo local y versiona lo nuevo más los documentos propios sin claves de la raíz (`Diagramas_UL_DL_Paging_5G.{md,html}`, `DFT-s-OFDM_explicacion.html`, `generar_html.py`). El resto del material previo, `.env` y `CONTEXTO_ANTECEDENTES.local.md` quedan excluidos | Varios contienen claves de SIM; también son pesados o de terceros. Sin referencia a TS: decisión de organización | Claude |
+| D-001 | 2026-10-30, act. 2026-11-05 | El repo git versiona lo nuevo más los documentos propios sin claves de la raíz (`Diagramas_UL_DL_Paging_5G.{md,html}`, `DFT-s-OFDM_explicacion.html`, `generar_html.py`). El resto del material previo, `.env` y `CONTEXTO_ANTECEDENTES.local.md` quedan excluidos. Desde el 2026-11-04 el repo está en GitHub (`inatali074/Celda_5G_USRP_B210`) y desde el 2026-11-05 es público, para que lo descarguen compañeros sin cuenta | Varios contienen claves de SIM; también son pesados o de terceros. Sin referencia a TS: decisión de organización. Público: pedido del usuario | Claude |
 | D-002 | 2026-10-30 | Implementación en Docker | Consigna de los docentes. Sin referencia a TS | Usuario |
 | D-003 | 2026-10-30 | Preguntar antes de implementar, siempre | Pedido del usuario. Sin referencia a TS | Usuario |
 | D-004 | 2026-10-30 | La prueba sin radio usa n3 FDD, 20 MHz, 106 PRB, μ=0, CP-OFDM en UL. No fija la banda de radio | srsUE rechaza SCS común distinto de 15 kHz (`rrc_nr_procedures.cc:439`), así que n78 μ=1 no se puede probar por ZMQ. Numerología: TS 38.211 §4.2 | Codex, revisó Claude |

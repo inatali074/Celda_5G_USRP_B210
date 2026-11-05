@@ -1,4 +1,4 @@
-# Núcleo con PLMN 001/01: prueba ZMQ con srsUE (MNC de 2 dígitos en usim.cc) y prueba con celulares. Igual a open5gs-5gc.yml salvo el PLMN.
+# Núcleo con PLMN 001/01: el que se usa con los celulares (por defecto en start.sh y docker-compose.yml) y en la prueba ZMQ con srsUE. Pese al nombre, no es solo para ZMQ. Igual a open5gs-5gc.yml salvo el PLMN.
 # SBI y PFCP usan loopback dentro del único contenedor 5GC.
 db_uri: mongodb://10.53.1.4/open5gs
 logger:
