@@ -21,12 +21,16 @@ Levantar/Frenar muestran únicamente `./start.sh <config.yml>` y `./stop.sh`.
   Referencias TX: QPSK 17,5 %, 16QAM 12,5 %, 64QAM 8 %, 256QAM 3,5 %;
   no constituyen una prueba de conformidad del enlace recibido.
 - **Identidad y núcleo:** registro, IP y DNN observados en `/logs/core/core.log`.
-  La asociación es **estimada**, uno a uno: creación `c-rnti=0x…: UE created`
-  y registro posterior dentro de 5 s, priorizando la creación más cercana.
-  Se recalcula con timestamps, independientemente del orden de lectura de archivos;
-  una nueva creación del mismo RNTI invalida la unión anterior. Sin timestamps
-  reconocibles no hay asociación. Requiere relojes y zona horaria comunes entre logs;
-  los registros simultáneos pueden resultar ambiguos. Nunca se une por fila.
+  **Asociación RNTI ↔ IMSI**, en dos pasos:
+  1. Por índice NGAP: el gNB escribe `ue=N c-rnti=0x…: UE created` y el AMF,
+     tras el SUCI del `InitialUEMessage`, `RAN_UE_NGAP_ID[N]` (mismo N, ±5 s).
+     El IMSI sale del SUCI con esquema nulo (MCC+MNC+MSIN). Funciona también con
+     Service Request, donde no hay `Registration complete`. La igualdad entre el índice
+     del CU-CP y el RAN_UE_NGAP_ID es una observación con OCUDU `release_26_10`.
+  2. Respaldo por tiempo: `UE created` y `Registration complete` dentro de 5 s.
+  Al arrancar, el panel recorre el log completo buscando solo esas líneas (el resto
+  se relee desde los últimos 256 KB), así no se pierden los UE ya conectados.
+  Una nueva creación del mismo RNTI invalida la unión anterior. Nunca se une por fila.
   Apodos: Redmi Note 14, OnePlus 13 y srsUE (sim), según IMSI de laboratorio.
   Los IMSI ajenos a `00101…` se muestran como `****` más sus últimos cuatro dígitos,
   también en eventos y consolas. “srsUE (sim)” es un apodo, no datos simulados.

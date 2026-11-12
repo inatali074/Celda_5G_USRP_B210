@@ -17,7 +17,7 @@
   body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px;padding:0 16px 48px;line-height:1.4;-webkit-font-smoothing:antialiased}
   h1,h2,h3{margin:0;font-weight:600}
   .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
-  header{position:sticky;top:0;z-index:30;background:linear-gradient(180deg,var(--bg) 72%,transparent);padding:12px 0 10px;border-bottom:1px solid var(--line);margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  header{position:sticky;top:0;z-index:30;background:var(--bg);padding:12px 0 10px;border-bottom:1px solid var(--line);margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
   .brand{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700}
   .dot{width:11px;height:11px;border-radius:50%;background:var(--bad)}
   .dot.on{background:var(--ok);animation:pulse 1.8s infinite}
@@ -41,7 +41,7 @@
   .kpi .spark{position:absolute;right:0;bottom:0;left:0;height:24px;opacity:.5}
 
   .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;min-width:0}
   .card h2{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;display:flex;align-items:center;gap:8px}
   .card h2 .pill{margin-left:auto;font-size:11px;font-weight:600}
   .span3{grid-column:span 3}.span4{grid-column:span 4}.span5{grid-column:span 5}.span6{grid-column:span 6}.span7{grid-column:span 7}.span8{grid-column:span 8}.span12{grid-column:span 12}
@@ -49,7 +49,7 @@
   .kv .k{color:var(--muted)}.kv .val{text-align:right;font-family:var(--mono)}
   .chips{display:flex;flex-wrap:wrap;gap:6px}
   .chip{font-size:11.5px;padding:3px 9px;border-radius:7px;border:1px solid var(--line);background:var(--card2);font-family:var(--mono);display:flex;align-items:center;gap:5px}
-  .chip i{width:7px;height:7px;border-radius:50%;background:var(--ok)}.chip.down i{background:var(--bad)}.chip.down{color:var(--bad)}
+  .chip i{width:7px;height:7px;border-radius:50%;background:var(--ok)}.chip.down i{background:var(--bad)}.chip.down{color:var(--bad)}.chip.idle{color:var(--muted)}.chip.idle i{background:var(--idle)}
   .bar{height:7px;background:var(--card2);border-radius:5px;overflow:hidden;margin-top:4px;border:1px solid var(--line)}
   .bar>span{display:block;height:100%;background:var(--accent);border-radius:5px;transition:width .4s}
   .barlabel{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px}.barlabel b{color:var(--tx);font-family:var(--mono)}
@@ -64,7 +64,7 @@
   .bi-good{background:var(--ok)}.bi-mid{background:var(--warn)}.bi-poor{background:var(--bad)}.bi-idle{background:var(--idle)}
   .detail td{background:var(--bg2)}.detail .inner{padding:12px 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px 22px}
   .detail .m{font-size:12px;color:var(--muted)}.detail .m b{display:block;color:var(--tx);font-family:var(--mono);font-size:15px}
-  svg.chart{width:100%;height:110px;display:block}
+  svg.chart{width:100%;height:110px;display:block}svg.chart.grow{flex:1 1 auto;height:auto;min-height:150px}
   .legend{display:flex;gap:16px;font-size:12px;color:var(--muted);margin-top:4px}.legend span{display:flex;align-items:center;gap:6px}.legend i{width:10px;height:3px;border-radius:2px}
   .note{font-size:11.5px;color:var(--dim);margin-top:8px}
   /* herramientas */
@@ -114,7 +114,7 @@
 <div class="kpis" id="kpis"></div>
 
 <div class="grid">
-  <section class="card span8">
+  <section class="card span12">
     <h2>📱 Conexiones en tiempo real <span class="pill mono" id="ueCount"></span></h2>
     <div style="overflow:auto">
       <table id="ueTable"><thead><tr>
@@ -122,7 +122,7 @@
         <th>SINR↑</th><th>EVM UL</th><th>↓ Mbps</th><th>↑ Mbps</th><th>BLER↓</th><th>TA</th>
       </tr></thead><tbody id="ueBody"></tbody></table>
     </div>
-    <div class="note">Tocá una fila para HARQ, PHR, RI, BSR, SNR PUCCH y BLER UL. Asociación IMSI estimada, nunca por orden de tabla.</div>
+    <div class="note">Tocá una fila para HARQ, PHR, RI, BSR, SNR PUCCH y BLER UL. IMSI asociado por índice NGAP (gNB ue=N ↔ AMF RAN_UE_NGAP_ID[N]), nunca por orden de tabla.</div>
   </section>
 
   <section class="card span4">
@@ -131,6 +131,50 @@
     <div class="barlabel"><span>CPU host</span><b id="cpuTxt"></b></div><div class="bar"><span id="cpuBar"></span></div>
     <div class="barlabel"><span>RAM</span><b id="ramTxt"></b></div><div class="bar"><span id="ramBar"></span></div>
     <div class="note" id="rtNote"></div>
+  </section>
+
+  <section class="card span4">
+    <h2>🗼 Celda / gNB (OCUDU)</h2>
+    <div class="kv" id="cellKv"></div>
+    <div class="barlabel"><span>Uso PRB ↓</span><b id="prbDlTxt"></b></div><div class="bar"><span id="prbDlBar"></span></div>
+    <div class="barlabel"><span>Uso PRB ↑</span><b id="prbUlTxt"></b></div><div class="bar"><span id="prbUlBar"></span></div>
+  </section>
+
+  <section class="card span4">
+    <h2>🧠 Núcleo 5G (Open5GS)</h2>
+    <div class="chips" id="nfChips" style="margin-bottom:12px"></div>
+    <div class="kv" id="coreKv"></div>
+  </section>
+
+  <section class="card span8">
+    <h2>📡 EVM de subida (PUSCH)</h2>
+    <svg class="chart grow" id="evmChart" style="min-height:220px"></svg>
+    <div class="legend" id="evmLegend"></div>
+    <div class="note" id="evmNote"></div>
+  </section>
+
+  <section class="card span4">
+    <h2>📈 Ancho de banda (N6, 60 s)</h2>
+    <svg class="chart grow" id="thrChart"></svg>
+    <div class="legend"><span><i style="background:var(--accent)"></i>↓ DL</span><span><i style="background:var(--ok)"></i>↑ UL</span>
+      <span style="margin-left:auto" class="mono" id="thrNow"></span></div>
+  </section>
+
+  <!-- CONSOLAS -->
+  <section class="card span8">
+    <h2>🖳 Consolas en vivo</h2>
+    <div class="tabs" id="conTabs">
+      <button data-svc="gnb" class="active">gNB (OCUDU)</button>
+      <button data-svc="core">Núcleo (Open5GS)</button>
+
+    </div>
+    <div class="console" id="console">Elegí una consola. Se actualiza en vivo cuando la red está levantada.</div>
+  </section>
+
+  <section class="card span4">
+    <h2>⏱️ Fallas de tiempo real (/min)</h2>
+    <svg class="chart grow" id="rtChart"></svg>
+    <div class="note" id="rtCmp"></div>
   </section>
 
   <!-- HERRAMIENTAS -->
@@ -162,50 +206,6 @@
   </section>
 
   <section class="card span4">
-    <h2>🗼 Celda / gNB (OCUDU)</h2>
-    <div class="kv" id="cellKv"></div>
-    <div class="barlabel"><span>Uso PRB ↓</span><b id="prbDlTxt"></b></div><div class="bar"><span id="prbDlBar"></span></div>
-    <div class="barlabel"><span>Uso PRB ↑</span><b id="prbUlTxt"></b></div><div class="bar"><span id="prbUlBar"></span></div>
-  </section>
-
-  <!-- CONSOLAS -->
-  <section class="card span8">
-    <h2>🖳 Consolas en vivo</h2>
-    <div class="tabs" id="conTabs">
-      <button data-svc="gnb" class="active">gNB (OCUDU)</button>
-      <button data-svc="core">Núcleo (Open5GS)</button>
-
-    </div>
-    <div class="console" id="console">Elegí una consola. Se actualiza en vivo cuando la red está levantada.</div>
-  </section>
-
-  <section class="card span4">
-    <h2>📈 Ancho de banda (N6, 60 s)</h2>
-    <svg class="chart" id="thrChart" style="height:150px"></svg>
-    <div class="legend"><span><i style="background:var(--accent)"></i>↓ DL</span><span><i style="background:var(--ok)"></i>↑ UL</span>
-      <span style="margin-left:auto" class="mono" id="thrNow"></span></div>
-  </section>
-
-  <section class="card span8">
-    <h2>📡 EVM de subida (PUSCH)</h2>
-    <svg class="chart" id="evmChart" style="height:220px"></svg>
-    <div class="legend" id="evmLegend"></div>
-    <div class="note" id="evmNote"></div>
-  </section>
-
-  <section class="card span4">
-    <h2>🧠 Núcleo 5G (Open5GS)</h2>
-    <div class="chips" id="nfChips" style="margin-bottom:12px"></div>
-    <div class="kv" id="coreKv"></div>
-  </section>
-
-  <section class="card span4">
-    <h2>⏱️ Fallas de tiempo real (/min)</h2>
-    <svg class="chart" id="rtChart" style="height:150px"></svg>
-    <div class="note" id="rtCmp"></div>
-  </section>
-
-  <section class="card span4">
     <h2>📋 Eventos <span class="pill mono" id="cadence"></span></h2>
     <div class="log" id="log"></div>
   </section>
@@ -213,7 +213,7 @@
 
 <div id="toast"></div>
 
-<p class="note" style="margin-top:18px">Diseño: Panel5G_SA de un compañero. Adaptado a FastAPI en Docker, puerto 8080. Asociación RNTI ↔ IMSI estimada por tiempo (ventana 5 s); puede fallar con registros simultáneos. No controla la red.</p>
+<p class="note" style="margin-top:18px">Diseño: Panel5G_SA de un compañero. Adaptado a FastAPI en Docker, puerto 8080. Asociación RNTI ↔ IMSI por índice NGAP; si falta, por hora de registro (ventana 5 s). No controla la red.</p>
 <script>
 'use strict';
 const $=s=>document.querySelector(s);
@@ -234,7 +234,7 @@ function lineChart(sel,series,unit,secs){
  const all=series.flatMap(s=>s.values).filter(finite),top=niceMax(Math.max(0,...all)),n=Math.max(2,...series.map(s=>s.values.length));
  const x=i=>L+i/(n-1)*pw,y=v=>T+(1-v/top)*ph;
  let svg='';
- for(const f of [0,.5,1]){const v=top*f;svg+=`<line x1="${L}" x2="${L+pw}" y1="${y(v)}" y2="${y(v)}" style="stroke:var(--line)"/>`+txt(L-6,y(v)+4,v>=10||v===0?Math.round(v):v.toFixed(1),'end');}
+ for(const f of [0,.5,1]){const v=top*f;svg+=`<line x1="${L}" x2="${L+pw}" y1="${y(v)}" y2="${y(v)}" style="stroke:var(--line)"/>`+txt(L-6,y(v)+4,v===0?'0':v.toFixed(Math.max(0,Math.ceil(-Math.log10(top))+1)).replace('.',','),'end');}
  svg+=txt(L+pw-2,T+12,unit,'end','var(--dim)');
  const marks=pw<300?[secs,0]:[secs,secs/2,0];
  for(const s of marks){svg+=txt(L+(1-s/secs)*pw,H-4,s?'−'+s+' s':'ahora',s===secs?'start':s===0?'end':'middle','var(--dim)');}
@@ -242,6 +242,7 @@ function lineChart(sel,series,unit,secs){
  if(!all.length)svg+=txt(L+pw/2,T+ph/2+4,'sin datos','middle','var(--dim)');
  el.setAttribute('viewBox',`0 0 ${W} ${H}`);el.innerHTML=svg;
 }
+if(window.ResizeObserver){const ro=new ResizeObserver(es=>{for(const e of es){const sel='#'+e.target.id;if(lineCharts[sel])lineChart(sel,...lineCharts[sel]);else if(sel==='#evmChart'&&lastEvm)renderEvm(lastEvm);}});['#thrChart','#rtChart','#evmChart'].forEach(q=>{const el=document.querySelector(q);if(el)ro.observe(el);});}
 window.addEventListener('resize',()=>{for(const [sel,args] of Object.entries(lineCharts))lineChart(sel,...args);});
 const evmValue=(v,unit)=>finite(v)?fmt(v,2)+' '+unit:'—';
 let lastEvm=null;
@@ -282,7 +283,7 @@ function render(d){
  $('#ueBody').innerHTML=U.map((u,i)=>{
  const point=d.evm?.series?.[u.rnti]?.points?.at(-1);
  const ta=u.ta_ns!=null?fmt(u.ta_ns)+' ns':'–';
- const cols=[(u.name||u.rnti)+(u.imsi?' · '+u.imsi+' (estimada)':''),u.ip,u.status,u.cqi,fmt(u.dl_mcs,0)+' / '+fmt(u.ul_mcs,0),fmt(u.pusch_rsrp_db)+' dB',fmt(u.sinr)+' dB',evmValue(point?.evm_pct,'%'),fmt(u.dl_mbps),fmt(u.ul_mbps),fmt(u.dl_bler)+' %',ta];
+ const cols=[(u.name||u.rnti)+(u.imsi?' · '+u.imsi:''),u.ip,u.status,finite(u.cqi)&&u.cqi>=0?u.cqi:'—',fmt(u.dl_mcs,0)+' / '+fmt(u.ul_mcs,0),fmt(u.pusch_rsrp_db)+' dB',fmt(u.sinr)+' dB',evmValue(point?.evm_pct,'%'),fmt(u.dl_mbps),fmt(u.ul_mbps),fmt(u.dl_bler)+' %',ta];
  const details=[['RNTI',u.rnti],['DNN',u.dnn],['HARQ DL OK/NOK',fmt(u.dl_ok,0)+' / '+fmt(u.dl_nok,0)],['HARQ UL OK/NOK',fmt(u.ul_ok,0)+' / '+fmt(u.ul_nok,0)],['BLER UL',fmt(u.ul_bler)+' %'],['SNR PUCCH',fmt(u.pucch_snr_db)+' dB'],['PHR',fmt(u.phr)+' dB'],['RI DL/UL',fmt(u.dl_ri,0)+' / '+fmt(u.ul_ri,0)],['BSR',u.bsr],['DL buffer',u.dl_bs],['TA PUSCH',fmt(u.pusch_ta_ns)+' ns'],['TA PUCCH',fmt(u.pucch_ta_ns)+' ns']];
  return `<tr class="ue" data-i="${i}">${cols.map((v,j)=>`<td${j===7&&!d.evm?.measured?' style="color:gray;font-style:italic"':''}>${escapeHtml(v)}</td>`).join('')}</tr><tr class="detail" id="det${i}" style="display:${expanded.has(u.rnti)?'table-row':'none'}"><td colspan="12"><div class="inner">${details.map(([k,v])=>`<div class="m">${escapeHtml(k)}<b>${escapeHtml(v)}</b></div>`).join('')}</div></td></tr>`;
  }).join('')||'<tr><td colspan="12">Sin datos de UEs</td></tr>';
@@ -295,7 +296,7 @@ function render(d){
  kv('#cellKv',[['Archivo montado',C.file],['Banda / duplex',`${C.band??'–'} / ${C.duplex??'–'}`],['ARFCN',C.arfcn],['Frecuencia DL',fmt(C.dlFreq,3)+' MHz'],['Ancho / SCS',`${C.bw??'–'} MHz / ${C.scs??'–'} kHz`],['PRB',C.prb],['PCI',C.pci],['PLMN / TAC',`${C.plmn??'–'} / ${C.tac??'–'}`]]);
  for(const dir of ['Dl','Ul']){text('#prb'+dir+'Txt','sin datos normalizados');$('#prb'+dir+'Bar').style.width='0%';}
  kv('#sliceKv',[['SST',K.slice?.sst],['SD',K.slice?.sd],['DNN observada en log',K.slice?.dnn]]);
- $('#nfChips').innerHTML=['AMF','SMF','UPF','AUSF','UDM','UDR','PCF','NSSF','BSF','NRF','SCP'].map(n=>`<span class="chip down">${n}: ${escapeHtml(K.nf?.[n]||'desconocido')}</span>`).join('');
+ $('#nfChips').innerHTML=['AMF','SMF','UPF','AUSF','UDM','UDR','PCF','NSSF','BSF','NRF','SCP'].map(n=>{const st=K.nf?.[n]||'sin datos';return `<span class="chip ${st==='log reciente'?'':'idle'}"><i></i>${n}: ${escapeHtml(st)}</span>`;}).join('');
  kv('#coreKv',[['Registros observados',K.reg],['PDU observadas',K.pdu],['N6 TX bytes (DL)',K.ogstun?.tx_bytes],['N6 RX bytes (UL)',K.ogstun?.rx_bytes],['Estado NF','Actividad de log; no prueba de proceso vivo']]);
  lineChart('#thrChart',[{values:T.map(t=>t.dl),color:'#4ea1ff'},{values:T.map(t=>t.ul),color:'#3ddc84'}],'Mbit/s',60);text('#thrNow','↓ '+fmt(T.at(-1)?.dl)+' ↑ '+fmt(T.at(-1)?.ul)+' Mbit/s');
  renderEvm(d.evm||{});

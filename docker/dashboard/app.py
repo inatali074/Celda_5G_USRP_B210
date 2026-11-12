@@ -58,6 +58,10 @@ log_buffers = {s: deque(maxlen=400) for s in ('gnb', 'core')}
 creations = deque(maxlen=256)
 registrations = deque(maxlen=256)
 associations = {}
+# Unión determinística: índice de UE del CU-CP (gNB) = RAN_UE_NGAP_ID del AMF.
+ue_indexes = deque(maxlen=256)   # (stamp, índice, rnti)
+ngap_ids = deque(maxlen=256)     # (stamp, RAN_UE_NGAP_ID, imsi)
+last_suci = [None, None]         # (stamp, imsi) del último SUCI sin cifrar
 nf_seen = {}
 ANSI = re.compile(r'\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1b\\))')
 
@@ -89,12 +93,22 @@ def associate():
     # Recalcular por timestamp: el orden de lectura de ambos archivos no importa.
     associations.clear()
     used = set()
+    # 1) Por índice: el gNB escribe 'ue=N c-rnti=X: UE created' y el AMF 'RAN_UE_NGAP_ID[N]'
+    #    tras el SUCI del InitialUEMessage. Sirve también para Service Request (sin registro nuevo).
+    for stamp, idx, imsi in sorted(ngap_ids):
+        candidates = [(abs(stamp-t), t, r) for t, i, r in ue_indexes if i == idx and abs(stamp-t) <= 5 and (t, r) not in used]
+        if candidates:
+            _, t, r = min(candidates)
+            used.add((t, r))
+            associations[r] = (imsi, t)
+    # 2) Respaldo por tiempo de 'Registration complete'.
     for stamp, imsi in sorted(registrations):
         candidates = [(t, r) for t, r in creations if 0 <= stamp-t <= 5 and (t, r) not in used]
         if candidates:
             t, r = max(candidates)
             used.add((t, r))
-            associations[r] = (imsi, t)
+            if r not in associations:
+                associations[r] = (imsi, t)
     # Una creación posterior del mismo RNTI invalida la unión anterior.
     for t, r in creations:
         if r in associations and t > associations[r][1]:
@@ -207,9 +221,11 @@ def log_line(source, line, replay=False):
                 iq_monitor.feed(line, stamp)
             except Exception as exc:
                 iq_error(exc)
-        created = re.search(r'c-rnti=(0x[0-9a-f]+): UE created', line, re.I)
+        created = re.search(r'(?:ue=(\d+) )?c-rnti=(0x[0-9a-f]+): UE created', line, re.I)
         if created and stamp is not None:
-            creations.append((stamp, int(created[1], 16)))
+            creations.append((stamp, int(created[2], 16)))
+            if created[1] is not None:
+                ue_indexes.append((stamp, int(created[1]), int(created[2], 16)))
             associate()
         kind = next((k for k, pattern in (
             ('ul_busy', r'UL processor is busy'), ('underflow', 'underflow'),
@@ -231,6 +247,14 @@ def log_line(source, line, replay=False):
         nf = re.search(r'\[(amf|smf|upf|ausf|udm|udr|pcf|nssf|bsf|nrf|scp)\]', line, re.I)
         if nf:
             nf_seen[nf[1].upper()] = stamp if stamp is not None else (0 if replay else time.time())
+        # SUCI con esquema nulo (suci-0-MCC-MNC-rutina-0-clave-MSIN): el IMSI es MCC+MNC+MSIN.
+        suci = re.search(r'suci-0-(\d{3})-(\d{2,3})-\d+-0-\d+-(\d+)', line)
+        if suci and stamp is not None:
+            last_suci[:] = [stamp, suci[1]+suci[2]+suci[3]]
+        ngap = re.search(r'RAN_UE_NGAP_ID\[(\d+)\].*TAC\[', line)
+        if ngap and stamp is not None and last_suci[0] is not None and 0 <= stamp-last_suci[0] <= 1:
+            ngap_ids.append((stamp, int(ngap[1]), last_suci[1]))
+            associate()
         match = re.search(r'UE SUPI\[(?:imsi-)?(\d+)\].*DNN\[([^]]+)\].*IPv4\[([\d.]+)\]', line)
         imsi_match = re.search(r'(?:imsi-|IMSI[\s\[:=]*|SUPI\[|\[)(\d{14,15})(?!\d)', line, re.I)
         imsi = match[1] if match else imsi_match[1] if imsi_match else None
@@ -259,6 +283,51 @@ def log_line(source, line, replay=False):
             event(source, line)
 
 
+ASSOC_MARKS = {'gnb': (b': UE created',), 'core': (b'suci-', b'RAN_UE_NGAP_ID', b'Registration complete')}
+
+
+def prescan(source, path, limit):
+    """Busca en todo el log, hasta `limit`, solo las líneas que unen RNTI e IMSI.
+
+    El arranque relee solo los últimos 256 KB; con el volcado IQ el log del gNB pesa cientos
+    de MB y sin esto se pierden las asociaciones de los UE ya conectados al reiniciar el panel.
+    """
+    marks, found, rest = ASSOC_MARKS[source], [], b''
+    with path.open('rb') as handle:
+        while handle.tell() < limit:
+            block = rest + handle.read(min(4*1024*1024, limit-handle.tell()))
+            if not block:
+                break
+            lines = block.split(b'\n')
+            rest = lines.pop()[-16384:]
+            found += [line.decode(errors='replace') for line in lines if any(m in line for m in marks)]
+            time.sleep(.005)  # ceder CPU al gNB en PCs chicas
+    return found[-2048:]
+
+
+def assoc_line(source, line):
+    """Versión mínima de log_line: solo actualiza los datos de asociación, sin eventos."""
+    stamp = log_time(line)
+    if stamp is None:
+        return
+    if source == 'gnb':
+        created = re.search(r'(?:ue=(\d+) )?c-rnti=(0x[0-9a-f]+): UE created', line, re.I)
+        if created:
+            creations.append((stamp, int(created[2], 16)))
+            if created[1] is not None:
+                ue_indexes.append((stamp, int(created[1]), int(created[2], 16)))
+        return
+    suci = re.search(r'suci-0-(\d{3})-(\d{2,3})-\d+-0-\d+-(\d+)', line)
+    if suci:
+        last_suci[:] = [stamp, suci[1]+suci[2]+suci[3]]
+    ngap = re.search(r'RAN_UE_NGAP_ID\[(\d+)\].*TAC\[', line)
+    if ngap and last_suci[0] is not None and 0 <= stamp-last_suci[0] <= 1:
+        ngap_ids.append((stamp, int(ngap[1]), last_suci[1]))
+    imsi = re.search(r'imsi-(\d{14,15})', line)
+    if 'Registration complete' in line and imsi:
+        registrations.append((stamp, imsi[1]))
+
+
 async def tail(source, path):
     """Lectura acotada por vuelta; detecta inode, tamaño y prefijo tras truncado rápido."""
     handle = None
@@ -266,6 +335,7 @@ async def tail(source, path):
     prefix = b''
     pending = b''
     first = True
+    history = []
     try:
         while True:
             try:
@@ -283,23 +353,35 @@ async def tail(source, path):
                     # Bootstrap acotado; no contabiliza fallas históricas como nuevas.
                     replay = first
                     if first and stat.st_size > 256*1024:
-                        handle.seek(stat.st_size-256*1024)
+                        start = stat.st_size-256*1024
+                        try:
+                            history = await asyncio.to_thread(prescan, source, path, start)
+                        except OSError:
+                            history = []
+                        handle.seek(start)
                         handle.readline()  # descartar primera línea incompleta
                     first = False
                     log_buffers[source].clear()
                     if source == 'gnb':
                         iq_monitor.reset()
                         creations.clear()
+                        ue_indexes.clear()
                         associations.clear()
                         state['gnb_since'] = None
                         state['config'] = None
                     else:
                         registrations.clear()
+                        ngap_ids.clear()
+                        last_suci[:] = [None, None]
                         associations.clear()
                         nf_seen.clear()
                         for ue in subscribers.values():
                             ue['connected'] = False
                             ue['pdu'] = False
+                    for old in (history if replay else ()):
+                        assoc_line(source, old)
+                    history = []
+                    associate()
                 prefix = head
                 chunk = handle.read(256*1024)
                 pending += chunk
