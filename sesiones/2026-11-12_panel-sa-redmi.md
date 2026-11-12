@@ -34,7 +34,7 @@ Celda en tachoPC con la opción 1 del menú (`gnb_b210_00101_n78_cpofdm.yml`), a
   - **Después de reiniciar la red, Linphone no se vuelve a registrar solo:** los teléfonos reciben IP nueva y tienen datos, pero a la central no llega ningún `REGISTER`. Se resuelve con "Forzar detención" de Linphone y abrirlo de nuevo en los dos teléfonos. `start.sh` lo recuerda al levantar la central.
 
 ## Para retomar
-- ~~Borrar el volcado IQ~~: hecho al cierre, con la red apagada (7,9 GB; el disco quedó con 59 GB libres).
+- ~~Borrar el volcado IQ~~: hecho después de cada corrida, con la red apagada (7,9 GB de la mañana y 222 MB de la última; el disco quedó con 59 GB libres).
 - **Conviene limitar el volumen del volcado y del log para corridas largas:** es la principal carga nueva sobre una PC de 4 hilos.
 - ~~Probar el Motorola con 001/01~~: hecho por la tarde.
 - **Postergado por el usuario:** probar en la jaula las opciones 2, 3 y 4 del menú.

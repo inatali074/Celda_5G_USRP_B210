@@ -150,6 +150,9 @@ Según `Prueba_configuracion_Drive_5G.docx` (29/10): ZMQ + srsUE funcionó de pu
 - **Llamadas SIP entre el Motorola (interno 1001) y el Redmi (1002), en los dos sentidos**, más el eco del 600, con G.711. Es voz sobre IP en la sesión PDU por defecto (5QI 9), no VoNR. Evidencia: `evidencia/07_voz_sip/`.
   - El registro fallaba porque el teléfono tenía una contraseña distinta de la del servidor: se comprobó recalculando el Digest. Se cambiaron las contraseñas por otras fáciles de escribir a mano, en `config/secretos/sip_credenciales.conf`.
   - Android suspende Linphone en segundo plano: deja de contestar los `OPTIONS` de Asterisk y una llamada hacia ese teléfono recibe `404`. Hay que darle a Linphone batería "Sin restricciones" y datos en segundo plano.
+- **La central SIP quedó integrada a los scripts:** `start.sh` pregunta si levantarla (por defecto, no) y la arranca antes del gNB; `stop.sh` la detiene. Se probó con un reinicio completo de la red.
+- **Después de reiniciar la red, Linphone no se vuelve a registrar solo:** los teléfonos reciben IP nueva y tienen datos, pero no mandan `REGISTER`. Se resuelve con "Forzar detención" de Linphone y abrirlo de nuevo; `start.sh` lo recuerda.
+- **Al cierre, la red quedó apagada** y se borró el volcado IQ de la última corrida (222 MB).
 - Las pruebas de las opciones 2–4 del menú quedan postergadas por decisión del usuario.
 - Detalle: `sesiones/2026-11-12_panel-sa-redmi.md`.
 
