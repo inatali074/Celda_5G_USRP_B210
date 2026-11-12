@@ -25,8 +25,8 @@ Celda en tachoPC con la opción 1 del menú (`gnb_b210_00101_n78_cpofdm.yml`), a
 - **La salida con código 139 de Open5GS ocurre siempre al apagar** (12 veces desde el 2026-11-03): ante el SIGTERM de `stop.sh`, un hilo no termina en 3 s y `ogs_thread_destroy` aborta (`ogs-thread.c:129-130`). No afecta el funcionamiento ni los datos, que están en MongoDB. No se tomó ninguna acción.
 
 ## Para retomar
-- **Borrar `/tmp/gnb_rx_symbols.bin` del volumen `gnb-logs` al apagar la red** (6 GB). Con el gNB corriendo no se puede: sigue escribiendo en el archivo borrado y el espacio no se libera.
+- ~~Borrar el volcado IQ~~: hecho al cierre, con la red apagada (7,9 GB; el disco quedó con 59 GB libres).
 - **Conviene limitar el volumen del volcado y del log para corridas largas:** es la principal carga nueva sobre una PC de 4 hilos.
-- **Probar el Motorola con PLMN 001/01** y la SIM 4. Con 722/999 no generó PRACH (D-008). En el panel, el apodo del IMSI …004 sigue siendo "OnePlus 13": hay que cambiarlo en `docker/dashboard/app.py`.
-- Probar en la jaula las opciones 2, 3 y 4 del menú.
+- **Postergado por el usuario:** probar el Motorola con PLMN 001/01 y la SIM 4 (con 722/999 no generó PRACH, D-008), y probar en la jaula las opciones 2, 3 y 4 del menú.
+- El panel muestra el nombre de la SIM (SIM 3, SIM 4) en lugar del modelo de teléfono (commit `6446d5c`).
 - Pendientes de antes: llamada SIP, cita E.212, tabla EDGE/LTE y la hipótesis de `zeroCorrelationZoneConfig`.

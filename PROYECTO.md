@@ -144,11 +144,13 @@ Según `Prueba_configuracion_Drive_5G.docx` (29/10): ZMQ + srsUE funcionó de pu
 - **El Redmi volvió a conectarse en SA** tras reactivar el modo SA, que el usuario había apagado el día anterior. Con el Redmi y el OnePlus juntos, el EVM medido fue de 4–6 % con una SINR del PUSCH de 24–30 dB.
 - **El panel asocia RNTI ↔ IMSI por índice NGAP** (`ue=N` del gNB = `RAN_UE_NGAP_ID[N]` del AMF), lo que cubre los Service Request. También se corrigió su diseño.
 - **La salida con código 139 de Open5GS es un aborto al apagar:** un hilo no termina en 3 s tras el SIGTERM (`ogs-thread.c:129`). Pasa en cada apagado y no afecta el funcionamiento.
-- **El volcado IQ llegó a 6 GB en ~1 h**, y hay que borrarlo con la red apagada.
+- **El volcado IQ llegó a 7,9 GB en ~55 min**, más 449 MB de log del gNB. Se borró con la red apagada.
+- **El panel muestra el nombre de la SIM** (SIM 3, SIM 4) en lugar del modelo de teléfono, así no depende de en qué teléfono esté cada una.
+- **Al cierre, la red quedó apagada.** Las pruebas del Motorola y de las opciones 2–4 del menú quedan postergadas por decisión del usuario.
 - Detalle: `sesiones/2026-11-12_panel-sa-redmi.md`.
 
 ## Punto de retorno TDD (2026-11-03)
 Mejor configuración n78 TDD hasta hoy: la de la etiqueta git **`tdd-ppm0-2026-11-03`**, `gnb_b210_00101_csiper_ppm0_kos.yml` (n78, ARFCN 635000, 20 MHz, μ=1, PLMN 00101, tx 80, `clock_ppm 0`, CSI periódico con `pucch.max_consecutive_kos 100000`). Desde el 2026-11-06 ese archivo no está en el árbol: su equivalente es la opción 1 del menú, `gnb_b210_00101_n78_cpofdm.yml`, que solo le suma el volcado IQ (D-018). Para volver exactamente a la de antes: `git show tdd-ppm0-2026-11-03:config/gnb/gnb_b210_00101_csiper_ppm0_kos.yml`. El corte de cada ~60 s se evita con el teléfono en `NR only` (D-015).
 
 ## Próximos pasos
-Ver la sección "Para retomar" de `sesiones/2026-11-12_panel-sa-redmi.md`, que reúne lo pendiente de las sesiones anteriores. Lo primero: borrar el volcado IQ con la red apagada, probar el Motorola con 001/01 y probar las opciones 2–4 del menú.
+Ver la sección "Para retomar" de `sesiones/2026-11-12_panel-sa-redmi.md`, que reúne lo pendiente de las sesiones anteriores. Quedan postergadas, por decisión del usuario, las pruebas del Motorola con 001/01 y de las opciones 2–4 del menú. Antes de una corrida larga con volcado IQ, conviene limitar su tamaño: crece ~8 GB por hora.
