@@ -31,6 +31,7 @@ Celda en tachoPC con la opción 1 del menú (`gnb_b210_00101_n78_cpofdm.yml`), a
   - Un `REGISTER` armado a mano dentro de la red interna, con la contraseña del archivo, recibió `200 OK`: así se descartó un problema de la central.
   - **Llamadas:** eco (600) desde el Redmi; el Motorola llamó al Redmi y el Redmi al Motorola. Las dos fueron atendidas, con RTP en los dos sentidos y G.711. Evidencia y explicación en `evidencia/07_voz_sip/`.
   - Cuando Android suspende Linphone, el teléfono deja de contestar los `OPTIONS` y Asterisk responde `404` a las llamadas hacia él.
+  - **Después de reiniciar la red, Linphone no se vuelve a registrar solo:** los teléfonos reciben IP nueva y tienen datos, pero a la central no llega ningún `REGISTER`. Se resuelve con "Forzar detención" de Linphone y abrirlo de nuevo en los dos teléfonos. `start.sh` lo recuerda al levantar la central.
 
 ## Para retomar
 - ~~Borrar el volcado IQ~~: hecho al cierre, con la red apagada (7,9 GB; el disco quedó con 59 GB libres).

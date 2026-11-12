@@ -145,7 +145,8 @@ echo
 if [[ $levantar_sip == si ]]; then
     echo "--- Central SIP ---"
     docker compose --profile voz up -d --no-build sip \
-        && echo "Central SIP en 10.53.1.10 (UDP 5060): internos 1001 y 1002, eco en el 600." \
+        && { echo "Central SIP en 10.53.1.10 (UDP 5060): internos 1001 y 1002, eco en el 600."
+             echo "Si Linphone no se registra: Forzar detención y volver a abrirlo (los teléfonos reciben IP nueva al reiniciar la red)."; } \
         || echo "No se pudo levantar la central SIP; sigo sin ella."
 fi
 
