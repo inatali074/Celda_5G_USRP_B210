@@ -37,7 +37,7 @@ Celda en tachoPC con la opción 1 del menú (`gnb_b210_00101_n78_cpofdm.yml`), a
 - **Conviene limitar el volumen del volcado y del log para corridas largas:** es la principal carga nueva sobre una PC de 4 hilos.
 - ~~Probar el Motorola con 001/01~~: hecho por la tarde.
 - **Postergado por el usuario:** probar en la jaula las opciones 2, 3 y 4 del menú.
-- **`stop.sh` no detiene el contenedor `sip`** (perfil `voz`): hay que detenerlo aparte o sumarlo al script.
+- ~~`stop.sh` no detenía el contenedor `sip`~~: ahora lo detiene (commit `ac7d3a4`), y `start.sh` pregunta si levantarlo (por defecto, no).
 - Medir la calidad de la llamada (retardo y pérdida de RTP, por ejemplo con `rtp set debug` o una captura en el contenedor `sip`).
 - El panel muestra el nombre de la SIM (SIM 3, SIM 4) en lugar del modelo de teléfono (commit `6446d5c`).
 - Pendientes de antes: cita E.212, tabla EDGE/LTE y la hipótesis de `zeroCorrelationZoneConfig`.

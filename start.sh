@@ -116,6 +116,17 @@ if [[ $gobernador != performance ]]; then
 fi
 
 echo
+read -r -p "¿Levantar también la central SIP para llamadas entre teléfonos? [s/N]: " respuesta
+levantar_sip=no
+if [[ $respuesta == [sS] ]]; then
+    if [[ ! -f config/secretos/sip_credenciales.conf ]]; then
+        echo "Falta config/secretos/sip_credenciales.conf (ver config/sip/credenciales.ejemplo.conf); no se levanta la central."
+    else
+        levantar_sip=si
+    fi
+fi
+
+echo
 echo "--- Núcleo y MongoDB ---"
 docker compose up -d --no-build mongodb open5gs dashboard
 
@@ -130,6 +141,13 @@ for _ in $(seq 1 40); do
 done
 echo
 [[ $estado == healthy ]] || { echo "Open5GS no quedó sano. Revisá: docker logs 5g-open5gs-1"; exit 1; }
+
+if [[ $levantar_sip == si ]]; then
+    echo "--- Central SIP ---"
+    docker compose --profile voz up -d --no-build sip \
+        && echo "Central SIP en 10.53.1.10 (UDP 5060): internos 1001 y 1002, eco en el 600." \
+        || echo "No se pudo levantar la central SIP; sigo sin ella."
+fi
 
 echo "--- gNB (empieza a transmitir) ---"
 inicio_gnb=$(date -u +%Y-%m-%dT%H:%M:%SZ)
