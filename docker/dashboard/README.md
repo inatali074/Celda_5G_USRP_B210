@@ -31,7 +31,7 @@ Levantar/Frenar muestran únicamente `./start.sh <config.yml>` y `./stop.sh`.
   Al arrancar, el panel recorre el log completo buscando solo esas líneas (el resto
   se relee desde los últimos 256 KB), así no se pierden los UE ya conectados.
   Una nueva creación del mismo RNTI invalida la unión anterior. Nunca se une por fila.
-  Apodos: Redmi Note 14, OnePlus 13 y srsUE (sim), según IMSI de laboratorio.
+  Apodos por SIM (IMSI de laboratorio): SIM 3 y SIM 4, como en PROYECTO.md, y srsUE (sim) para el UE simulado; no dependen del teléfono.
   Los IMSI ajenos a `00101…` se muestran como `****` más sus últimos cuatro dígitos,
   también en eventos y consolas. “srsUE (sim)” es un apodo, no datos simulados.
 - **Celda/RF:** YAML `/config/gnb.yml`, montaje de sólo lectura del mismo

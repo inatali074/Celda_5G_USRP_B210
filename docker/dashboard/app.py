@@ -34,7 +34,7 @@ FIELDS = {
     'phr': ('last_phr', 'phr', 'power_headroom'),
     **{k: (k,) for k in ('pusch_rsrp_db', 'pucch_snr_db', 'ta_ns', 'pusch_ta_ns', 'pucch_ta_ns', 'dl_ri', 'ul_ri', 'dl_bs')},
 }
-UE_NAMES = {'001010000000003': 'Redmi Note 14', '001010000000004': 'OnePlus 13', '001010000000001': 'srsUE (sim)'}
+UE_NAMES = {'001010000000003': 'SIM 3', '001010000000004': 'SIM 4', '001010000000001': 'srsUE (sim)'}
 evm_history = {}
 dl_history = {}
 START = time.monotonic()
