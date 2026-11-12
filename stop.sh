@@ -45,6 +45,9 @@ if docker logs 5g-open5gs-1 >/dev/null 2>&1; then
     echo "  logs/${marca}_nucleo.log.gz"
 fi
 
+echo "--- Central SIP (si estaba levantada) ---"
+docker compose --profile voz stop sip
+
 echo "--- Núcleo y MongoDB ---"
 docker compose stop dashboard open5gs mongodb
 
@@ -59,5 +62,5 @@ if [[ $gobernador == performance ]]; then
 fi
 
 echo
-docker compose --profile radio ps --format '{{.Service}} {{.Status}}'
+docker compose --profile radio --profile voz ps --format '{{.Service}} {{.Status}}'
 echo "--- Red detenida. Los abonados quedan guardados en MongoDB. ---"
