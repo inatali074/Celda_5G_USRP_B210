@@ -33,6 +33,15 @@ Celda en tachoPC con la opción 1 del menú (`gnb_b210_00101_n78_cpofdm.yml`), a
   - Cuando Android suspende Linphone, el teléfono deja de contestar los `OPTIONS` y Asterisk responde `404` a las llamadas hacia él.
   - **Después de reiniciar la red, Linphone no se vuelve a registrar solo:** los teléfonos reciben IP nueva y tienen datos, pero a la central no llega ningún `REGISTER`. Se resuelve con "Forzar detención" de Linphone y abrirlo de nuevo en los dos teléfonos. `start.sh` lo recuerda al levantar la central.
 
+## Tarde: IMS para VoNR, etapa 1
+- **Investigación:** Gemini (`investigacion/2026-11-12_vonr-telefonos.md`), verificada por Claude (`…_verificacion.md`): dos fuentes inventadas y varias mal descriptas. Plan de Codex en modo lectura (`revisiones/2026-11-12_codex-plan-ims.md`).
+- **Implementación** (Codex, `revisiones/2026-11-12_codex-ims-etapa1.md`; revisión y pruebas de Claude): seis contenedores en el perfil `ims` y red `10.53.2.0/24`, `open5gs-5gc-ims.yml`, `ogstun2` sin NAT, `cargar_ims.sh` (MSISDN 1003 y 1004; claves por stdin), `verificar_ims.sh`, y pregunta de IMS en `start.sh`.
+  - Errores encontrados al levantarlo sin radio: el `init.sh` de MySQL usaba `set -eu` y la imagen oficial lo incorpora con `source`, lo que rompía su script (`$1: unbound variable`); y los CSCF montaban dos archivos dentro de una carpeta ya montada en solo lectura. Se corrigieron y se borró el volumen de MySQL recién creado.
+  - Sin radio: DNS, Cx de I-CSCF y S-CSCF con PyHSS y API OK. Las claves de las SIM no aparecen en ningún log.
+- **Con radio:** el Motorola pidió la DNN `ims` primero, recibió 10.46.0.2 y completó el registro IMS (`sip:1004@…`, `tel:1004` y la identidad derivada del IMSI, "registered"). Evidencia: `evidencia/08_ims_registro/` (IMEI y datos de IMS-AKA redactados).
+- **Redmi:** nunca pidió `ims`. "Estado de IMS: No registrado" y "Servicio de voz: Fuera de servicio" en `*#*#4636#*#*`; `carrier_volte_available_bool = false` para 001/01, aunque el módem soporta IMS. No sirvieron los códigos de Xiaomi, `cmd phone cc` ("Permission denied") ni Pixel IMS + Shizuku (`NoSuchMethodError` en `BrokerInstrumentation.applyConfig`). Las apps se desinstalaron; quedan por apagar en el teléfono "Instalar vía USB" y "Depuración USB (ajustes de seguridad)".
+- **Corrección:** los "15 pedidos de `ims` del Redmi" eran 5 del 2026-11-05 repetidos en tres logs guardados.
+
 ## Para retomar
 - ~~Borrar el volcado IQ~~: hecho después de cada corrida, con la red apagada (7,9 GB de la mañana y 222 MB de la última; el disco quedó con 59 GB libres).
 - **Conviene limitar el volumen del volcado y del log para corridas largas:** es la principal carga nueva sobre una PC de 4 hilos.
@@ -41,4 +50,5 @@ Celda en tachoPC con la opción 1 del menú (`gnb_b210_00101_n78_cpofdm.yml`), a
 - ~~`stop.sh` no detenía el contenedor `sip`~~: ahora lo detiene (commit `ac7d3a4`), y `start.sh` pregunta si levantarlo (por defecto, no).
 - Medir la calidad de la llamada (retardo y pérdida de RTP, por ejemplo con `rtp set debug` o una captura en el contenedor `sip`).
 - El panel muestra el nombre de la SIM (SIM 3, SIM 4) en lugar del modelo de teléfono (commit `6446d5c`).
+- **VoNR, etapa 2:** N5 (flujo 5QI 1), RTPEngine y la llamada. Requiere un segundo teléfono que active IMS en 001/01.
 - Pendientes de antes: cita E.212, tabla EDGE/LTE y la hipótesis de `zeroCorrelationZoneConfig`.
