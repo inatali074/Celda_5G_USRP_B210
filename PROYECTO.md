@@ -48,7 +48,7 @@ Estado al 2026-11-02 (K/OPc confirmadas por AUTHENTICATE en SIM 3 y SIM 4; ADM e
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | SIM 1 | …0010 | 722999000000001 | 722/999 | Sin NG-RAN | Cargado | Referencia, sin tocar |
 | SIM 3 | …0374 | 001010000000003 | 001/01 | NG-RAN + E-UTRAN | Cargado | Redmi |
-| SIM 4 | …0044 | 001010000000004 | 001/01 | NG-RAN + E-UTRAN | Cargado | Era del OnePlus 13; pasa al Motorola Edge 30 (2026-11-12). Grabada con OYEI en Windows, luego por APDU |
+| SIM 4 | …0044 | 001010000000004 | 001/01 | NG-RAN + E-UTRAN | Cargado | Era del OnePlus 13; pasa al Motorola Edge 30, que se registró con 001/01 el 2026-11-12. Grabada con OYEI en Windows, luego por APDU |
 
 ## Versiones
 | Componente | Versión | Estado |
@@ -146,11 +146,15 @@ Según `Prueba_configuracion_Drive_5G.docx` (29/10): ZMQ + srsUE funcionó de pu
 - **La salida con código 139 de Open5GS es un aborto al apagar:** un hilo no termina en 3 s tras el SIGTERM (`ogs-thread.c:129`). Pasa en cada apagado y no afecta el funcionamiento.
 - **El volcado IQ llegó a 7,9 GB en ~55 min**, más 449 MB de log del gNB. Se borró con la red apagada.
 - **El panel muestra el nombre de la SIM** (SIM 3, SIM 4) en lugar del modelo de teléfono, así no depende de en qué teléfono esté cada una.
-- **Al cierre, la red quedó apagada.** Las pruebas del Motorola y de las opciones 2–4 del menú quedan postergadas por decisión del usuario.
+- **Primera corrida de la tarde (13:43 UTC):** el Motorola Edge 30 se registró con la SIM 4 y PLMN 001/01, y recibió IP (`10.45.0.4`) después de configurar el APN `Metodos1`. Con 722/999 no había generado PRACH (D-008).
+- **Llamadas SIP entre el Motorola (interno 1001) y el Redmi (1002), en los dos sentidos**, más el eco del 600, con G.711. Es voz sobre IP en la sesión PDU por defecto (5QI 9), no VoNR. Evidencia: `evidencia/07_voz_sip/`.
+  - El registro fallaba porque el teléfono tenía una contraseña distinta de la del servidor: se comprobó recalculando el Digest. Se cambiaron las contraseñas por otras fáciles de escribir a mano, en `config/secretos/sip_credenciales.conf`.
+  - Android suspende Linphone en segundo plano: deja de contestar los `OPTIONS` de Asterisk y una llamada hacia ese teléfono recibe `404`. Hay que darle a Linphone batería "Sin restricciones" y datos en segundo plano.
+- Las pruebas de las opciones 2–4 del menú quedan postergadas por decisión del usuario.
 - Detalle: `sesiones/2026-11-12_panel-sa-redmi.md`.
 
 ## Punto de retorno TDD (2026-11-03)
 Mejor configuración n78 TDD hasta hoy: la de la etiqueta git **`tdd-ppm0-2026-11-03`**, `gnb_b210_00101_csiper_ppm0_kos.yml` (n78, ARFCN 635000, 20 MHz, μ=1, PLMN 00101, tx 80, `clock_ppm 0`, CSI periódico con `pucch.max_consecutive_kos 100000`). Desde el 2026-11-06 ese archivo no está en el árbol: su equivalente es la opción 1 del menú, `gnb_b210_00101_n78_cpofdm.yml`, que solo le suma el volcado IQ (D-018). Para volver exactamente a la de antes: `git show tdd-ppm0-2026-11-03:config/gnb/gnb_b210_00101_csiper_ppm0_kos.yml`. El corte de cada ~60 s se evita con el teléfono en `NR only` (D-015).
 
 ## Próximos pasos
-Ver la sección "Para retomar" de `sesiones/2026-11-12_panel-sa-redmi.md`, que reúne lo pendiente de las sesiones anteriores. Quedan postergadas, por decisión del usuario, las pruebas del Motorola con 001/01 y de las opciones 2–4 del menú. Antes de una corrida larga con volcado IQ, conviene limitar su tamaño: crece ~8 GB por hora.
+Ver la sección "Para retomar" de `sesiones/2026-11-12_panel-sa-redmi.md`, que reúne lo pendiente de las sesiones anteriores. Quedan postergadas, por decisión del usuario, las pruebas de las opciones 2–4 del menú. La llamada SIP ya se probó (`evidencia/07_voz_sip/`); falta medir su calidad (retardo y pérdida de RTP) y, si se quiere voz nativa, el plan de VoNR con IMS. Antes de una corrida larga con volcado IQ, conviene limitar su tamaño: crece ~8 GB por hora.

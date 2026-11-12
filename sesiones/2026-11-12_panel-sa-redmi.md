@@ -24,9 +24,20 @@ Celda en tachoPC con la opción 1 del menú (`gnb_b210_00101_n78_cpofdm.yml`), a
 - **Tiempo real en tachoPC:** 500–4500 fallas por minuto, con "UL busy" en alarma y la CPU al 85–90 %. Siguieron altas después de pasar a `performance`, como se esperaba de P-004 (persiste una vez que aparece). Pesan el log en `info` que requiere el volcado IQ (334 MB en ~1 h), el volcado mismo (6 GB en ~1 h, con tráfico de los dos teléfonos), Chrome y el panel. **Recrear el panel con la celda corriendo produjo un pico de fallas "late"**, probablemente por leer el log entero.
 - **La salida con código 139 de Open5GS ocurre siempre al apagar** (12 veces desde el 2026-11-03): ante el SIGTERM de `stop.sh`, un hilo no termina en 3 s y `ogs_thread_destroy` aborta (`ogs-thread.c:129-130`). No afecta el funcionamiento ni los datos, que están en MongoDB. No se tomó ninguna acción.
 
+## Tarde: Motorola y llamadas SIP
+- Segunda corrida (13:43 UTC, opción 1). **El Motorola Edge 30 se registró con la SIM 4 y PLMN 001/01.** Primero no pidió sesión PDU; con el APN `Metodos1` cargado recibió `10.45.0.4`. También pide la DNN `ims` cada ~16 s y el AMF la rechaza, como hacía el OnePlus.
+- **Central SIP:** el Motorola usa el interno 1001 y el Redmi el 1002 (al revés de lo que decían los comentarios de `pjsip.conf`, ya corregidos).
+  - El registro del Motorola fallaba con `401` aun pegando la contraseña: el Digest recalculado no coincidía con ninguna contraseña del archivo. Se cambiaron por contraseñas cortas sin caracteres ambiguos y, con la cuenta creada de nuevo, se registró.
+  - Un `REGISTER` armado a mano dentro de la red interna, con la contraseña del archivo, recibió `200 OK`: así se descartó un problema de la central.
+  - **Llamadas:** eco (600) desde el Redmi; el Motorola llamó al Redmi y el Redmi al Motorola. Las dos fueron atendidas, con RTP en los dos sentidos y G.711. Evidencia y explicación en `evidencia/07_voz_sip/`.
+  - Cuando Android suspende Linphone, el teléfono deja de contestar los `OPTIONS` y Asterisk responde `404` a las llamadas hacia él.
+
 ## Para retomar
 - ~~Borrar el volcado IQ~~: hecho al cierre, con la red apagada (7,9 GB; el disco quedó con 59 GB libres).
 - **Conviene limitar el volumen del volcado y del log para corridas largas:** es la principal carga nueva sobre una PC de 4 hilos.
-- **Postergado por el usuario:** probar el Motorola con PLMN 001/01 y la SIM 4 (con 722/999 no generó PRACH, D-008), y probar en la jaula las opciones 2, 3 y 4 del menú.
+- ~~Probar el Motorola con 001/01~~: hecho por la tarde.
+- **Postergado por el usuario:** probar en la jaula las opciones 2, 3 y 4 del menú.
+- **`stop.sh` no detiene el contenedor `sip`** (perfil `voz`): hay que detenerlo aparte o sumarlo al script.
+- Medir la calidad de la llamada (retardo y pérdida de RTP, por ejemplo con `rtp set debug` o una captura en el contenedor `sip`).
 - El panel muestra el nombre de la SIM (SIM 3, SIM 4) en lugar del modelo de teléfono (commit `6446d5c`).
-- Pendientes de antes: llamada SIP, cita E.212, tabla EDGE/LTE y la hipótesis de `zeroCorrelationZoneConfig`.
+- Pendientes de antes: cita E.212, tabla EDGE/LTE y la hipótesis de `zeroCorrelationZoneConfig`.
