@@ -69,6 +69,7 @@
   .note{font-size:11.5px;color:var(--dim);margin-top:8px}
   /* herramientas */
   .toolrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+  .out.console{max-height:220px;color:var(--tx)}
   .out{font-family:var(--mono);font-size:12px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:10px;white-space:pre-wrap;max-height:150px;overflow:auto;color:var(--muted)}
   /* consola */
   .tabs{display:flex;gap:4px;margin-bottom:10px}
@@ -186,7 +187,7 @@
       <input id="pingCount" title="Duración en segundos" type="number" value="5" min="1" max="600" style="width:56px">
       <button class="btn" id="pingBtn">Enviar ping</button>
     </div>
-    <div class="out" id="pingOut">Pingea desde el núcleo hacia la IP del celular (sale por ogstun).</div>
+    <div class="out console" id="pingOut">Pingea desde el núcleo hacia la IP del celular (sale por ogstun).</div>
     <div class="toolrow" style="margin-top:12px">
       <b style="width:52px">Tráfico</b>
       <select id="trafDir"><option value="normal">Cliente: enviar al UE</option><option value="reverse">Cliente: recibir del UE</option></select>
@@ -305,7 +306,7 @@ function render(d){
  text('#cellState',d.running?'WebSocket conectado':'sin conexión al gNB');text('#modeTxt',d.mode);text('#srcTag','datos reales');text('#cellTag',`${C.band??'–'} · ${C.dlFreq??'–'} MHz · ${C.plmn??'–'}`);text('#offHint',d.running?'':'Sin datos de radio; ver consolas');$('#statusDot').className='dot'+(d.running?' on':'');
  const ips=[...new Set(['10.45.0.1','8.8.8.8',...(K.ues||[]).map(u=>u.ip).filter(Boolean)])];$('#targets').innerHTML=ips.map(ip=>`<option value="${escapeHtml(ip)}"></option>`).join('');
  const P=Object.values(d.pings||{});
- text('#pingOut',P.length?P.slice(-4).map(p=>`${p.target} ${p.running?'(en curso)':'(terminado)'}: ${p.received??0}/${p.sent??0} respuestas, pérdida ${fmt(p.loss_percent)} %, RTT ${fmt(p.rtt_ms,2)} ms, jitter ${fmt(p.jitter_ms,2)} ms`).join('\n'):'Sin pruebas. Elegí IP y duración en segundos.');
+ renderPing(P);
  const I=d.iperf||{},mb=b=>typeof b==='number'?fmt(b/1e6,2)+' Mbit/s':'–';
  const ires=(I.results||[]).slice(-3).map(x=>{const r=x.result||{},e=r.end||{},t=new Date(x.time*1000).toLocaleTimeString('es-AR');
   if(r.error)return `${t} ${x.mode}: error ${String(r.error).slice(0,200)}`;
@@ -321,6 +322,17 @@ async function logsLoop(){await pollLog();setTimeout(logsLoop,2000);}
 $('#startBtn').onclick=()=>toast('Ejecutá en una terminal: ./start.sh <config.yml>');$('#stopBtn').onclick=()=>toast('Ejecutá en una terminal: ./stop.sh');
 $('#themeBtn').onclick=()=>{document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';};
 async function action(path,body,out){try{await api(path,'POST',body);toast('Solicitud aceptada');}catch(e){text(out,e.message);toast(e.message);}}
+// Ping como en la consola: una línea por paquete y el resumen al terminar (últimas 2 pruebas).
+function renderPing(P){
+ const box=$('#pingOut'),abajo=box.scrollHeight-box.scrollTop-box.clientHeight<24;
+ const hora=t=>new Date(t*1000).toLocaleTimeString('es-AR',{hour12:false});
+ const txt=P.length?P.slice(-2).map(p=>{
+  const L=(p.lines||[]).map(l=>`${hora(l.time)} ${p.target} seq=${l.seq} `+(l.rtt_ms==null?'sin respuesta':`rtt=${fmt(l.rtt_ms,1)} ms`));
+  L.unshift(`--- ping ${p.target} ${p.running?'(en curso)':''}---`);
+  if(!p.running)L.push(p.error?`--- error: ${p.error} ---`:`--- ${p.target}: ${p.received??0}/${p.sent??0} respuestas, pérdida ${fmt(p.loss_percent)} %, RTT medio ${fmt(p.rtt_avg_ms,1)} ms, jitter ${fmt(p.jitter_ms,1)} ms ---`);
+  return L.join('\n');}).join('\n\n'):'Sin pruebas. Elegí IP y duración en segundos.';
+ if(box.textContent!==txt){box.textContent=txt;if(abajo)box.scrollTop=box.scrollHeight;}
+}
 $('#pingBtn').onclick=()=>action('/api/ping',{target:$('#pingTarget').value,interval:1,duration:Number($('#pingCount').value)},'#pingOut');
 $('#trafBtn').onclick=()=>action('/api/iperf/client',{target:$('#pingTarget').value,duration:Number($('#trafSecs').value),reverse:$('#trafDir').value==='reverse',udp:$('#udp').checked,bandwidth_mbps:Number($('#bandwidth').value)},'#trafOut');
 $('#serverBtn').onclick=()=>action('/api/iperf/server',null,'#trafOut');

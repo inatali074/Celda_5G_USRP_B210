@@ -531,6 +531,7 @@ async def run_ping(key, request):
     last = None
     jitter_sum = 0
     pairs = 0
+    rtt_sum = 0
     try:
         proc = await asyncio.create_subprocess_exec('ping', '-n', '-O', '-i', str(request.interval), '-w', str(request.duration), '-W', '2', '--', request.target, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT, env={'LC_ALL': 'C', 'PATH': '/usr/bin:/bin'})
         processes[key] = proc
@@ -541,11 +542,18 @@ async def run_ping(key, request):
                 seq = re.search(r'icmp_seq[= ](\d+)', line)
                 if seq:
                     item['sent'] = max(item['sent'], int(seq[1]))
+                    # -O informa cada paquete sin respuesta: una línea por paquete, como en la consola.
+                    if line.startswith('no answer yet'):
+                        item['lines'].append({'time': time.time(), 'seq': int(seq[1]), 'rtt_ms': None})
                 match = re.search(r'time[=<]([\d.]+)', line)
                 if match and 'DUP!' not in line:
                     value = float(match[1])
                     item['received'] += 1
                     item['rtt_ms'] = value
+                    rtt_sum += value
+                    item['rtt_avg_ms'] = rtt_sum/item['received']
+                    if seq:
+                        item['lines'].append({'time': time.time(), 'seq': int(seq[1]), 'rtt_ms': value})
                     item['samples'].append({'time': time.time(), 'rtt_ms': value})
                     if last is not None:
                         jitter_sum += abs(value-last)
@@ -558,6 +566,11 @@ async def run_ping(key, request):
                 item['loss_percent'] = 100*(1-item['received']/item['sent']) if item['sent'] else None
             await proc.wait()
             item['exit_code'] = proc.returncode
+            # ping -w corta sin informar el último paquete perdido: completar cada seq enviado.
+            vistos = {l['seq'] for l in item['lines']}
+            for faltante in range(1, item['sent']+1):
+                if faltante not in vistos:
+                    item['lines'].append({'time': time.time(), 'seq': faltante, 'rtt_ms': None})
     except Exception as exc:
         item['error'] = str(exc)
     finally:
@@ -632,7 +645,7 @@ def snapshot():
     return {**state, 'uptime': time.monotonic()-START, 'events': list(events), 'history': list(history),
             'metrics_history': list(metrics_history),
             'core_ues': [{**u, 'seconds': now-u['since'] if u['connected'] and u['since'] else u.get('seconds')} for u in subscribers.values()],
-            'pings': {k: {**v, 'samples': list(v['samples'])} for k, v in pings.items()},
+            'pings': {k: {**v, 'samples': list(v['samples']), 'lines': list(v.get('lines', []))} for k, v in pings.items()},
             'iperf': {**iperf, 'results': list(iperf['results'])}}
 
 
@@ -652,7 +665,7 @@ async def ping_start(request: PingRequest):
             ping_tasks.pop(key, None)
     key = uuid.uuid4().hex[:12]
     pings[key] = {'target': request.target, 'running': True, 'sent': 0, 'received': 0,
-                  'samples': deque(maxlen=180), 'loss_percent': None}
+                  'samples': deque(maxlen=180), 'lines': deque(maxlen=200), 'loss_percent': None}
     ping_tasks[key] = launch(run_ping(key, request))
     return {'id': key}
 
@@ -811,7 +824,7 @@ async def panel_metrics():
                                    'ul': h['ogstun'].get('rx_bytes_per_s', 0)*8/1e6 if 'rx_bytes_per_s' in h['ogstun'] else None} for h in list(history)[-60:]],
             'rt': {'rates': rates, 'total': dict(rt_total), 'series': [p.get('total', 0)*60 for p in rt_window], 'alarm': state['alarm']},
             'events': list(events), 'running': state['gnb_connected'], 'mode': 'métricas reales' if fresh else 'sin datos de radio',
-            'pings': {k: {**v, 'samples': list(v['samples'])} for k, v in pings.items()},
+            'pings': {k: {**v, 'samples': list(v['samples']), 'lines': list(v.get('lines', []))} for k, v in pings.items()},
             'iperf': {**iperf, 'results': list(iperf['results'])}, 'errors': state['errors']}
 
 
