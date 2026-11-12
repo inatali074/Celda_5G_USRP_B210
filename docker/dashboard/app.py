@@ -48,7 +48,7 @@ events = deque(maxlen=150)
 history = deque(maxlen=180)
 subscribers = {}  # IMSI -> estado observado en el núcleo, sin unión especulativa con RNTI.
 pings = {}
-iperf = {'server': False, 'client': False, 'results': deque(maxlen=10)}
+iperf = {'server': False, 'client': False, 'results': deque(maxlen=10), 'lines': deque(maxlen=300)}
 processes = {}
 tasks = set()
 rt = Counter()
@@ -580,26 +580,33 @@ async def run_ping(key, request):
 
 
 async def run_iperf(server, args):
+    # Salida de texto de iperf3, línea por línea, como en una terminal (--forceflush: un reporte por segundo).
     key = 'server' if server else 'client'
+    nombre = 'servidor' if server else 'cliente'
     proc = None
+    log = iperf['lines']
     try:
         while True:
-            # --one-off permite un documento JSON completo por prueba y reinicia el servidor.
-            proc = await asyncio.create_subprocess_exec('iperf3', *args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            log.append({'time': time.time(), 'src': nombre, 'text': f"--- iperf3 {' '.join(args)} ---"})
+            proc = await asyncio.create_subprocess_exec('iperf3', *args, '--forceflush',
+                                                        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT)
             processes[key] = proc
-            out, err = await asyncio.wait_for(proc.communicate(), None if server else 75)
-            try:
-                result = json.loads(out)
-            except ValueError:
-                result = {'error': (out+err).decode(errors='replace')[:2000]}
-            iperf['results'].append({'time': time.time(), 'mode': key, 'result': result})
+            async with asyncio.timeout(None if server else 120):
+                async for raw in proc.stdout:
+                    line = raw.decode(errors='replace').rstrip()
+                    if line.strip():
+                        log.append({'time': time.time(), 'src': nombre, 'text': line[:300]})
+                await proc.wait()
             if not server or proc.returncode != 0:
+                if proc.returncode:
+                    log.append({'time': time.time(), 'src': nombre, 'text': f'--- terminó con código {proc.returncode} ---'})
                 break
             await asyncio.sleep(.1)
     except asyncio.CancelledError:
+        log.append({'time': time.time(), 'src': nombre, 'text': '--- detenido ---'})
         raise
     except Exception as exc:
-        iperf['results'].append({'time': time.time(), 'mode': key, 'result': {'error': str(exc)}})
+        log.append({'time': time.time(), 'src': nombre, 'text': f'--- error: {exc} ---'})
     finally:
         await terminate(proc)
         processes.pop(key, None)
@@ -646,7 +653,7 @@ def snapshot():
             'metrics_history': list(metrics_history),
             'core_ues': [{**u, 'seconds': now-u['since'] if u['connected'] and u['since'] else u.get('seconds')} for u in subscribers.values()],
             'pings': {k: {**v, 'samples': list(v['samples']), 'lines': list(v.get('lines', []))} for k, v in pings.items()},
-            'iperf': {**iperf, 'results': list(iperf['results'])}}
+            'iperf': {**iperf, 'results': list(iperf['results']), 'lines': list(iperf['lines'])}}
 
 
 @app.get('/api/state')
@@ -692,7 +699,7 @@ async def iperf_server():
     if iperf['server']:
         raise HTTPException(409, 'El servidor ya está activo.')
     iperf['server'] = True
-    iperf_tasks['server'] = launch(run_iperf(True, ['-s', '-B', '10.45.0.1', '-p', '5201', '-1', '-J']))
+    iperf_tasks['server'] = launch(run_iperf(True, ['-s', '-B', '10.45.0.1', '-p', '5201', '-1', '-f', 'm']))
     return {'ok': True}
 
 
@@ -701,7 +708,7 @@ async def iperf_client(request: IperfRequest):
     target = destination(request.target)
     if iperf['client']:
         raise HTTPException(409, 'Ya hay una prueba cliente en curso.')
-    args = ['-c', target, '-t', str(request.duration), '-i', '1', '-J', '--connect-timeout', '5000']
+    args = ['-c', target, '-t', str(request.duration), '-i', '1', '-f', 'm', '--connect-timeout', '5000']
     if request.reverse:
         args += ['-R']
     if request.udp:
@@ -825,7 +832,7 @@ async def panel_metrics():
             'rt': {'rates': rates, 'total': dict(rt_total), 'series': [p.get('total', 0)*60 for p in rt_window], 'alarm': state['alarm']},
             'events': list(events), 'running': state['gnb_connected'], 'mode': 'métricas reales' if fresh else 'sin datos de radio',
             'pings': {k: {**v, 'samples': list(v['samples']), 'lines': list(v.get('lines', []))} for k, v in pings.items()},
-            'iperf': {**iperf, 'results': list(iperf['results'])}, 'errors': state['errors']}
+            'iperf': {**iperf, 'results': list(iperf['results']), 'lines': list(iperf['lines'])}, 'errors': state['errors']}
 
 
 @app.get('/api/evm')

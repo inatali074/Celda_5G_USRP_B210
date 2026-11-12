@@ -69,7 +69,7 @@
   .note{font-size:11.5px;color:var(--dim);margin-top:8px}
   /* herramientas */
   .toolrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
-  .out.console{max-height:220px;color:var(--tx)}
+  .out.pingcon{color:var(--tx);white-space:pre}
   .out{font-family:var(--mono);font-size:12px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:10px;white-space:pre-wrap;max-height:150px;overflow:auto;color:var(--muted)}
   /* consola */
   .tabs{display:flex;gap:4px;margin-bottom:10px}
@@ -187,7 +187,7 @@
       <input id="pingCount" title="Duración en segundos" type="number" value="5" min="1" max="600" style="width:56px">
       <button class="btn" id="pingBtn">Enviar ping</button>
     </div>
-    <div class="out console" id="pingOut">Pingea desde el núcleo hacia la IP del celular (sale por ogstun).</div>
+    <div class="out pingcon" id="pingOut">Pingea desde el núcleo hacia la IP del celular (sale por ogstun).</div>
     <div class="toolrow" style="margin-top:12px">
       <b style="width:52px">Tráfico</b>
       <select id="trafDir"><option value="normal">Cliente: enviar al UE</option><option value="reverse">Cliente: recibir del UE</option></select>
@@ -196,7 +196,7 @@
       <input id="trafSecs" type="number" value="10" min="3" max="60" style="width:56px"><span class="note" style="margin:0">seg</span>
       <button class="btn" id="trafBtn">▶ Generar tráfico</button>
     </div>
-    <div class="out" id="trafOut">iperf3 real. El teléfono puede conectarse a 10.45.0.1:5201. El cliente usa el destino seleccionado para ping (debe tener servidor iperf3).</div>
+    <div class="out pingcon" id="trafOut">iperf3 real. El teléfono puede conectarse a 10.45.0.1:5201. El cliente usa el destino seleccionado para ping (debe tener servidor iperf3).</div>
   </section>
 
   <!-- NETWORK SLICE -->
@@ -307,12 +307,7 @@ function render(d){
  const ips=[...new Set(['10.45.0.1','8.8.8.8',...(K.ues||[]).map(u=>u.ip).filter(Boolean)])];$('#targets').innerHTML=ips.map(ip=>`<option value="${escapeHtml(ip)}"></option>`).join('');
  const P=Object.values(d.pings||{});
  renderPing(P);
- const I=d.iperf||{},mb=b=>typeof b==='number'?fmt(b/1e6,2)+' Mbit/s':'–';
- const ires=(I.results||[]).slice(-3).map(x=>{const r=x.result||{},e=r.end||{},t=new Date(x.time*1000).toLocaleTimeString('es-AR');
-  if(r.error)return `${t} ${x.mode}: error ${String(r.error).slice(0,200)}`;
-  if(e.sum&&e.sum.jitter_ms!==undefined)return `${t} ${x.mode} UDP: ${mb(e.sum.bits_per_second)}, jitter ${fmt(e.sum.jitter_ms,2)} ms, pérdida ${fmt(e.sum.lost_percent)} %`;
-  return `${t} ${x.mode} TCP: enviado ${mb(e.sum_sent?.bits_per_second)}, recibido ${mb(e.sum_received?.bits_per_second)}, retransmisiones ${e.sum_sent?.retransmits??'–'}`;});
- text('#trafOut',`Servidor 10.45.0.1:5201: ${I.server?'activo':'apagado'} · cliente: ${I.client?'en curso':'libre'}\n`+(ires.join('\n')||'Sin resultados todavía.'));text('#clock',new Date().toLocaleTimeString('es-AR'));
+ const I=d.iperf||{};renderConsola('#trafOut',`Servidor 10.45.0.1:5201: ${I.server?'activo':'apagado'} · cliente: ${I.client?'en curso':'libre'}\n`+((I.lines||[]).map(l=>`${new Date(l.time*1000).toLocaleTimeString('es-AR',{hour12:false})} ${l.src==='servidor'?'srv':'cli'} ${l.text}`).join('\n')||'Sin pruebas todavía.'));text('#clock',new Date().toLocaleTimeString('es-AR'));
 }
 let conSvc='gnb';
 async function pollLog(){try{const r=await api('/api/logs?svc='+conSvc+'&tail=160');const c=$('#console'),bottom=c.scrollTop+c.clientHeight>=c.scrollHeight-30;c.textContent=r.log||r.error||'sin datos';if(bottom)c.scrollTop=c.scrollHeight;}catch(e){text('#console',e.message);}}
@@ -333,6 +328,9 @@ function renderPing(P){
   return L.join('\n');}).join('\n\n'):'Sin pruebas. Elegí IP y duración en segundos.';
  if(box.textContent!==txt){box.textContent=txt;if(abajo)box.scrollTop=box.scrollHeight;}
 }
+// Caja tipo consola: reemplaza el texto y baja al final, salvo que el usuario haya subido para leer.
+function renderConsola(sel,txt){const box=$(sel),abajo=box.scrollHeight-box.scrollTop-box.clientHeight<24;
+ if(box.textContent!==txt){box.textContent=txt;if(abajo)box.scrollTop=box.scrollHeight;}}
 $('#pingBtn').onclick=()=>action('/api/ping',{target:$('#pingTarget').value,interval:1,duration:Number($('#pingCount').value)},'#pingOut');
 $('#trafBtn').onclick=()=>action('/api/iperf/client',{target:$('#pingTarget').value,duration:Number($('#trafSecs').value),reverse:$('#trafDir').value==='reverse',udp:$('#udp').checked,bandwidth_mbps:Number($('#bandwidth').value)},'#trafOut');
 $('#serverBtn').onclick=()=>action('/api/iperf/server',null,'#trafOut');
