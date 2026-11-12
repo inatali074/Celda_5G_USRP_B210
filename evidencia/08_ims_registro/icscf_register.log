@@ -1,0 +1,2 @@
+31(58) INFO: {1 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 register} ims_icscf [cxdx_uar.c:73]: create_uaa_return_code(): created AVP successfully : [uaa_return_code]
+ 9(36) INFO: ims_icscf [cxdx_uar.c:73]: create_uaa_return_code(): created AVP successfully : [uaa_return_code]

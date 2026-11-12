@@ -54,29 +54,28 @@ try {
         !/^[0-9a-fA-F]{32}$/.test(input.opc)) quit(2);
     const subscribers = db.getSiblingDB("open5gs").subscribers;
     const previous = subscribers.findOne({imsi: input.imsi},
-        {_id: 1, "slice._id": 1, "slice.session._id": 1});
-    const slice = previous?.slice?.[0];
+        {});
+    const slices = previous?.slice ?? [];
+    let slice = slices.find(s => s.sst === 1 && !s.sd);
+    if (!slice) { slice = {sst: NumberInt(1), default_indicator: true, session: [], _id: new ObjectId()}; slices.push(slice); }
+    const old = slice.session?.find(s => s.name === "Metodos1");
     const ambr = () => ({
         downlink: {value: NumberInt(1000000000), unit: NumberInt(0)},
         uplink: {value: NumberInt(1000000000), unit: NumberInt(0)}
     });
+    slice.session = slice.session ?? [];
+    const dataSession = {
+        ...(old ?? {}), name: "Metodos1", type: NumberInt(1),
+        qos: {index: NumberInt(9), arp: {priority_level: NumberInt(8),
+            pre_emption_capability: NumberInt(1), pre_emption_vulnerability: NumberInt(2)}},
+        ambr: ambr(), pcc_rule: old?.pcc_rule ?? [], _id: old?._id ?? new ObjectId()
+    };
+    slice.session = slice.session.filter(s => s.name !== "Metodos1");
+    slice.session.push(dataSession);
     const result = subscribers.updateOne({imsi: input.imsi}, {
         $set: {
             schema_version: NumberInt(1),
-            slice: [{
-                sst: NumberInt(1), default_indicator: true,
-                session: [{
-                    name: "Metodos1", type: NumberInt(1),
-                    qos: {index: NumberInt(9), arp: {
-                        priority_level: NumberInt(8),
-                        pre_emption_capability: NumberInt(1),
-                        pre_emption_vulnerability: NumberInt(2)
-                    }},
-                    ambr: ambr(), pcc_rule: [],
-                    _id: slice?.session?.[0]?._id ?? new ObjectId()
-                }],
-                _id: slice?._id ?? new ObjectId()
-            }],
+            slice: slices,
             "security.k": input.k, "security.op": null,
             "security.opc": input.opc, "security.amf": "8000",
             ambr: ambr(), access_restriction_data: 32,

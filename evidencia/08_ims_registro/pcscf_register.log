@@ -1,0 +1,122 @@
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:384]: mod_init(): Successfully bound to PCSCF Usrloc module
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:391]: mod_init(): Successfully bound to TM module
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:150]: ipsec_print_all_socket_lists(): Listening on:
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): udp: 10.53.2.21 [10.53.2.21]:5060
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): udp: 10.53.2.21 [10.53.2.21]:5100
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): udp: 10.53.2.21 [10.53.2.21]:5101
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): udp: 10.53.2.21 [10.53.2.21]:5102
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): udp: 10.53.2.21 [10.53.2.21]:5103
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): udp: 10.53.2.21 [10.53.2.21]:5104
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): udp: 10.53.2.21 [10.53.2.21]:5105
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): udp: 10.53.2.21 [10.53.2.21]:5106
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): udp: 10.53.2.21 [10.53.2.21]:5107
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): udp: 10.53.2.21 [10.53.2.21]:5108
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): udp: 10.53.2.21 [10.53.2.21]:5109
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): udp: 10.53.2.21 [10.53.2.21]:6100
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): udp: 10.53.2.21 [10.53.2.21]:6101
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): udp: 10.53.2.21 [10.53.2.21]:6102
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): udp: 10.53.2.21 [10.53.2.21]:6103
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): udp: 10.53.2.21 [10.53.2.21]:6104
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): udp: 10.53.2.21 [10.53.2.21]:6105
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): udp: 10.53.2.21 [10.53.2.21]:6106
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): udp: 10.53.2.21 [10.53.2.21]:6107
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): udp: 10.53.2.21 [10.53.2.21]:6108
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): udp: 10.53.2.21 [10.53.2.21]:6109
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): tcp: 10.53.2.21 [10.53.2.21]:5060
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): tcp: 10.53.2.21 [10.53.2.21]:5100
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): tcp: 10.53.2.21 [10.53.2.21]:5101
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): tcp: 10.53.2.21 [10.53.2.21]:5102
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): tcp: 10.53.2.21 [10.53.2.21]:5103
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): tcp: 10.53.2.21 [10.53.2.21]:5104
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): tcp: 10.53.2.21 [10.53.2.21]:5105
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): tcp: 10.53.2.21 [10.53.2.21]:5106
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): tcp: 10.53.2.21 [10.53.2.21]:5107
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): tcp: 10.53.2.21 [10.53.2.21]:5108
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): tcp: 10.53.2.21 [10.53.2.21]:5109
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): tcp: 10.53.2.21 [10.53.2.21]:6100
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): tcp: 10.53.2.21 [10.53.2.21]:6101
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): tcp: 10.53.2.21 [10.53.2.21]:6102
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): tcp: 10.53.2.21 [10.53.2.21]:6103
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): tcp: 10.53.2.21 [10.53.2.21]:6104
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): tcp: 10.53.2.21 [10.53.2.21]:6105
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): tcp: 10.53.2.21 [10.53.2.21]:6106
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): tcp: 10.53.2.21 [10.53.2.21]:6107
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): tcp: 10.53.2.21 [10.53.2.21]:6108
+ 0(1) INFO: ims_ipsec_pcscf [ims_ipsec_pcscf_mod.c:214]: ipsec_print_all_socket_lists(): tcp: 10.53.2.21 [10.53.2.21]:6109
+ 0(1) ERROR: ims_ipsec_pcscf [ipsec.c:654]: clean_sa(): Error sending delete SAs command via netlink socket: No data available
+ 0(1) WARNING: ims_ipsec_pcscf [cmd.c:1476]: ipsec_cleanall(): Error cleaning IPSec Security associations during startup.
+ 0(1) ERROR: ims_ipsec_pcscf [ipsec.c:703]: clean_policy(): Error sending delete policies command via netlink socket: No data available
+ 0(1) WARNING: ims_ipsec_pcscf [cmd.c:1480]: ipsec_cleanall(): Error cleaning IPSec Policies during startup.
+91(131) NOTICE: {1 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 DEFAULT_ROUTE} <script>: PCSCF: REGISTER sip:ims.mnc001.mcc001.3gppnetwork.org (sip:001010000000004@ims.mnc001.mcc001.3gppnetwork.org (10.46.0.2:43767) to sip:001010000000004@ims.mnc001.mcc001.3gppnetwork.org, 1062925503_4127237088@10.46.0.2)
+91(131) INFO: {1 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 DEFAULT_ROUTE} rr [rr_mod.c:576]: pv_get_route_uri_f(): No route header present.
+91(131) NOTICE: {1 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER} <script>: Destination URI: <null>
+91(131) INFO: {1 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER} rr [rr_mod.c:576]: pv_get_route_uri_f(): No route header present.
+91(131) NOTICE: {1 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER} <script>: Source IP and Port: (10.46.0.2:43767)
+91(131) NOTICE: {1 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER} <script>: Received IP and Port: (10.53.2.21:5060)
+91(131) NOTICE: {1 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER} <script>: Contact header: <sip:b1a8582d-c6e7-4b4f-aec1-476e810702f1@10.46.0.2:5060>;+g.3gpp.accesstype="cellular2";audio;+g.3gpp.nw-init-ussi;+g.3gpp.smsip;video;+g.3gpp.icsi-ref="urn%3Aurn-7%3A3gpp-service.ims.icsi.mmtel";+sip.instance="<<imei-redactado>>"
+91(131) INFO: {1 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER} ims_registrar_pcscf [sec_agree.c:335]: cscf_get_security_verify(): No security-verify parameters found
+91(131) ERROR: {1 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER} ims_ipsec_pcscf [ipsec.c:654]: clean_sa(): Error sending delete SAs command via netlink socket: No data available
+91(131) WARNING: {1 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER} ims_ipsec_pcscf [cmd.c:1476]: ipsec_cleanall(): Error cleaning IPSec Security associations during startup.
+91(131) ERROR: {1 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER} ims_ipsec_pcscf [ipsec.c:703]: clean_policy(): Error sending delete policies command via netlink socket: No data available
+91(131) WARNING: {1 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER} ims_ipsec_pcscf [cmd.c:1480]: ipsec_cleanall(): Error cleaning IPSec Policies during startup.
+91(131) INFO: {1 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 RELAY} <core> [core/tcp_main.c:3333]: tcpconn_1st_send(): quick connect for 0x7f76c7e9b280 sock 29
+92(132) ERROR: {2 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER_reply} ims_ipsec_pcscf [ipsec.c:930]: delete_unused_sa(): Error sending delete unused SAs command via netlink socket: No data available
+92(132) ERROR: {2 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER_reply} ims_ipsec_pcscf [ipsec.c:1146]: delete_unused_policy(): Error sending delete unused policies command via netlink socket: No data available
+92(132) NOTICE: {2 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER_reply} <script>: Security-Client=ipsec-3gpp; alg=hmac-md5-96; ealg=des-ede3-cbc; spi-c=3640259524; spi-s=1523953915; port-c=41329; port-s=41254,ipsec-3gpp; alg=hmac-md5-96; ealg=aes-cbc; spi-c=3640259524; spi-s=1523953915; port-c=41329; port-s=41254,ipsec-3gpp; alg=hmac-md5-96; ealg=null; spi-c=3640259524; spi-s=1523953915; port-c=41329; port-s=41254,ipsec-3gpp; alg=hmac-sha-1-96; ealg=des-ede3-cbc; spi-c=3640259524; spi-s=1523953915; port-c=41329; port-s=41254,ipsec-3gpp; alg=hmac-sha-1-96; ealg=aes-cbc; spi-c=3640259524; spi-s=1523953915; port-c=41329; port-s=41254,ipsec-3gpp; alg=hmac-sha-1-96; ealg=null; spi-c=3640259524; spi-s=1523953915; port-c=41329; port-s=41254
+92(132) NOTICE: {2 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER_reply} <script>: port-c=41329
+92(132) NOTICE: {2 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER_reply} <script>: port-s=41254
+92(132) NOTICE: {2 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER_reply} <script>: Expires=600000
+92(132) NOTICE: {2 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER_reply} <script>: Old header - WWW-Authenticate=Digest realm="ims.mnc001.mcc001.3gppnetwork.org", nonce="<redactado>", algorithm=AKAv1-MD5, ck="<redactado>", ik="<redactado>", qop="auth"
+92(132) NOTICE: {2 1062925503 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER_reply} <script>: New header - WWW-Authenticate=Digest realm="ims.mnc001.mcc001.3gppnetwork.org", nonce="<redactado>", algorithm=AKAv1-MD5, qop="auth"
+91(131) NOTICE: {1 1062925504 REGISTER 1062925503_4127237088@10.46.0.2 DEFAULT_ROUTE} <script>: PCSCF: REGISTER sip:ims.mnc001.mcc001.3gppnetwork.org (sip:001010000000004@ims.mnc001.mcc001.3gppnetwork.org (10.46.0.2:43767) to sip:001010000000004@ims.mnc001.mcc001.3gppnetwork.org, 1062925503_4127237088@10.46.0.2)
+91(131) INFO: {1 1062925504 REGISTER 1062925503_4127237088@10.46.0.2 DEFAULT_ROUTE} rr [rr_mod.c:576]: pv_get_route_uri_f(): No route header present.
+91(131) NOTICE: {1 1062925504 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER} <script>: Destination URI: <null>
+91(131) INFO: {1 1062925504 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER} rr [rr_mod.c:576]: pv_get_route_uri_f(): No route header present.
+91(131) NOTICE: {1 1062925504 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER} <script>: Source IP and Port: (10.46.0.2:43767)
+91(131) NOTICE: {1 1062925504 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER} <script>: Received IP and Port: (10.53.2.21:5060)
+91(131) NOTICE: {1 1062925504 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER} <script>: Contact header: <sip:b1a8582d-c6e7-4b4f-aec1-476e810702f1@10.46.0.2:5060>;+g.3gpp.accesstype="cellular2";+sip.instance="<<imei-redactado>>";audio;+g.3gpp.nw-init-ussi;+g.3gpp.smsip;video;+g.3gpp.icsi-ref="urn%3Aurn-7%3A3gpp-service.ims.icsi.mmtel"
+91(131) INFO: {1 1062925504 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER} ims_registrar_pcscf [sec_agree.c:335]: cscf_get_security_verify(): No security-verify parameters found
+92(132) ERROR: {2 1062925504 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER_reply} ims_ipsec_pcscf [ipsec.c:930]: delete_unused_sa(): Error sending delete unused SAs command via netlink socket: No data available
+92(132) NOTICE: {2 1062925504 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER_reply} <script>: Security-Client=ipsec-3gpp; alg=hmac-md5-96; ealg=des-ede3-cbc; spi-c=2457446892; spi-s=2321978432; port-c=41026; port-s=41254,ipsec-3gpp; alg=hmac-md5-96; ealg=aes-cbc; spi-c=2457446892; spi-s=2321978432; port-c=41026; port-s=41254,ipsec-3gpp; alg=hmac-md5-96; ealg=null; spi-c=2457446892; spi-s=2321978432; port-c=41026; port-s=41254,ipsec-3gpp; alg=hmac-sha-1-96; ealg=des-ede3-cbc; spi-c=2457446892; spi-s=2321978432; port-c=41026; port-s=41254,ipsec-3gpp; alg=hmac-sha-1-96; ealg=aes-cbc; spi-c=2457446892; spi-s=2321978432; port-c=41026; port-s=41254,ipsec-3gpp; alg=hmac-sha-1-96; ealg=null; spi-c=2457446892; spi-s=2321978432; port-c=41026; port-s=41254
+92(132) NOTICE: {2 1062925504 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER_reply} <script>: port-c=41026
+92(132) NOTICE: {2 1062925504 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER_reply} <script>: port-s=41254
+92(132) NOTICE: {2 1062925504 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER_reply} <script>: Expires=600000
+92(132) NOTICE: {2 1062925504 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER_reply} <script>: Old header - WWW-Authenticate=Digest realm="ims.mnc001.mcc001.3gppnetwork.org", nonce="<redactado>", algorithm=AKAv1-MD5, ck="<redactado>", ik="<redactado>", qop="auth"
+92(132) NOTICE: {2 1062925504 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER_reply} <script>: New header - WWW-Authenticate=Digest realm="ims.mnc001.mcc001.3gppnetwork.org", nonce="<redactado>", algorithm=AKAv1-MD5, qop="auth"
+93(133) NOTICE: {1 1062925505 REGISTER 1062925503_4127237088@10.46.0.2 DEFAULT_ROUTE} <script>: PCSCF: REGISTER sip:ims.mnc001.mcc001.3gppnetwork.org (sip:001010000000004@ims.mnc001.mcc001.3gppnetwork.org (10.46.0.2:41026) to sip:001010000000004@ims.mnc001.mcc001.3gppnetwork.org, 1062925503_4127237088@10.46.0.2)
+93(133) INFO: {1 1062925505 REGISTER 1062925503_4127237088@10.46.0.2 DEFAULT_ROUTE} rr [rr_mod.c:576]: pv_get_route_uri_f(): No route header present.
+93(133) NOTICE: {1 1062925505 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER} <script>: Destination URI: <null>
+93(133) INFO: {1 1062925505 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER} rr [rr_mod.c:576]: pv_get_route_uri_f(): No route header present.
+93(133) NOTICE: {1 1062925505 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER} <script>: Source IP and Port: (10.46.0.2:41026)
+93(133) NOTICE: {1 1062925505 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER} <script>: Received IP and Port: (10.53.2.21:6101)
+93(133) NOTICE: {1 1062925505 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER} <script>: Contact header: <sip:b1a8582d-c6e7-4b4f-aec1-476e810702f1@10.46.0.2:41254>;+g.3gpp.accesstype="cellular2";+sip.instance="<<imei-redactado>>";audio;+g.3gpp.nw-init-ussi;+g.3gpp.smsip;video;+g.3gpp.icsi-ref="urn%3Aurn-7%3A3gpp-service.ims.icsi.mmtel"
+92(132) INFO: {2 1062925505 REGISTER 1062925503_4127237088@10.46.0.2 REGISTER_reply} ims_ipsec_pcscf [cmd.c:1256]: ipsec_forward(): new destination URI: sip:10.46.0.2:41026;transport=tcp
+49(89) NOTICE: {1 1062927579 SUBSCRIBE 1062927579_4128209216@10.46.0.2 DEFAULT_ROUTE} <script>: PCSCF: SUBSCRIBE sip:1004@ims.mnc001.mcc001.3gppnetwork.org (sip:1004@ims.mnc001.mcc001.3gppnetwork.org (10.46.0.2:41026) to sip:1004@ims.mnc001.mcc001.3gppnetwork.org, 1062927579_4128209216@10.46.0.2)
+49(89) NOTICE: {1 1062927579 SUBSCRIBE 1062927579_4128209216@10.46.0.2 MO} <script>: Destination URI: sip:orig@scscf.ims.mnc001.mcc001.3gppnetwork.org:6060;lr
+49(89) NOTICE: {1 1062927579 SUBSCRIBE 1062927579_4128209216@10.46.0.2 MO} <script>: Source IP and Port: (10.46.0.2:41026)
+49(89) NOTICE: {1 1062927579 SUBSCRIBE 1062927579_4128209216@10.46.0.2 MO} <script>: Received IP and Port: (10.53.2.21:6101)
+49(89) NOTICE: {1 1062927579 SUBSCRIBE 1062927579_4128209216@10.46.0.2 MO} <script>: Next hop domain: (scscf.ims.mnc001.mcc001.3gppnetwork.org)
+49(89) NOTICE: {1 1062927579 SUBSCRIBE 1062927579_4128209216@10.46.0.2 MO} <script>: Contact header: <sip:b1a8582d-c6e7-4b4f-aec1-476e810702f1@10.46.0.2:41254>
+49(89) INFO: {1 1062927579 SUBSCRIBE 1062927579_4128209216@10.46.0.2 MO} siputils [chargingvector.c:488]: sip_handle_pcv(): Generated new PCV header P-Charging-Vector: icid-value=<hex-redactado>;icid-generated-at=
+50(90) NOTICE: {2 1062927579 SUBSCRIBE 1062927579_4128209216@10.46.0.2 MO_reply} <script>: Destination URI: <null>
+50(90) INFO: {2 1062927579 SUBSCRIBE 1062927579_4128209216@10.46.0.2 MO_reply} rr [rr_mod.c:576]: pv_get_route_uri_f(): No route header present.
+50(90) NOTICE: {2 1062927579 SUBSCRIBE 1062927579_4128209216@10.46.0.2 MO_reply} <script>: Source IP and Port: (10.53.2.20:6060)
+50(90) NOTICE: {2 1062927579 SUBSCRIBE 1062927579_4128209216@10.46.0.2 MO_reply} <script>: Received IP and Port: (10.53.2.21:6101)
+50(90) NOTICE: {2 1062927579 SUBSCRIBE 1062927579_4128209216@10.46.0.2 MO_reply} <script>: Next hop domain: (10.46.0.2)
+50(90) NOTICE: {2 1062927579 SUBSCRIBE 1062927579_4128209216@10.46.0.2 MO_reply} <script>: Contact header: <sip:1004@ims.mnc001.mcc001.3gppnetwork.org>
+50(90) INFO: {2 1062927579 SUBSCRIBE 1062927579_4128209216@10.46.0.2 MO_reply} ims_ipsec_pcscf [cmd.c:1256]: ipsec_forward(): new destination URI: sip:10.46.0.2:41254
+51(91) NOTICE: {1 1062927582 NOTIFY 1062927579_4128209216@10.46.0.2 DEFAULT_ROUTE} <script>: PCSCF: NOTIFY sip:b1a8582d-c6e7-4b4f-aec1-476e810702f1@10.46.0.2:41254 (sip:1004@ims.mnc001.mcc001.3gppnetwork.org (10.53.2.20:6060) to sip:1004@ims.mnc001.mcc001.3gppnetwork.org, 1062927579_4128209216@10.46.0.2)
+51(91) NOTICE: {1 1062927582 NOTIFY 1062927579_4128209216@10.46.0.2 WITHINDLG} <script>: In-dialog: To Tag: 1062927581
+51(91) NOTICE: {1 1062927582 NOTIFY 1062927579_4128209216@10.46.0.2 WITHINDLG} <script>: Route URI: sip:mo@10.53.2.21:6101;lr=on;ftag=1062927581
+51(91) NOTICE: {1 1062927582 NOTIFY 1062927579_4128209216@10.46.0.2 MO_indialog} <script>: Destination URI: <null>
+51(91) NOTICE: {1 1062927582 NOTIFY 1062927579_4128209216@10.46.0.2 MO_indialog} <script>: Source IP and Port: (10.53.2.20:6060)
+51(91) NOTICE: {1 1062927582 NOTIFY 1062927579_4128209216@10.46.0.2 MO_indialog} <script>: Received IP and Port: (10.53.2.21:6101)
+51(91) NOTICE: {1 1062927582 NOTIFY 1062927579_4128209216@10.46.0.2 MO_indialog} <script>: Next hop domain: (10.46.0.2)
+51(91) NOTICE: {1 1062927582 NOTIFY 1062927579_4128209216@10.46.0.2 MO_indialog} <script>: Contact header: <sip:scscf.ims.mnc001.mcc001.3gppnetwork.org:6060>
+51(91) INFO: {1 1062927582 NOTIFY 1062927579_4128209216@10.46.0.2 MO_indialog} ims_ipsec_pcscf [cmd.c:1256]: ipsec_forward(): new destination URI: sip:10.46.0.2:41254
+94(134) NOTICE: {2 1062927582 NOTIFY 1062927579_4128209216@10.46.0.2 MO_indialog_reply} <script>: Destination URI: <null>
+94(134) INFO: {2 1062927582 NOTIFY 1062927579_4128209216@10.46.0.2 MO_indialog_reply} rr [rr_mod.c:576]: pv_get_route_uri_f(): No route header present.
+94(134) NOTICE: {2 1062927582 NOTIFY 1062927579_4128209216@10.46.0.2 MO_indialog_reply} <script>: Source IP and Port: (10.46.0.2:41254)
+94(134) NOTICE: {2 1062927582 NOTIFY 1062927579_4128209216@10.46.0.2 MO_indialog_reply} <script>: Received IP and Port: (10.53.2.21:5101)
+94(134) NOTICE: {2 1062927582 NOTIFY 1062927579_4128209216@10.46.0.2 MO_indialog_reply} <script>: Next hop domain: (10.53.2.20)
+94(134) NOTICE: {2 1062927582 NOTIFY 1062927579_4128209216@10.46.0.2 MO_indialog_reply} <script>: Contact header: <null>

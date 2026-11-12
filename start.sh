@@ -126,6 +126,19 @@ if [[ $respuesta == [sS] ]]; then
     fi
 fi
 
+read -r -p '¿Levantar IMS (VoNR, etapa 1)? [s/N]: ' respuesta
+levantar_ims=no
+if [[ $respuesta == [sS] ]]; then
+ [[ -f config/secretos/ims_mysql.env ]] || { echo 'Falta config/secretos/ims_mysql.env; ver docker/ims/README.md'; exit 1; }
+ [[ $plmn == 00101 ]] || { echo 'IMS requiere PLMN 00101'; exit 1; }
+ levantar_ims=si
+ export OPEN5GS_CONFIG=open5gs-5gc-ims.yml
+ export IMS_SUBNET=10.46.0.0/24 OGSTUN2_ADDRESS=10.46.0.1/24
+else
+ unset IMS_SUBNET OGSTUN2_ADDRESS
+ [[ $OPEN5GS_CONFIG != open5gs-5gc-ims.yml ]] || { echo 'El YAML IMS requiere activar IMS.'; exit 1; }
+fi
+
 echo
 echo "--- Núcleo y MongoDB ---"
 docker compose up -d --no-build mongodb open5gs dashboard
@@ -148,6 +161,14 @@ if [[ $levantar_sip == si ]]; then
         && { echo "Central SIP en 10.53.1.10 (UDP 5060): internos 1001 y 1002, eco en el 600."
              echo "Si Linphone no se registra: Forzar detención y volver a abrirlo (los teléfonos reciben IP nueva al reiniciar la red)."; } \
         || echo "No se pudo levantar la central SIP; sigo sin ella."
+fi
+
+if [[ $levantar_ims == si ]]; then
+ echo '--- IMS (sin radio) ---'
+ docker compose --profile ims up -d --no-build --wait --wait-timeout 180 ims-dns ims-mysql ims-pyhss ims-icscf ims-scscf ims-pcscf || {
+  echo 'IMS no quedó listo; se aborta antes del gNB. Revisá docker compose --profile ims ps y los logs.'; exit 1;
+ }
+ scripts/verificar_ims.sh || { echo 'Falló verificación IMS; no se inicia el gNB.'; exit 1; }
 fi
 
 echo "--- gNB (empieza a transmitir) ---"

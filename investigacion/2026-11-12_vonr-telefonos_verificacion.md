@@ -17,7 +17,7 @@
 - **El código `*#*#726633#*#*`** para mostrar la opción de SA en Xiaomi lo recomienda el autor de docker_open5gs en el issue #650.
 
 ## Falso o mal descripto
-- **"El Redmi no pide la DNN `ims`":** falso. En los logs del núcleo del 2026-11-12, el …003 (Redmi) la pidió 15 veces y el …004 (Motorola) 351 veces. Los dos teléfonos ya intentan usar IMS.
+- ~~"El Redmi no pide la DNN `ims`": falso~~. **Corrección del mismo día:** Gemini tenía razón. Los "15 pedidos" del …003 eran 5, del 2026-11-05, repetidos en tres logs guardados (cada uno incluye la historia completa del contenedor). En la prueba de la etapa 1 el Redmi no pidió `ims` ni con VoLTE y VoNR activados: su configuración de operadora para 001/01 tiene `carrier_volte_available_bool = false` (ver `evidencia/08_ims_registro/README.md`). El Motorola sí la pide.
 - **"Para MediaTek, agregar `ims` al tipo de APN (`default,ims`)":** contradice el README de docker_open5gs, que dice no tocar la APN `ims` a mano. No hacerlo.
 - **Issue #650:** dice que los Xiaomi y Oppo con Kamailio funcionan en VoLTE (llamadas y SMS) y, en 5G, "igual que en 4G". Lo de "no envían `SUBSCRIBE`" ocurre con OpenSIPS, no con Kamailio. Gemini mezcló los dos casos. Tampoco menciona los códigos `*#*#86583#*#*` ni `*#*#8667#*#*`.
 - **"Discussion #456" de docker_open5gs:** no existe como issue; no se pudo verificar como discusión. Lo que se le atribuye (Redmi Note 12 resuelto con códigos de Xiaomi) queda sin fuente.

@@ -48,6 +48,9 @@ fi
 echo "--- Central SIP (si estaba levantada) ---"
 docker compose --profile voz stop sip
 
+echo "--- IMS (si estaba levantado) ---"
+docker compose --profile ims stop ims-pcscf ims-scscf ims-icscf ims-pyhss ims-dns ims-mysql
+
 echo "--- Núcleo y MongoDB ---"
 docker compose stop dashboard open5gs mongodb
 
@@ -62,5 +65,5 @@ if [[ $gobernador == performance ]]; then
 fi
 
 echo
-docker compose --profile radio --profile voz ps --format '{{.Service}} {{.Status}}'
+docker compose --profile radio --profile voz --profile ims ps --format '{{.Service}} {{.Status}}'
 echo "--- Red detenida. Los abonados quedan guardados en MongoDB. ---"

@@ -1,0 +1,8 @@
+11/12 15:14:31.859: [gmm] INFO: [suci-0-001-01-0-0-0-0000000004]    SUCI (../src/amf/gmm-handler.c:1076)
+11/12 15:14:32.776: [gmm] INFO: [imsi-001010000000004] Registration complete (../src/amf/gmm-sm.c:3165)
+11/12 15:14:34.935: [amf] INFO:     SUCI[suci-0-001-01-0-0-0-0000000004] (../src/amf/ngap-handler.c:1966)
+11/12 15:14:35.361: [gmm] INFO: UE SUPI[imsi-001010000000004] DNN[ims] LBO[0] S_NSSAI[SST:1 SD:0xffffff] smContextRef[NULL] smContextResourceURI[NULL] (../src/amf/gmm-handler.c:1430)
+11/12 15:14:35.407: [smf] INFO: UE SUPI[imsi-001010000000004] DNN[ims] IPv4[10.46.0.2] IPv6[] (../src/smf/npcf-handler.c:647)
+11/12 15:14:37.959: [gmm] INFO: UE SUPI[imsi-001010000000004] DNN[Metodos1] LBO[0] S_NSSAI[SST:1 SD:0xffffff] smContextRef[NULL] smContextResourceURI[NULL] (../src/amf/gmm-handler.c:1430)
+11/12 15:14:37.978: [smf] INFO: UE SUPI[imsi-001010000000004] DNN[Metodos1] IPv4[10.45.0.2] IPv6[] (../src/smf/npcf-handler.c:647)
+11/12 15:28:06.123: [amf] INFO:     SUCI[suci-0-001-01-0-0-0-0000000004] (../src/amf/ngap-handler.c:1966)

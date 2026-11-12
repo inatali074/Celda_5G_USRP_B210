@@ -1,0 +1,17 @@
+$TTL 60
+@ IN SOA dns.ims.mnc001.mcc001.3gppnetwork.org. hostmaster.ims.mnc001.mcc001.3gppnetwork.org. (1 60 60 3600 60)
+@ IN NS dns
+dns IN A 10.53.2.15
+pcscf IN A 10.53.2.21
+_sip._udp.pcscf IN SRV 0 0 5060 pcscf
+_sip._tcp.pcscf IN SRV 0 0 5060 pcscf
+icscf IN A 10.53.2.19
+_sip._udp.icscf IN SRV 0 0 4060 icscf
+_sip._tcp.icscf IN SRV 0 0 4060 icscf
+scscf IN A 10.53.2.20
+_sip._udp.scscf IN SRV 0 0 6060 scscf
+_sip._tcp.scscf IN SRV 0 0 6060 scscf
+hss IN A 10.53.2.18
+@ IN NAPTR 10 10 "s" "SIP+D2U" "" _sip._udp
+_sip._udp IN SRV 0 0 4060 icscf
+_sip._tcp IN SRV 0 0 4060 icscf

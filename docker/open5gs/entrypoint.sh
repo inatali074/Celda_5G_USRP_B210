@@ -8,4 +8,10 @@ ip addr add "$OGSTUN_ADDRESS" dev ogstun
 ip link set ogstun up
 # Solo se modifica el namespace de red del contenedor.
 iptables -t nat -A POSTROUTING -s "$UE_SUBNET" ! -o ogstun -j MASQUERADE
+if [ -n "${IMS_SUBNET:-}" ]; then
+ : "${OGSTUN2_ADDRESS:?Falta OGSTUN2_ADDRESS}"
+ ip tuntap add name ogstun2 mode tun
+ ip addr add "$OGSTUN2_ADDRESS" dev ogstun2
+ ip link set ogstun2 up
+fi
 exec "$@"

@@ -37,6 +37,9 @@ services:
     # Referencia: pool UE 10.45.0.0/16, ogstun 10.45.0.1/16; valores reales en config/.
     env_file:
       - ./config/open5gs/network.env
+    environment:
+      IMS_SUBNET: ${IMS_SUBNET:-}
+      OGSTUN2_ADDRESS: ${OGSTUN2_ADDRESS:-}
     command: ["5gc", "-c", "/config/${OPEN5GS_CONFIG:-open5gs-5gc-zmq.yml}"]
     # Espera al NRF (SBI :7777), como el compose oficial, para que el gNB no corra antes que el núcleo.
     healthcheck:
@@ -55,6 +58,9 @@ services:
     networks:
       ran:
         ipv4_address: 10.53.1.2
+
+      ims:
+        ipv4_address: 10.53.2.2
 
   dashboard:
     build: ./docker/dashboard
@@ -246,10 +252,263 @@ services:
       ran:
         ipv4_address: 10.53.1.10
 
+  ims-dns:
+    profiles:
+    - ims
+    build: ./docker/ims/dns
+    networks:
+      ims:
+        ipv4_address: 10.53.2.15
+    dns:
+    - 10.53.2.15
+    security_opt:
+    - no-new-privileges:true
+    cap_drop:
+    - ALL
+    cap_add:
+    - NET_BIND_SERVICE
+    volumes:
+    - ./config/ims/dns:/config:ro
+    healthcheck:
+      test:
+      - CMD
+      - dig
+      - '@127.0.0.1'
+      - ims.mnc001.mcc001.3gppnetwork.org
+      - SOA
+      - +short
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  ims-mysql:
+    profiles:
+    - ims
+    build: ./docker/ims/mysql
+    networks:
+      ims:
+        ipv4_address: 10.53.2.17
+    dns:
+    - 10.53.2.15
+    security_opt:
+    - no-new-privileges:true
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETUID, SETGID]
+    env_file:
+    - path: ./config/secretos/ims_mysql.env
+      required: false
+    volumes:
+    - ims-mysql-data:/var/lib/mysql
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - MYSQL_PWD="$$MYSQL_ROOT_PASSWORD" mysql -uroot -Nse "SELECT 1" >/dev/null
+      interval: 5s
+      timeout: 3s
+      retries: 60
+  ims-pyhss:
+    profiles:
+    - ims
+    build: ./docker/ims/pyhss
+    networks:
+      ims:
+        ipv4_address: 10.53.2.18
+    dns:
+    - 10.53.2.15
+    security_opt:
+    - no-new-privileges:true
+    env_file:
+    - path: ./config/secretos/ims_mysql.env
+      required: false
+    environment:
+      MCC: '001'
+      MNC: '01'
+      MYSQL_IP: 10.53.2.17
+      PYHSS_IP: 10.53.2.18
+      PYHSS_BIND_PORT: '3868'
+    depends_on:
+      ims-mysql:
+        condition: service_healthy
+      ims-dns:
+        condition: service_healthy
+    cap_drop:
+    - ALL
+    volumes:
+    - ./config/ims/pyhss:/mnt/pyhss:ro
+    - ./scripts/provisionar_ims.py:/opt/provisionar_ims.py:ro
+    healthcheck:
+      test:
+      - CMD
+      - python3
+      - -c
+      - import urllib.request; urllib.request.urlopen("http://127.0.0.1:8080/docs/")
+      interval: 5s
+      timeout: 3s
+      retries: 60
+  ims-icscf:
+    profiles:
+    - ims
+    build: ./docker/ims/ims_base
+    networks:
+      ims:
+        ipv4_address: 10.53.2.19
+    dns:
+    - 10.53.2.15
+    security_opt:
+    - no-new-privileges:true
+    env_file:
+    - path: ./config/secretos/ims_mysql.env
+      required: false
+    environment:
+      MCC: '001'
+      MNC: '01'
+      MYSQL_IP: 10.53.2.17
+      PYHSS_IP: 10.53.2.18
+      PYHSS_BIND_PORT: '3868'
+      COMPONENT_NAME: icscf
+      ICSCF_IP: 10.53.2.19
+      ICSCF_BIND_PORT: '3869'
+      PCSCF_PUB_IP: 10.53.2.21
+      SCP_IP: 10.53.2.2
+      PCRF_BIND_PORT: '3868'
+      RTPENGINE_IP: 127.0.0.1
+      IMS_N5: ${IMS_N5:-0}
+    depends_on:
+      ims-mysql:
+        condition: service_healthy
+      ims-dns:
+        condition: service_healthy
+      ims-pyhss:
+        condition: service_healthy
+    cap_drop:
+    - ALL
+    volumes:
+    - ./config/ims/icscf:/mnt/icscf:ro
+    - ./docker/ims:/opt/ims:ro
+    entrypoint:
+    - bash
+    - /opt/ims/icscf/init.sh
+    command: []
+    cap_add: []
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - ss -lun | grep -q ':4060 '
+      interval: 5s
+      timeout: 3s
+      retries: 60
+  ims-scscf:
+    profiles:
+    - ims
+    build: ./docker/ims/ims_base
+    networks:
+      ims:
+        ipv4_address: 10.53.2.20
+    dns:
+    - 10.53.2.15
+    security_opt:
+    - no-new-privileges:true
+    env_file:
+    - path: ./config/secretos/ims_mysql.env
+      required: false
+    environment:
+      MCC: '001'
+      MNC: '01'
+      MYSQL_IP: 10.53.2.17
+      PYHSS_IP: 10.53.2.18
+      PYHSS_BIND_PORT: '3868'
+      COMPONENT_NAME: scscf
+      SCSCF_IP: 10.53.2.20
+      SCSCF_BIND_PORT: '3870'
+      PCSCF_PUB_IP: 10.53.2.21
+      SCP_IP: 10.53.2.2
+      PCRF_BIND_PORT: '3868'
+      RTPENGINE_IP: 127.0.0.1
+      IMS_N5: ${IMS_N5:-0}
+    depends_on:
+      ims-mysql:
+        condition: service_healthy
+      ims-dns:
+        condition: service_healthy
+      ims-pyhss:
+        condition: service_healthy
+    cap_drop:
+    - ALL
+    volumes:
+    - ./config/ims/scscf:/mnt/scscf:ro
+    - ./docker/ims:/opt/ims:ro
+    entrypoint:
+    - bash
+    - /opt/ims/scscf/init.sh
+    command: []
+    cap_add: []
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - ss -lun | grep -q ':6060 '
+      interval: 5s
+      timeout: 3s
+      retries: 60
+  ims-pcscf:
+    profiles:
+    - ims
+    build: ./docker/ims/ims_base
+    networks:
+      ims:
+        ipv4_address: 10.53.2.21
+    dns:
+    - 10.53.2.15
+    security_opt:
+    - no-new-privileges:true
+    env_file:
+    - path: ./config/secretos/ims_mysql.env
+      required: false
+    environment:
+      MCC: '001'
+      MNC: '01'
+      MYSQL_IP: 10.53.2.17
+      PYHSS_IP: 10.53.2.18
+      PYHSS_BIND_PORT: '3868'
+      COMPONENT_NAME: pcscf
+      PCSCF_IP: 10.53.2.21
+      PCSCF_BIND_PORT: '3871'
+      PCSCF_PUB_IP: 10.53.2.21
+      SCP_IP: 10.53.2.2
+      PCRF_BIND_PORT: '3868'
+      RTPENGINE_IP: 127.0.0.1
+      IMS_N5: ${IMS_N5:-0}
+    depends_on:
+      ims-mysql:
+        condition: service_healthy
+      ims-dns:
+        condition: service_healthy
+      ims-pyhss:
+        condition: service_healthy
+    sysctls:
+      net.ipv4.ip_nonlocal_bind: "1"
+    cap_drop:
+    - ALL
+    volumes:
+    - ./config/ims/pcscf:/mnt/pcscf:ro
+    - ./docker/ims:/opt/ims:ro
+    entrypoint:
+    - bash
+    - /opt/ims/pcscf/init.sh
+    command: []
+    cap_add:
+    - NET_ADMIN
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - ss -lun | grep -q ':5060 '
+      interval: 5s
+      timeout: 3s
+      retries: 60
+
 volumes:
   mongodb-data:
   gnb-logs:
   core-logs:
+  ims-mysql-data:
 
 # N2 (SCTP/38412) y N3 (UDP/2152) circulan por esta red sin publicar puertos.
 # Las configuraciones deben usar estas IP; comprobar que la subred no se superponga con el host.
@@ -259,3 +518,8 @@ networks:
     ipam:
       config:
         - subnet: 10.53.1.0/24
+  ims:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.53.2.0/24
