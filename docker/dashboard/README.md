@@ -15,16 +15,11 @@ Levantar/Frenar muestran únicamente `./start.sh <config.yml>` y `./stop.sh`.
   y TA explícitamente en ns. No se deducen unidades de aliases ambiguos.
   Un mensaje sin `ue_list` conserva la tabla; lista vacía la vacía. Después de
   5 s sin muestras de UEs o al perder el WebSocket, deja de mostrar radio vieja.
-- **EVM de subida (PUSCH):** historial por RNTI de hasta 120 reportes del UE,
-  con tiempo de recepción, SINR en dB, EVM en % y MCS UL. Se elimina tras más
-  de 30 s sin reportes. EVM = 100×10^(−SINR/20); sólo se identifica como medido
-  si `/config/gnb.yml` declara `expert_phy.pusch_sinr_calc_method: evm`.
-  Con otro método o sin la opción, se muestra como estimación y la columna
-  EVM UL queda gris e itálica. Valores ausentes o inválidos: “—”.
-  Curvas con escala fija 0–30 % (valores mayores se dibujan en el borde;
-  la leyenda conserva el valor completo y la SINR en dB). Referencias TX 3GPP:
-  QPSK 17,5 %, 16QAM 12,5 %, 64QAM 8 % y 256QAM 3,5 %; son referencias de
-  transmisor, no una prueba de conformidad del enlace recibido.
+- **EVM de subida (PUSCH):** medido por decisión sobre las constelaciones IQ,
+  historial por RNTI de hasta 120 puntos con timestamp del log PUSCH (recepción
+  si falta). Se elimina tras 30 s sin resultados. No se deriva de SINR.
+  Referencias TX: QPSK 17,5 %, 16QAM 12,5 %, 64QAM 8 %, 256QAM 3,5 %;
+  no constituyen una prueba de conformidad del enlace recibido.
 - **Identidad y núcleo:** registro, IP y DNN observados en `/logs/core/core.log`.
   La asociación es **estimada**, uno a uno: creación `c-rnti=0x…: UE created`
   y registro posterior dentro de 5 s, priorizando la creación más cercana.
@@ -131,3 +126,73 @@ Los siguientes pasos los ejecutan las personas responsables:
 Pendiente: prueba integrada en contenedores, navegador y logs reales. Los parsers
 son conservadores: formatos no reconocidos quedan sin asociación/dato; ausencia de
 un evento de liberación puede dejar un registro o PDU observado antiguo.
+
+## EVM medido (IQ) y constelaciones
+
+`/evm` consulta `/api/evm` cada segundo, con canvas local, sin CDN ni datos
+simulados. El contenedor lee `/logs/gnb/gnb_rx_symbols.bin` y `gnb.log`,
+montados en solo lectura desde `gnb-logs`. No controla la radio.
+
+Las cuatro configuraciones del menú de `./start.sh` incluyen JSON,
+`remote_control`, log `info` y `phy_rx_symbols_*`. Se conserva el método SINR
+predeterminado `post_equalization`, usado por el scheduler. El volcado IQ
+crece sin límite mientras haya subida: al terminar, borrar
+`/tmp/gnb_rx_symbols.bin` del volumen `gnb-logs`.
+
+`iq.py` deduce N_sc de `RX_SYMBOL size=14*N_sc`, valida el rango PRB y coteja
+con la configuración: n78 tiene 612 subportadoras, SCS 30 kHz y 20 slots/trama;
+n3 tiene 1272, SCS 15 kHz y 10 slots/trama. Un puerto, sector 0, 14 símbolos,
+complex64 little endian, offset/size en muestras, orden símbolo/subportadora.
+El emparejador SFN.slot espera 2 s, limita la cola a 4096 y procesa como máximo
+un slot cada 250 ms. La CLI usa dos pasadas y el RX_SYMBOL más cercano.
+
+La forma de onda y PCI se leen de `/config/gnb.yml`:
+
+- CP-OFDM: DMRS Gold (TS 38.211 §5.2.1 y §6.4.1.1.1.1), longitud según grilla.
+  Si coherencia <0,5, prueba PCI/1/0, slot/slot+1 y delta 0/1.
+- DFT-s-OFDM: DMRS de baja PAPR (§6.4.1.1.1.2 y §5.2.2), M_ZC=6*n_PRB,
+  mayor primo estrictamente menor que M_ZC, Zadoff-Chu y extensión cíclica.
+  Sin hopping: u=PCI%30, v=0. Si coherencia <0,5 busca u=0..29 y delta 0/1.
+  Para M_ZC<36 declara `NoChannel`; no implementa las tablas cortas.
+  Aplica IDFT unitaria por símbolo después de ecualizar, antes de decidir QAM.
+
+Detecta DMRS por energía de peine par/impar (relación >5); respaldo {2,7,11}.
+Estima LS, suaviza módulo/fase sobre 15 pilotos, interpola y ecualiza ZF.
+Excluye símbolos DMRS completos. QPSK, 16/64/256QAM; pi/2-BPSK no está
+implementado y se rechaza explícitamente si aparece. Supone DMRS tipo 1,
+puerto único y dos grupos CDM sin datos. Hopping, multicapas, PTRS/UCI y errores
+de decisión pueden sesgar la medición. No equivale a EVM de conformidad TX.
+Pendiente contrastar con capturas reales, especialmente n3 DFT-s-OFDM.
+
+Contrato `/api/evm`:
+
+- `cell`: band, dlFreq, prb, plmn, file, waveform y duplex.
+- `method="iq_constellation"`, `measured=true`: identifica el método, incluso
+  sin datos. `series` contiene puntos por RNTI con tiempo Unix y evm_pct;
+  sinr_db y ul_mcs quedan null, no se inventan ni se asocian por cercanía.
+- `time`: reloj Unix del servidor; `fresh`: hay medición IQ de menos de 5 s.
+- `dl`: CQI, MCS, BLER y bitrate de métricas JSON, historial independiente.
+- `constellations`: source, ul y stats. `ul[mod]` incluye hasta 3000 puntos,
+  EVM/SNR por suma de energías de hasta 50 slots y dmrs_check (convención,
+  coherencia, u/v para DFT-s-OFDM). Solo muestra modulaciones actualizadas en
+  los últimos 5 s y con archivo en crecimiento. stats informa procesados,
+  descartados_por_tasa, sin_canal y ultimo_error.
+
+Ausencia/rotación/truncado del archivo limpia estado IQ. Errores se informan
+sin detener el servidor. Una reescritura con igual inode/tamaño/prefijo puede
+no detectarse. La coherencia DMRS valida operativamente el formato, sin
+reemplazar la comparación con el productor.
+
+Prueba local, sin Docker ni radio:
+
+```sh
+python3 -I docker/dashboard/iq.py --probar
+python3 -I docker/dashboard/iq.py --bin /ruta/gnb_rx_symbols.bin --log /ruta/gnb.log --scs 15 --dfts --nid 1
+```
+
+`--probar` cubre las cuatro combinaciones con 16QAM, canal de fase lineal y
+AWGN de 25 dB, EVM esperado 5,62 % ±0,5 puntos porcentuales, asignación al borde
+de la grilla, búsqueda alternativa u=17/delta=1 y límites de slots.
+OCUDU release_26_10 confirma `enable_transform_precoding`, `phy_rx_symbols_*`,
+SINR por defecto y DMRS u=n_rs_id%30/v=0. El scheduler llena pusch_dmrs_id con
+PCI; la búsqueda alternativa queda informada en dmrs_check y no modifica radio.

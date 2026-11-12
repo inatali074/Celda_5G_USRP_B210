@@ -1,13 +1,9 @@
 # SPDX-FileCopyrightText: Copyright (C) 2021-2026 Software Radio Systems Limited
 # SPDX-License-Identifier: BSD-3-Clause-Open-MPI
-# Variante csiper_ppm0 con pucch.max_consecutive_kos alto.
-# clock_ppm 0 (prueba 2026-11-03).
-
-
-# This example configuration outlines how to configure the OCUDU gNB to create a single TDD cell
-# transmitting in band 78, with 20 MHz bandwidth and 30 kHz sub-carrier-spacing. A USRP B200 is configured
-# as the RF frontend using split 8. Note in this example an external clock source is not used, so the sync
-# is not defined and the default is used.
+# Basada en el ejemplo oficial de OCUDU para B210 (TDD n78 o FDD n3, 20 MHz).
+# n78 TDD, subida CP-OFDM.
+# Métricas JSON y volcado IQ: crece sin límite mientras haya subida.
+# Al terminar, borrar /tmp/gnb_rx_symbols.bin del volumen gnb-logs.
 
 cu_cp:
   amf:
@@ -50,16 +46,17 @@ cell_cfg:
   pucch:
     max_consecutive_kos: 100000
   pusch:
-    # UL CP-OFDM; probar DFT-s-OFDM después cambiando solo este valor.
     enable_transform_precoding: false
 
-# The USRP clock may introduce some CFO: configure the channel estimator to compensate for it.
-# With good clocks (e.g., external ones), the default setup may provide better performance.
+# Compensar el CFO del reloj de la USRP en el estimador de canal.
 expert_phy:
   pusch_channel_estimator_td_strategy: average
   pusch_channel_estimator_cfo_compensation: true
 
 log:
+  phy_rx_symbols_filename: /tmp/gnb_rx_symbols.bin
+  phy_rx_symbols_port: 0
+  phy_rx_symbols_pusch_threshold_sinr_dB: 100
   filename: /tmp/gnb.log
   all_level: info
 

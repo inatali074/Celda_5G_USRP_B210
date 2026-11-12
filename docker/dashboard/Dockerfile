@@ -5,6 +5,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends iputils-ping ip
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY app.py index.html ./
+COPY app.py iq.py index.html evm.html ./
 EXPOSE 8080
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1"]

@@ -40,11 +40,11 @@ Trabajo práctico de **Comunicaciones Móviles (UNRC)**: implementación desde c
 
 ## Uso
 
-> ⚠️ **`start.sh` transmite por la B210 apenas se ejecuta.** Usarlo solo dentro de la jaula de Faraday o en un entorno de RF autorizado, y con la B210 conectada por USB 3.0.
+> ⚠️ **`./start.sh` muestra un menú; elegir 1–4 inicia la transmisión. Con archivo o `GNB_CONFIG`, arranca directamente.** Usarlo solo dentro de la jaula de Faraday o en un entorno de RF autorizado, y con la B210 conectada por USB 3.0.
 
 ```bash
 # Levantar la red con la configuración n78 TDD recomendada
-./start.sh gnb_b210_00101_csiper_ppm0_kos.yml
+./start.sh  # menú: n78 TDD / n3 FDD × CP-OFDM / DFT-s-OFDM
 
 # Detenerla
 ./stop.sh
@@ -63,3 +63,5 @@ pdflatex informe_final.tex && pdflatex informe_final.tex
 ## Datos sensibles
 
 Las claves de las SIM (K, OPc, ADM) **no están en el repositorio**: viven en `config/secretos/` y en archivos `*.local.*`, que `.gitignore` excluye. Para cargar los abonados en otra PC hay que copiarlos aparte. Los identificadores de teléfonos de terceros que aparecen en la evidencia están anonimizados.
+
+Las cuatro configuraciones `gnb_b210_00101_n{78,3}_{cpofdm,dfts}.yml` incluyen métricas JSON y volcado IQ para constelaciones y EVM medido. n3 DFT-s-OFDM nunca se probó en el aire. El IQ crece sin límite mientras haya subida: al terminar, borrar `/tmp/gnb_rx_symbols.bin` del volumen `gnb-logs`. `0` o EOF en el menú sale sin transmitir; no hay selección por defecto.

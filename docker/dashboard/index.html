@@ -98,6 +98,7 @@
   <div class="ctrls">
     <span class="tag" id="srcTag">—</span>
 
+    <a class="btn ghost" href="/evm" target="_blank" rel="noopener">Monitor EVM ↗</a>
     <button class="btn go" id="startBtn">▶ Levantar</button>
     <button class="btn stop" id="stopBtn">■ Frenar</button>
     <button class="btn ghost" id="themeBtn">◐</button>
@@ -180,14 +181,14 @@
 
   <section class="card span4">
     <h2>📈 Ancho de banda (N6, 60 s)</h2>
-    <svg class="chart" id="thrChart" viewBox="0 0 600 110" preserveAspectRatio="none"></svg>
+    <svg class="chart" id="thrChart" style="height:150px"></svg>
     <div class="legend"><span><i style="background:var(--accent)"></i>↓ DL</span><span><i style="background:var(--ok)"></i>↑ UL</span>
       <span style="margin-left:auto" class="mono" id="thrNow"></span></div>
   </section>
 
   <section class="card span8">
     <h2>📡 EVM de subida (PUSCH)</h2>
-    <svg class="chart" id="evmChart" viewBox="0 0 600 180" preserveAspectRatio="none"></svg>
+    <svg class="chart" id="evmChart" style="height:220px"></svg>
     <div class="legend" id="evmLegend"></div>
     <div class="note" id="evmNote"></div>
   </section>
@@ -200,7 +201,7 @@
 
   <section class="card span4">
     <h2>⏱️ Fallas de tiempo real (/min)</h2>
-    <svg class="chart" id="rtChart" viewBox="0 0 600 110" preserveAspectRatio="none"></svg>
+    <svg class="chart" id="rtChart" style="height:150px"></svg>
     <div class="note" id="rtCmp"></div>
   </section>
 
@@ -223,26 +224,55 @@ const kv=(id,rows)=>$(id).innerHTML=rows.map(([k,v])=>`<div class="k">${escapeHt
 const clamp=v=>Math.max(0,Math.min(100,Number(v)||0));
 async function api(path,method='GET',body){const r=await fetch(path,{method,headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});const data=await r.json();if(!r.ok)throw Error(typeof data.detail==='string'?data.detail:JSON.stringify(data.detail));return data;}
 function toast(msg){text('#toast',msg);$('#toast').className='show';setTimeout(()=>$('#toast').className='',6000);}
-function spark(values,color){let valid=values.filter(v=>typeof v==='number'&&Number.isFinite(v));if(!valid.length)return '<text x="10" y="55" fill="gray">sin datos</text>';const max=Math.max(1,...valid);let pen=false,d='';values.forEach((v,i)=>{if(typeof v!=='number'||!Number.isFinite(v)){pen=false;return;}d+=(pen?'L':'M')+(i*600/Math.max(1,values.length-1)).toFixed(1)+' '+(105-v/max*100).toFixed(1)+' ';pen=true;});return `<path d="${d}" fill="none" stroke="${color}" stroke-width="2"/>`;}
 const finite=v=>typeof v==='number'&&Number.isFinite(v);
-const evmValue=(v,unit)=>finite(v)?fmt(v,2)+' '+unit:'—';
-function renderEvm(E){
- const entries=Object.entries(E.series||{}).sort(([a],[b])=>a.localeCompare(b)),colors=['#4ea1ff','#3ddc84','#ffb454','#c084fc','#ff5d5d','#22d3ee'];
- const points=entries.flatMap(([,s])=>s.points||[]),times=points.map(p=>p.time).filter(finite),end=Math.max(0,...times),start=Math.min(end-1,...times);
- const y=v=>165-v/30*150;
- let svg=[0,30].map(v=>`<text x="2" y="${y(v)}" fill="gray" font-size="10">${v} %</text>`).join('');
- svg+=[[17.5,'QPSK'],[12.5,'16QAM'],[8,'64QAM'],[3.5,'256QAM']].map(([v,q])=>`<line x1="35" x2="590" y1="${y(v)}" y2="${y(v)}" stroke="gray" stroke-dasharray="4 4"/><text x="38" y="${y(v)-3}" fill="gray" font-size="10">${String(v).replace('.',',')} % ${q} · límite TX 3GPP (ref.)</text>`).join('');
- const legend=entries.map(([r,s],i)=>{
-  const color=colors[i%colors.length],ps=s.points||[];let pen=false,path='';
-  for(const p of ps){if(!finite(p.evm_pct)||!finite(p.time)){pen=false;continue;}const x=35+(p.time-start)/(end-start)*555,py=y(Math.max(0,Math.min(30,p.evm_pct)));path+=(pen?'L':'M')+x.toFixed(1)+' '+py.toFixed(1)+' ';pen=true;svg+=`<circle cx="${x.toFixed(1)}" cy="${py.toFixed(1)}" r="2" fill="${color}"/>`;}
-  svg+=`<path d="${path}" fill="none" stroke="${color}" stroke-width="2"/>`;
-  const last=ps.at(-1)||{};
-  return `<span><i style="background:${color}"></i>${escapeHtml(s.name||r)} · ${evmValue(last.evm_pct,'%')} · SINR ${evmValue(last.sinr_db,'dB')}</span>`;
- });
- if(!points.some(p=>finite(p.evm_pct)))svg+='<text x="250" y="25" fill="gray">sin datos</text>';
- $('#evmChart').innerHTML=svg;$('#evmLegend').innerHTML=legend.join('');
- text('#evmNote',E.measured?'EVM medido por el gNB (pusch_sinr_calc_method: evm), promedio por reporte de 1 s':'Estimado: la SINR viene del método '+(E.method||'por defecto')+', no del EVM. Para medirlo, arrancar con gnb_b210_00101_csiper_ppm0_kos_evm.yml');
+const lineCharts={};
+function niceMax(v){if(!(v>0))return 1;const e=10**Math.floor(Math.log10(v)),m=v/e;return (m<=1?1:m<=2?2:m<=5?5:10)*e;}
+function lineChart(sel,series,unit,secs){
+ lineCharts[sel]=[series,unit,secs];
+ const el=$(sel),W=Math.max(240,el.clientWidth||600),H=Math.max(110,el.clientHeight||150),L=44,R=8,T=8,B=20,pw=W-L-R,ph=H-T-B;
+ const txt=(X,Y,t,a='start',f='var(--muted)')=>`<text x="${X}" y="${Y}" text-anchor="${a}" style="fill:${f};font-size:11px;font-family:var(--mono)">${t}</text>`;
+ const all=series.flatMap(s=>s.values).filter(finite),top=niceMax(Math.max(0,...all)),n=Math.max(2,...series.map(s=>s.values.length));
+ const x=i=>L+i/(n-1)*pw,y=v=>T+(1-v/top)*ph;
+ let svg='';
+ for(const f of [0,.5,1]){const v=top*f;svg+=`<line x1="${L}" x2="${L+pw}" y1="${y(v)}" y2="${y(v)}" style="stroke:var(--line)"/>`+txt(L-6,y(v)+4,v>=10||v===0?Math.round(v):v.toFixed(1),'end');}
+ svg+=txt(L+pw-2,T+12,unit,'end','var(--dim)');
+ const marks=pw<300?[secs,0]:[secs,secs/2,0];
+ for(const s of marks){svg+=txt(L+(1-s/secs)*pw,H-4,s?'−'+s+' s':'ahora',s===secs?'start':s===0?'end':'middle','var(--dim)');}
+ for(const s of series){let d='',pen=false;const off=n-s.values.length;s.values.forEach((v,i)=>{if(!finite(v)){pen=false;return;}d+=(pen?'L':'M')+x(i+off).toFixed(1)+' '+y(v).toFixed(1)+' ';pen=true;});if(d)svg+=`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round"/>`;}
+ if(!all.length)svg+=txt(L+pw/2,T+ph/2+4,'sin datos','middle','var(--dim)');
+ el.setAttribute('viewBox',`0 0 ${W} ${H}`);el.innerHTML=svg;
 }
+window.addEventListener('resize',()=>{for(const [sel,args] of Object.entries(lineCharts))lineChart(sel,...args);});
+const evmValue=(v,unit)=>finite(v)?fmt(v,2)+' '+unit:'—';
+let lastEvm=null;
+function renderEvm(E){
+ lastEvm=E;
+ const el=$('#evmChart'),W=Math.max(320,el.clientWidth||600),H=Math.max(160,el.clientHeight||220);
+ const narrow=W<520,L=40,R=narrow?72:104,T=10,B=24,pw=W-L-R,ph=H-T-B,WIN=120,MAX=30;
+ const entries=Object.entries(E.series||{}).sort(([a],[b])=>a.localeCompare(b)),colors=['#4ea1ff','#3ddc84','#ffb454','#c084fc','#ff5d5d','#22d3ee'];
+ const times=entries.flatMap(([,s])=>(s.points||[]).map(p=>p.time)).filter(finite);
+ const end=finite(E.time)?E.time:(times.length?Math.max(...times):0),start=end-WIN;
+ const x=t=>L+(t-start)/WIN*pw,y=v=>T+(1-Math.max(0,Math.min(MAX,v))/MAX)*ph;
+ const txt=(X,Y,t,anchor='start',fill='var(--muted)')=>`<text x="${X}" y="${Y}" text-anchor="${anchor}" style="fill:${fill};font-size:11px;font-family:var(--mono)">${t}</text>`;
+ let svg='';
+ for(const v of [0,10,20,30]){svg+=`<line x1="${L}" x2="${L+pw}" y1="${y(v)}" y2="${y(v)}" style="stroke:var(--line)"/>`+txt(L-6,y(v)+4,v+' %','end');}
+ for(const s of (narrow?[120,60,0]:[120,90,60,30,0])){const X=x(end-s);svg+=txt(X,H-6,s?'−'+s+' s':'ahora',s===120?'start':s===0?'end':'middle','var(--dim)');}
+ for(const [v,q] of [[17.5,'QPSK'],[12.5,'16QAM'],[8,'64QAM'],[3.5,'256QAM']]){
+  svg+=`<line x1="${L}" x2="${L+pw}" y1="${y(v)}" y2="${y(v)}" style="stroke:var(--dim)" stroke-dasharray="3 5"/>`+txt(L+pw+6,y(v)+4,q+' '+String(v).replace('.',',')+(narrow?'':' %'),'start','var(--dim)');
+ }
+ const legend=entries.map(([r,s],i)=>{
+  const color=colors[i%colors.length],ps=(s.points||[]).filter(p=>finite(p.evm_pct)&&finite(p.time)&&p.time>=start);
+  let path='',prev=null;
+  for(const p of ps){const X=x(p.time).toFixed(1),Y=y(p.evm_pct).toFixed(1);path+=(prev!==null&&p.time-prev<=5?'L':'M')+X+' '+Y+' ';prev=p.time;svg+=`<circle cx="${X}" cy="${Y}" r="2" fill="${color}"/>`;}
+  if(path)svg+=`<path d="${path}" fill="none" stroke="${color}" stroke-width="2"/>`;
+  const last=ps.at(-1)||{},snr=finite(last.evm_pct)&&last.evm_pct>0?-20*Math.log10(last.evm_pct/100):null;
+  return `<span><i style="background:${color}"></i>${escapeHtml(s.name||r)} · EVM ${evmValue(last.evm_pct,'%')} · SNR ${evmValue(snr,'dB')}</span>`;
+ });
+ if(!times.some(t=>t>=start))svg+=txt(L+pw/2,T+ph/2+4,'sin datos','middle','var(--dim)');
+ el.setAttribute('viewBox',`0 0 ${W} ${H}`);el.innerHTML=svg;$('#evmLegend').innerHTML=legend.join('');
+ text('#evmNote',E.measured?'EVM medido de las constelaciones IQ del PUSCH (ventana de 120 s). Líneas punteadas: EVM máximo de transmisión del UE por modulación, TS 38.101-1 §6.4.2.1 (referencia).':'Sin volcado IQ: no hay EVM medido.');
+}
+window.addEventListener('resize',()=>{if(lastEvm)renderEvm(lastEvm);});
 let expanded=new Set();
 function render(d){
  const C=d.cell||{},S=d.sys||{},K=d.core||{},R=d.rt||{},U=d.ues||[],T=d.thr||[],rates=R.rates||{};
@@ -267,9 +297,9 @@ function render(d){
  kv('#sliceKv',[['SST',K.slice?.sst],['SD',K.slice?.sd],['DNN observada en log',K.slice?.dnn]]);
  $('#nfChips').innerHTML=['AMF','SMF','UPF','AUSF','UDM','UDR','PCF','NSSF','BSF','NRF','SCP'].map(n=>`<span class="chip down">${n}: ${escapeHtml(K.nf?.[n]||'desconocido')}</span>`).join('');
  kv('#coreKv',[['Registros observados',K.reg],['PDU observadas',K.pdu],['N6 TX bytes (DL)',K.ogstun?.tx_bytes],['N6 RX bytes (UL)',K.ogstun?.rx_bytes],['Estado NF','Actividad de log; no prueba de proceso vivo']]);
- $('#thrChart').innerHTML=spark(T.map(t=>t.dl),'#4ea1ff')+spark(T.map(t=>t.ul),'#3ddc84');text('#thrNow','↓ '+fmt(T.at(-1)?.dl)+' ↑ '+fmt(T.at(-1)?.ul)+' Mbit/s');
+ lineChart('#thrChart',[{values:T.map(t=>t.dl),color:'#4ea1ff'},{values:T.map(t=>t.ul),color:'#3ddc84'}],'Mbit/s',60);text('#thrNow','↓ '+fmt(T.at(-1)?.dl)+' ↑ '+fmt(T.at(-1)?.ul)+' Mbit/s');
  renderEvm(d.evm||{});
- $('#rtChart').innerHTML=spark(R.series||[],'#ff5d5d');text('#rtCmp','60 puntos: tasa instantánea por minuto, según segundo de lectura del log. Alarma: UL busy >10/s.');
+ lineChart('#rtChart',[{values:R.series||[],color:'#ff5d5d'}],'/min',60);text('#rtCmp','60 puntos: tasa instantánea por minuto, según segundo de lectura del log. Alarma: UL busy >10/s.');
  $('#log').innerHTML=(d.events||[]).slice().reverse().map(e=>`<div class="row"><span class="t">${escapeHtml(new Date(e.time*1000).toLocaleTimeString('es-AR'))}</span><span class="ev">${escapeHtml(e.source+': '+e.text)}</span></div>`).join('');
  text('#cellState',d.running?'WebSocket conectado':'sin conexión al gNB');text('#modeTxt',d.mode);text('#srcTag','datos reales');text('#cellTag',`${C.band??'–'} · ${C.dlFreq??'–'} MHz · ${C.plmn??'–'}`);text('#offHint',d.running?'':'Sin datos de radio; ver consolas');$('#statusDot').className='dot'+(d.running?' on':'');
  const ips=[...new Set(['10.45.0.1','8.8.8.8',...(K.ues||[]).map(u=>u.ip).filter(Boolean)])];$('#targets').innerHTML=ips.map(ip=>`<option value="${escapeHtml(ip)}"></option>`).join('');

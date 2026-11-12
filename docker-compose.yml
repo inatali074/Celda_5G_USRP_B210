@@ -70,13 +70,13 @@ services:
       - gnb-logs:/logs/gnb:ro
       - core-logs:/logs/core:ro
       - type: bind
-        source: ./config/gnb/${GNB_CONFIG:-gnb_b210_00101_csiper_ppm0_kos.yml}
+        source: ./config/gnb/${GNB_CONFIG:-gnb_b210_00101_n78_cpofdm.yml}
         target: /config/gnb.yml
         read_only: true
         bind:
           create_host_path: false
     environment:
-      GNB_CONFIG: ${GNB_CONFIG:-gnb_b210_00101_csiper_ppm0_kos.yml}
+      GNB_CONFIG: ${GNB_CONFIG:-gnb_b210_00101_n78_cpofdm.yml}
 
   gnb-radio:
     profiles: [radio]
@@ -105,7 +105,7 @@ services:
       - gnb-logs:/tmp
       - /dev/bus/usb:/dev/bus/usb
       - type: bind
-        source: ./config/gnb/${GNB_CONFIG:-gnb_b210_00101_csiper_ppm0_kos.yml}
+        source: ./config/gnb/${GNB_CONFIG:-gnb_b210_00101_n78_cpofdm.yml}
         target: /config/gnb.yml
         read_only: true
         bind:

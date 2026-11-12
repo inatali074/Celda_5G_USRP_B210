@@ -89,7 +89,7 @@ Estos comandos cambian la red del host: revisalos antes de correrlos.
 ## Arrancar y apagar
 ```bash
 cd ~/red5g-docker
-./start.sh    # TRANSMITE apenas se ejecuta, sin pedir confirmación
+./start.sh    # menú; 1–4 transmite, 0 o EOF sale sin transmitir
 ./stop.sh     # Corta la transmisión, guarda los logs y apaga todo
 ```
 
@@ -111,3 +111,5 @@ Esta prueba responde si los cortes venían de la PC. Usá la misma configuració
 
 ## Opcional: compilar para la CPU nueva
 Las imágenes usan `MARCH=x86-64-v3`, que funciona en cualquier CPU con AVX2. Si hace falta más rendimiento, se puede cambiar `MARCH` y `NUM_JOBS` en `docker-compose.yml` y reconstruir `gnb-radio`. Los Dockerfile rechazan `native` a propósito, así que usá un valor explícito, como `x86-64-v4` en una CPU con AVX-512.
+
+El menú ofrece n78 TDD (3525 MHz) y n3 FDD (1842,5 MHz), cada una con CP-OFDM o DFT-s-OFDM de subida. n3 DFT-s-OFDM nunca se probó en el aire. Todas incluyen métricas JSON y volcado IQ; el binario crece sin límite mientras haya subida. Al terminar, borrar `/tmp/gnb_rx_symbols.bin` del volumen `gnb-logs`. Para saltear el menú: `./start.sh gnb_b210_00101_n78_cpofdm.yml` o `GNB_CONFIG=gnb_b210_00101_n3_dfts.yml ./start.sh`.

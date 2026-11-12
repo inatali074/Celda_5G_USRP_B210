@@ -18,6 +18,8 @@ from pydantic import BaseModel, Field
 import websockets
 import yaml
 
+from iq import Monitor, NoChannel, process_slot
+
 # Único lugar para ajustar nombres. No se suponen unidades para aliases ambiguos.
 FIELDS = {
     'rnti': ('rnti', 'c_rnti', 'crnti'), 'imsi': ('imsi', 'supi'),
@@ -34,11 +36,13 @@ FIELDS = {
 }
 UE_NAMES = {'001010000000003': 'Redmi Note 14', '001010000000004': 'OnePlus 13', '001010000000001': 'srsUE (sim)'}
 evm_history = {}
+dl_history = {}
 START = time.monotonic()
 START_WALL = time.time()
 state = {'gnb_connected': False, 'metrics_at': None, 'raw': None, 'radio_ues': [],
          'config': None, 'errors': {}, 'ogstun': {}, 'host': {}, 'rt': {},
          'radio_at': None, 'alarm': False, 'busy_threshold': 10, 'gnb_since': None}
+iq_monitor = Monitor()
 metrics_history = deque(maxlen=30)
 events = deque(maxlen=150)
 history = deque(maxlen=180)
@@ -110,14 +114,6 @@ def number(value):
         return None
 
 
-def evm_pct(value):
-    sinr = number(value)
-    try:
-        return number(100*10**(-sinr/20)) if sinr is not None else None
-    except OverflowError:
-        return None
-
-
 def radio_rnti(value):
     try:
         return int(value, 16) if isinstance(value, str) and value.startswith('0x') else int(value)
@@ -126,9 +122,10 @@ def radio_rnti(value):
 
 
 def prune_evm(now):
-    for rnti in list(evm_history):
-        if now-evm_history[rnti][-1]['time'] > 30:
-            del evm_history[rnti]
+    for history_by_rnti in (evm_history, dl_history):
+        for rnti in list(history_by_rnti):
+            if now-history_by_rnti[rnti][-1]['time'] > 30:
+                del history_by_rnti[rnti]
 
 
 def extract(payload):
@@ -178,9 +175,10 @@ async def metrics():
                             for row in state['radio_ues']:
                                 rnti = radio_rnti(row.get('rnti'))
                                 if rnti is not None:
-                                    evm_history.setdefault(rnti, deque(maxlen=120)).append({
-                                        'time': state['radio_at'], 'sinr_db': number(row.get('sinr')),
-                                        'evm_pct': evm_pct(row.get('sinr')), 'ul_mcs': number(row.get('ul_mcs'))})
+                                    dl_history.setdefault(rnti, deque(maxlen=120)).append({
+                                        'time': state['radio_at'],
+                                        **{k: number(row.get(k)) for k in ('cqi', 'dl_mcs', 'dl_bler')},
+                                        'dl_mbps': number(row.get('dl_brate'))/1e6 if number(row.get('dl_brate')) is not None else None})
                         for cell in cells:
                             for item in cell.get('event_list', []):
                                 event('metrics', private_text(json.dumps(item, ensure_ascii=False)))
@@ -201,6 +199,14 @@ def log_line(source, line, replay=False):
     log_buffers[source].append(private_text(line[:16384]))
     stamp = log_time(line)
     if source == 'gnb':
+        if not replay:
+            try:
+                iq_monitor.scs = int(state.get('cell', {}).get('scs') or 30)
+                prb = state.get('cell', {}).get('prb')
+                iq_monitor.n_sc = int(prb)*12 if prb else None
+                iq_monitor.feed(line, stamp)
+            except Exception as exc:
+                iq_error(exc)
         created = re.search(r'c-rnti=(0x[0-9a-f]+): UE created', line, re.I)
         if created and stamp is not None:
             creations.append((stamp, int(created[1], 16)))
@@ -282,6 +288,7 @@ async def tail(source, path):
                     first = False
                     log_buffers[source].clear()
                     if source == 'gnb':
+                        iq_monitor.reset()
                         creations.clear()
                         associations.clear()
                         state['gnb_since'] = None
@@ -308,6 +315,48 @@ async def tail(source, path):
     finally:
         if handle:
             handle.close()
+
+
+def iq_error(exc):
+    message = str(exc)[:300]
+    state['errors']['iq'] = message
+    iq_monitor.stats['ultimo_error'] = message
+
+
+async def iq_worker():
+    while True:
+        try:
+            jobs = iq_monitor.poll()
+            for key, rx, allocations in jobs:
+                generation = iq_monitor.generation
+                try:
+                    cell = state.get('cell', {})
+                    results = await asyncio.to_thread(process_slot, iq_monitor.path, key, rx, allocations,
+                                                    cell.get('waveform') == 'DFT-s-OFDM',
+                                                    int(cell.get('pci') or 0), int(cell.get('scs') or 30))
+                    if generation == iq_monitor.generation:
+                        iq_monitor.accept(results)
+                        prune_evm(time.time())
+                        grouped = {}
+                        for result in results:
+                            rnti = radio_rnti(result.get('rnti'))
+                            if rnti is not None:
+                                grouped.setdefault(rnti, []).append(result)
+                        for rnti, group in grouped.items():
+                            ratio = sum(r['error'] for r in group)/sum(r['reference'] for r in group)
+                            evm_history.setdefault(rnti, deque(maxlen=120)).append({
+                                'time': max(r['time'] for r in group),
+                                'evm_pct': 100*math.sqrt(ratio), 'sinr_db': None, 'ul_mcs': None})
+                        state['errors'].pop('iq', None)
+                except NoChannel as exc:
+                    if generation == iq_monitor.generation:
+                        iq_monitor.stats['sin_canal'] += 1
+                        iq_error(exc)
+        except Exception as exc:
+            if isinstance(exc, FileNotFoundError):
+                iq_monitor.reset()
+            iq_error(exc)
+        await asyncio.sleep(.05)
 
 
 async def sample():
@@ -464,7 +513,7 @@ async def run_iperf(server, args):
 
 @asynccontextmanager
 async def lifespan(app):
-    background = [launch(metrics()), launch(tail('gnb', Path('/logs/gnb/gnb.log'))),
+    background = [launch(iq_worker()), launch(metrics()), launch(tail('gnb', Path('/logs/gnb/gnb.log'))),
                   launch(tail('core', Path('/logs/core/core.log'))), launch(sample())]
     yield
     for task in list(tasks):
@@ -489,6 +538,11 @@ async def local_ui(request: Request, call_next):
 @app.get('/')
 async def index():
     return FileResponse(Path(__file__).with_name('index.html'))
+
+
+@app.get('/evm')
+async def evm_page():
+    return FileResponse(Path(__file__).with_name('evm.html'))
 
 
 def snapshot():
@@ -597,7 +651,8 @@ def read_cell():
         bw, scs = number(c.get('channel_bandwidth_MHz')), number(c.get('common_scs'))
         band = c.get('band')
         return {'file': os.environ.get('GNB_CONFIG'), 'band': 'n'+str(band) if band else None,
-                'sinrMethod': (cfg.get('expert_phy') or {}).get('pusch_sinr_calc_method'),
+                'sinrMethod': (cfg.get('expert_phy') or {}).get('pusch_sinr_calc_method', 'post_equalization'),
+                'waveform': 'DFT-s-OFDM' if (c.get('pusch') or {}).get('enable_transform_precoding', False) else 'CP-OFDM',
                 'duplex': {78: 'TDD', 3: 'FDD'}.get(band), 'arfcn': n,
                 'dlFreq': round(.005*n if n < 600000 else 3000+.015*(n-600000), 3) if n is not None and 0 <= n < 2016667 else None,
                 'bw': bw, 'scs': scs, 'prb': {(10, 15): 52, (10, 30): 24, (20, 15): 106, (20, 30): 51}.get((bw, scs)),
@@ -642,7 +697,7 @@ async def panel_metrics():
     fresh = bool(state['gnb_connected'] and state['radio_at'] and now-state['radio_at'] <= 5)
     rows = []
     prune_evm(now)
-    method = state.get('cell', {}).get('sinrMethod')
+    method = 'iq_constellation'
     for row in state['radio_ues'] if fresh else []:
         rnti = radio_rnti(row.get('rnti'))
         if rnti is None:
@@ -667,7 +722,7 @@ async def panel_metrics():
                      'pdu': sum(bool(u.get('pdu')) for u in subscribers.values()) if subscribers else None,
                      'nf': {n: ('log reciente' if now-t < 10 else 'sin actividad reciente') for n, t in nf_seen.items()},
                      'ogstun': state['ogstun'], 'slice': {'sst': 1, 'sd': '0xffffff', 'dnn': 'Metodos1'}},
-            'evm': {'method': method, 'measured': method == 'evm',
+            'evm': {'method': method, 'measured': True,
                     'series': {f'0x{rnti:04x}': {'name': UE_NAMES.get(associations.get(rnti, (None,))[0]),
                                                'points': list(points)} for rnti, points in evm_history.items()}},
             'ues': rows, 'thr': [{'dl': h['ogstun'].get('tx_bytes_per_s', 0)*8/1e6 if 'tx_bytes_per_s' in h['ogstun'] else None,
@@ -676,3 +731,14 @@ async def panel_metrics():
             'events': list(events), 'running': state['gnb_connected'], 'mode': 'métricas reales' if fresh else 'sin datos de radio',
             'pings': {k: {**v, 'samples': list(v['samples'])} for k, v in pings.items()},
             'iperf': {**iperf, 'results': list(iperf['results'])}, 'errors': state['errors']}
+
+
+@app.get('/api/evm')
+async def monitor_evm():
+    panel = await panel_metrics()
+    return {'cell': {k: panel['cell'].get(k) for k in ('band', 'dlFreq', 'prb', 'plmn', 'file', 'waveform', 'duplex')},
+            **panel['evm'], 'time': time.time(), 'fresh': any(time.time()-p['time'] < 5 for series in evm_history.values() for p in series),
+            'dl': {f'0x{rnti:04x}': {'name': UE_NAMES.get(associations.get(rnti, (None,))[0]),
+                                    'points': list(points)} for rnti, points in dl_history.items()},
+            # Paso C: ul[modulación] = {points: [[i, q], ...], evm_pct, snr_db, n_slots}.
+            'constellations': iq_monitor.snapshot()}

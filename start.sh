@@ -1,9 +1,9 @@
 #!/bin/bash
 # Levanta la red 5G en Docker y abre la consola de control con 4 paneles.
-# TRANSMITE por la B210 apenas se ejecuta: no pide confirmación (pedido del usuario, 2026-11-03).
+# Sin configuración muestra un menú; elegir una opción o pasar un archivo TRANSMITE.
 #
 # Uso: ./start.sh [ARCHIVO_GNB.yml]. --confirmado se acepta por compatibilidad y no hace nada.
-# Acepta también config/gnb/ARCHIVO_GNB.yml. Prioridad: argumento > GNB_CONFIG > defecto.
+# Acepta también config/gnb/ARCHIVO_GNB.yml. Prioridad: argumento > GNB_CONFIG > menú.
 # Otra configuración del núcleo: OPEN5GS_CONFIG=open5gs-5gc.yml ./start.sh gnb_b210.yml
 set -eu
 
@@ -38,7 +38,7 @@ parsear_argumentos() {
         esac
     done
 
-    origen_config='por defecto'
+    origen_config='menú'
     if [[ -n $archivo_argumento ]]; then
         if [[ ${GNB_CONFIG+x} && $GNB_CONFIG != "$archivo_argumento" ]]; then
             echo "Aviso: GNB_CONFIG='$GNB_CONFIG'; se usa el argumento '$archivo_argumento'." >&2
@@ -48,9 +48,7 @@ parsear_argumentos() {
     elif [[ -n ${GNB_CONFIG:-} ]]; then
         origen_config=variable
     else
-        # Recomendada desde 2026-11-03: CSI periódico, clock_ppm 0 y max_consecutive_kos alto
-        # (D-012 y D-014 en PROYECTO.md).
-        GNB_CONFIG=gnb_b210_00101_csiper_ppm0_kos.yml
+        GNB_CONFIG=''
     fi
     export GNB_CONFIG
 }
@@ -63,9 +61,23 @@ fi
 export OPEN5GS_CONFIG="${OPEN5GS_CONFIG:-open5gs-5gc-zmq.yml}"
 SESION=red5g
 
+[[ -t 0 && -t 1 ]] || { echo "Correlo desde una terminal: abre una consola interactiva."; exit 1; }
+if [[ -z $GNB_CONFIG ]]; then
+    while true; do
+        printf '\n=== TDD (n78, 3525 MHz) ===\n1) CP-OFDM\n2) DFT-s-OFDM\n=== FDD (n3, 1842,5 MHz) ===\n3) CP-OFDM\n4) DFT-s-OFDM (nunca probada)\n0) Salir sin transmitir\n'
+        read -r -p 'Configuración: ' opcion || exit 0
+        case "$opcion" in
+            0) exit 0 ;;
+            1) GNB_CONFIG=gnb_b210_00101_n78_cpofdm.yml; break ;;
+            2) GNB_CONFIG=gnb_b210_00101_n78_dfts.yml; break ;;
+            3) GNB_CONFIG=gnb_b210_00101_n3_cpofdm.yml; break ;;
+            4) GNB_CONFIG=gnb_b210_00101_n3_dfts.yml; break ;;
+            *) echo 'Opción inválida; elegí 0 a 4.' ;;
+        esac
+    done
+fi
 [[ -f "config/gnb/$GNB_CONFIG" ]] || { echo "No existe config/gnb/$GNB_CONFIG"; exit 1; }
 [[ -f "config/open5gs/$OPEN5GS_CONFIG" ]] || { echo "No existe config/open5gs/$OPEN5GS_CONFIG"; exit 1; }
-[[ -t 0 && -t 1 ]] || { echo "Correlo desde una terminal: abre una consola interactiva."; exit 1; }
 
 if ! lsusb | grep -qE 'Ettus|2500:0020|2500:0021|04b4:00f3'; then
     echo "No veo la B210 por USB. Conectala y volvé a correr."
@@ -76,8 +88,17 @@ frecuencia=$(awk '/dl_arfcn:/{print $2}' "config/gnb/$GNB_CONFIG")
 ganancia=$(awk '/tx_gain:/{print $2}' "config/gnb/$GNB_CONFIG")
 plmn=$(awk -F"'" '/^  plmn:/{print $2}' "config/gnb/$GNB_CONFIG")
 clock_ppm=$(awk '/clock_ppm:/{print $2}' "config/gnb/$GNB_CONFIG")
+banda=$(awk '/^  band:/{print $2}' "config/gnb/$GNB_CONFIG")
+duplexado=desconocido
+case "$banda" in 78) duplexado=TDD ;; 3) duplexado=FDD ;; esac
+onda=CP-OFDM
+if awk '/^[[:space:]]*enable_transform_precoding:[[:space:]]*true/{found=1} END{exit !found}' "config/gnb/$GNB_CONFIG"; then
+    onda=DFT-s-OFDM
+fi
 echo "=== CONFIGURACIÓN gNB: config/gnb/$GNB_CONFIG (origen: $origen_config) ==="
 echo "  dl_arfcn $frecuencia, tx_gain $ganancia, PLMN $plmn, clock_ppm $clock_ppm"
+echo "  Banda n$banda, $duplexado, subida $onda"
+echo "  Aviso: el volcado IQ crece sin límite mientras haya subida; borrar /tmp/gnb_rx_symbols.bin del volumen gnb-logs al terminar."
 echo
 echo "ESTO TRANSMITE por la B210. La antena tiene que estar dentro de la jaula."
 # Sin confirmación: quien ejecuta el script ya decidió transmitir (pedido del usuario, 2026-11-03).

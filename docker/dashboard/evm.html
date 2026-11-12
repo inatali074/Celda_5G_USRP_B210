@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es-AR">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Monitor EVM — 5G NR SA</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#eee;color:#111;font:13px Arial,sans-serif}main{max-width:1600px;margin:16px auto;padding:22px;background:#fafafa}h1{text-align:center;font-size:17px;margin:0 0 10px}#subtitle{text-align:center;margin-bottom:20px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}section{min-width:0}h2{text-align:center;font-size:13px;margin:8px 0}canvas{display:block;width:100%;aspect-ratio:1;background:white}.small{font-size:11px;color:#666;min-height:32px;line-height:1.5}#note{line-height:1.6;margin-top:16px}@media(max-width:900px){.grid{grid-template-columns:1fr}main{padding:12px;margin:0}canvas{max-width:650px;margin:auto}}
+</style>
+<main>
+<h1>MONITOR DE CONSTELACIONES I/Q Y CALIDAD EVM EN TIEMPO REAL</h1>
+<div id="subtitle"></div>
+<div class="grid">
+<section><h2>[UL] Constelación QPSK</h2><canvas id="qpsk"></canvas></section>
+<section><h2>[UL] Constelación 16QAM</h2><canvas id="qam16"></canvas></section>
+<section><h2>[UL] Constelación 64QAM / 256QAM</h2><canvas id="qam64"></canvas></section>
+<section><h2>EVM medido (IQ) — evolución UL</h2><canvas id="evolution"></canvas></section>
+<section><h2>EVM medido (IQ) — distribución UL</h2><canvas id="histogram"></canvas></section>
+<section><h2>Telemetría DL (reporte del UE)</h2><canvas id="downlink"></canvas><div id="bler" class="small"></div><div class="small">sin receptor DL: no hay constelación de bajada</div></section>
+</div>
+<div id="note"></div>
+</main>
+<script>
+'use strict';
+const colors=['#1f77b4','#ff7f0e','#2ca02c','#9467bd','#8c564b'];
+const limits=[['QPSK',17.5,'#d62728'],['16QAM',12.5,'#ff7f0e'],['64QAM',8,'#2ca02c'],['256QAM',3.5,'#9467bd']];
+const valid=v=>typeof v==='number'&&Number.isFinite(v);
+const fmt=(v,n=1)=>valid(v)?v.toLocaleString('es-AR',{minimumFractionDigits:n,maximumFractionDigits:n}):'—';
+let data={cell:{},series:{},dl:{},constellations:{ul:{}}}, received=0;
+// Cada cuadro se compone completo antes de copiarlo al canvas visible.
+function axes(id,xmin,xmax,ymin,ymax,xticks,yticks,xlabel,ylabel){
+ const target=document.getElementById(id),size=500,off=document.createElement('canvas');off.width=off.height=size;
+ const c=off.getContext('2d'),l=65,r=445,t=55,b=435;
+ c.fillStyle='white';c.fillRect(0,0,size,size);c.font='12px Arial';
+ const x=v=>l+(v-xmin)/(xmax-xmin)*(r-l),y=v=>b-(v-ymin)/(ymax-ymin)*(b-t);
+ c.lineWidth=.7;c.textAlign='center';
+ for(const v of xticks){c.strokeStyle='#ddd';c.beginPath();c.moveTo(x(v),t);c.lineTo(x(v),b);c.stroke();c.strokeStyle='#111';c.beginPath();c.moveTo(x(v),b);c.lineTo(x(v),b+4);c.stroke();c.fillStyle='#222';c.fillText(fmt(v,Number.isInteger(v)?0:(Math.abs(v)<1?2:1)),x(v),b+19);}
+ c.textAlign='right';
+ for(const v of yticks){c.strokeStyle='#ddd';c.beginPath();c.moveTo(l,y(v));c.lineTo(r,y(v));c.stroke();c.strokeStyle='#111';c.beginPath();c.moveTo(l-4,y(v));c.lineTo(l,y(v));c.stroke();c.fillStyle='#222';c.fillText(fmt(v,Number.isInteger(v)?0:(Math.abs(v)<1?2:1)),l-9,y(v)+4);}
+ c.strokeStyle='#111';c.lineWidth=1;c.strokeRect(l,t,r-l,b-t);c.textAlign='center';c.fillText(xlabel,(l+r)/2,485);
+ c.save();c.translate(17,(t+b)/2);c.rotate(-Math.PI/2);c.fillText(ylabel,0,0);c.restore();
+ function clip(draw){c.save();c.beginPath();c.rect(l,t,r-l,b-t);c.clip();draw();c.restore();}
+ function line(points,color,dash=[]){clip(()=>{c.strokeStyle=color;c.lineWidth=1.5;c.setLineDash(dash);c.beginPath();let pen=false,last=null;for(const [a,v] of points){if(!valid(a)||!valid(v)){pen=false;continue;}if(last!==null&&a-last>5)pen=false;pen?c.lineTo(x(a),y(v)):c.moveTo(x(a),y(v));pen=true;last=a;}c.stroke();c.setLineDash([]);});}
+ function legend(rows,left=l+7,top=t+7,bg='#fffffff0'){if(!rows.length)return;c.font='11px Arial';const width=Math.max(...rows.map(row=>c.measureText(row[0]).width))+30;c.fillStyle=bg;c.fillRect(left,top,width,rows.length*16+10);c.strokeStyle='#999';c.strokeRect(left,top,width,rows.length*16+10);rows.forEach(([label,color],i)=>{c.fillStyle=color;c.fillRect(left+5,top+9+i*16,11,2);c.textAlign='left';c.fillText(label,left+21,top+13+i*16);});}
+ function empty(label='sin datos'){c.fillStyle='#888';c.textAlign='center';c.fillText(label,(l+r)/2,(t+b)/2);}
+ function finish(){const dpr=window.devicePixelRatio||1;target.width=target.height=size*dpr;target.getContext('2d').drawImage(off,0,0,target.width,target.height);}
+ return {c,x,y,l,r,t,b,line,legend,empty,clip,finish};
+}
+function constellation(id,mods,color){
+ const ul=data.constellations?.ul||{},mod=mods.filter(m=>ul[m]).sort((p,q)=>(ul[q].n_slots||0)-(ul[p].n_slots||0))[0]||mods[0],s=ul[mod],order={QPSK:4,'16QAM':16,'64QAM':64,'256QAM':256}[mod];
+ const a=axes(id,-1.4,1.4,-1.4,1.4,[-1,-.5,0,.5,1],[-1,-.5,0,.5,1],'I (In-Phase)','Q (Quadrature)'),{c,x,y}=a;
+ a.line([[-1.4,0],[1.4,0]],'#777');a.line([[0,-1.4],[0,1.4]],'#777');
+ a.clip(()=>{if(s){c.fillStyle=color;c.globalAlpha=.3;for(const p of s.points||[]){if(Array.isArray(p)&&valid(p[0])&&valid(p[1])){c.beginPath();c.arc(x(p[0]),y(p[1]),1.8,0,2*Math.PI);c.fill();}}c.globalAlpha=1;}
+ const side=Math.sqrt(order),norm=Math.sqrt(2*(order-1)/3);c.strokeStyle='#d62728';c.lineWidth=1;
+ for(let i=1-side;i<side;i+=2)for(let q=1-side;q<side;q+=2){const px=x(i/norm),py=y(q/norm);c.beginPath();c.moveTo(px-3,py);c.lineTo(px+3,py);c.moveTo(px,py-3);c.lineTo(px,py+3);c.stroke();}});
+ if(!s)a.empty('sin volcado IQ (paso C)');else{const limit=limits.find(row=>row[0]===mod)[1],known=valid(s.evm_pct),ok=known&&s.evm_pct<=limit;a.legend([[mod+' ('+(s.n_slots??'—')+' slots)',color],['EVM: '+fmt(s.evm_pct,2)+' % | SNR: '+fmt(s.snr_db)+' dB','#222'],['3GPP ≤ '+fmt(limit)+' % ['+(known?(ok?'CUMPLE':'NO CUMPLE'):'—')+']','#222']],a.l+7,a.t+7,known?(ok?'#e2f3df':'#fbe0e0'):'#eee');}a.finish();
+}
+function render(){
+ const now=Date.now()/1000,offset=received?(Date.now()-received)/1000:0,end=valid(data.time)?data.time+offset:now;
+ document.getElementById('subtitle').textContent='OCUDU 5G NR SA | Ettus B210 ('+fmt(data.cell?.prb,0)+' PRB / '+(data.cell?.band||'—')+' '+fmt(data.cell?.dlFreq)+' MHz) — '+new Date().toLocaleTimeString('es-AR',{hour12:false})+' ['+(data.fresh&&offset<=5?'EN LÍNEA':'SIN DATOS')+']';
+ constellation('qpsk',['QPSK'],'#1f77b4');constellation('qam16',['16QAM'],'#ff7f0e');constellation('qam64',['64QAM','256QAM'],'#2ca02c');
+ const series=Object.entries(data.series||{}),dl=Object.entries(data.dl||{}),keys=[...new Set([...series,...dl].map(([k])=>k))].sort(),color=k=>colors[keys.indexOf(k)%colors.length];
+ const recent=s=>(s.points||[]).filter(p=>valid(p.time)&&p.time>=end-120&&p.time<=end);
+ let a=axes('evolution',-120,0,0,22,[-120,-90,-60,-30,0],[0,5,10,15,20,22],'Tiempo relativo (s)','EVM rms (%)');
+ const legend=[];limits.forEach(([mod,v,c])=>{a.line([[-120,v],[0,v]],c,[5,4]);legend.push(['límite '+mod+' ('+fmt(v)+' %)',c]);});
+ let values=[];for(const [k,s] of series){const points=recent(s);a.line(points.map(p=>[p.time-end,p.evm_pct]),color(k));legend.push([s.name||k,color(k)]);values.push(...points.map(p=>p.evm_pct).filter(v=>valid(v)&&v>=0));}
+ if(!values.length)a.empty();a.legend(legend,207,76);a.finish();
+ values.sort((x,y)=>x-y);const max=Math.max(22,Math.ceil((values.at(-1)||0)*2)/2+.5),bins=new Map();for(const v of values){const bin=Math.floor(v*2)/2;bins.set(bin,(bins.get(bin)||0)+1);}
+ const density=Math.max(.1,...[...bins.values()].map(n=>n/(values.length*.5)))*1.2;
+ a=axes('histogram',0,max,0,density,[0,max/4,max/2,3*max/4,max],[0,density/4,density/2,3*density/4,density],'EVM rms (%)','Densidad (%⁻¹)');
+ a.clip(()=>{for(const [bin,n] of bins){const top=a.y(n/(values.length*.5));a.c.fillStyle='#4682b4';a.c.strokeStyle='#263d50';a.c.fillRect(a.x(bin),top,a.x(bin+.5)-a.x(bin),a.b-top);a.c.strokeRect(a.x(bin),top,a.x(bin+.5)-a.x(bin),a.b-top);}});
+ if(values.length){const mean=values.reduce((x,y)=>x+y,0)/values.length,index=(values.length-1)*.95,low=Math.floor(index),p95=values[low]+(values[Math.ceil(index)]-values[low])*(index-low);a.line([[mean,0],[mean,density]],'#d62728');a.line([[p95,0],[p95,density]],'#d62728',[2,3]);a.legend([['Media: '+fmt(mean)+' %','#d62728'],['P95: '+fmt(p95)+' %','#d62728']]);}else a.empty();a.finish();
+ a=axes('downlink',-120,0,0,28,[-120,-90,-60,-30,0],[0,7,14,21,28],'Tiempo relativo (s)','MCS DL');
+ const dlLegend=[],bler=[];let hasCqi=false,hasMcs=false;
+ for(const [k,s] of dl){const points=recent(s),name=s.name||k;hasMcs ||= points.some(p=>valid(p.dl_mcs));a.line(points.map(p=>[p.time-end,p.dl_mcs]),color(k));dlLegend.push([name+' MCS',color(k)]);if(points.some(p=>valid(p.cqi))){hasCqi=true;a.line(points.map(p=>[p.time-end,valid(p.cqi)?p.cqi*28/15:null]),color(k),[3,3]);dlLegend.push([name+' CQI ···',color(k)]);}const last=points.at(-1);bler.push(name+': '+fmt(last&&end-last.time<=5?last.dl_bler:null)+' %');}
+ if(hasCqi){a.c.fillStyle='#222';a.c.textAlign='left';for(const v of [0,5,10,15])a.c.fillText(String(v),a.r+5,a.y(v*28/15)+4);a.c.save();a.c.translate(485,245);a.c.rotate(-Math.PI/2);a.c.textAlign='center';a.c.fillText('CQI',0,0);a.c.restore();}else{a.c.fillStyle='#888';a.c.textAlign='center';a.c.fillText('el UE no reporta CQI',255,460);}
+ if(!hasMcs&&!hasCqi)a.empty();a.legend(dlLegend);a.finish();document.getElementById('bler').textContent='BLER DL actual — '+(bler.join(' | ')||'—');
+ document.getElementById('note').textContent='EVM medido (IQ), por decisión sobre constelaciones recibidas. '+(data.cell?.waveform||'—')+' · '+(data.cell?.duplex||'—')+'. Las referencias de EVM son de transmisor (TS 38.101-1/38.104), no una prueba de conformidad.';
+}
+async function update(){try{const response=await fetch('/api/evm',{cache:'no-store',signal:AbortSignal.timeout(4000)});if(!response.ok)throw Error(response.status);data=await response.json();received=Date.now();}catch{data.fresh=false;}render();setTimeout(update,1000);}
+render();update();
+</script>
+</html>
