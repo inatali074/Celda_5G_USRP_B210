@@ -50,6 +50,9 @@ subscribers = {}  # IMSI -> estado observado en el núcleo, sin unión especulat
 pings = {}
 iperf = {'server': False, 'client': False, 'results': deque(maxlen=10), 'lines': deque(maxlen=300)}
 processes = {}
+# Asignaciones del scheduler (líneas "Slot decisions" del gNB): (stamp, slot absoluto, dir, rnti, rb0, rb1, tbs, retx).
+sched = deque(maxlen=8000)
+SCHED_ENTRY = re.compile(r'(DL|UL|RAR): ([^,]*)')
 tasks = set()
 rt = Counter()
 rt_total = Counter()
@@ -208,6 +211,79 @@ async def metrics():
         await asyncio.sleep(3)
 
 
+def slots_per_frame():
+    return 10*(int(state.get('cell', {}).get('scs') or 30)//15)
+
+
+def parse_sched(line, stamp):
+    # El número [SFN.slot] es el slot del PDSCH o del PUSCH (en UL ya incluye k2).
+    slot = re.search(r'\[\s*(\d+)\.(\d+)\] Slot decisions', line)
+    if not slot:
+        return
+    absolute = int(slot[1])*slots_per_frame()+int(slot[2])
+    for kind, body in SCHED_ENTRY.findall(line):
+        rnti = re.search(r'rnti=(0x[0-9a-f]+)', body)
+        rb = re.search(r'rb=\[(\d+)\.\.(\d+)\)', body)
+        if not rnti or not rb:
+            continue
+        rnti, rb0, rb1 = rnti[1], rb[1], rb[2]
+        tbs = (re.search(r'tbs=(\d+)', body) or [None, ''])[1]
+        newtx = (re.search(r'newtx=(true|false)', body) or [None, 'true'])[1]
+        sched.append((stamp, absolute, 'DL' if kind == 'RAR' else kind, 'RAR' if kind == 'RAR' else rnti.lower(),
+                      int(rb0), int(rb1), int(tbs) if tbs else 0, newtx == 'false'))
+
+
+def tdd_slots(direction):
+    # Patrón TDD por defecto de OCUDU en n78 (visto en el log): slots 0-6 de bajada (el 6 es especial) y 7-9 de subida.
+    if state.get('cell', {}).get('duplex') != 'TDD':
+        return None
+    return range(0, 7) if direction == 'DL' else range(7, 10)
+
+
+def sched_snapshot(window_slots=400):
+    if not sched:
+        return {'fresh': False}
+    spf = slots_per_frame()
+    modulo = 1024*spf
+    newest = sched[-1][0]
+    fresh = time.time()-newest < 5
+    # Referencia: el último slot visto más un margen, porque el PUSCH se programa k2 slots adelante.
+    # (el máximo no sirve: el SFN vuelve a 0 cada 10,24 s).
+    reference = (sched[-1][1]+12) % modulo
+    grid, stats = [], {}
+    prb = int(state.get('cell', {}).get('prb') or 51)
+    per_second = 1000*spf//10
+    for stamp, absolute, direction, rnti, rb0, rb1, tbs, retx in sched:
+        rel = (reference-absolute) % modulo
+        if rel < window_slots:
+            grid.append([window_slots-1-rel, direction, rnti, rb0, rb1, retx])
+        if newest-stamp <= 1 and rnti != 'RAR':
+            s = stats.setdefault(rnti, {d: {'slots': 0, 'prb': 0, 'prb_max': 0, 'bits': 0, 'retx': 0} for d in ('DL', 'UL')})[direction]
+            s['slots'] += 1
+            s['prb'] += rb1-rb0
+            s['prb_max'] = max(s['prb_max'], rb1-rb0)
+            if retx:
+                s['retx'] += 1
+            else:
+                s['bits'] += tbs*8
+    available = {}
+    for direction in ('DL', 'UL'):
+        tdd = tdd_slots(direction)
+        available[direction] = per_second*len(tdd)//10 if tdd else per_second
+    out = {}
+    for rnti, dirs in stats.items():
+        link = associations.get(int(rnti, 16))
+        out[rnti] = {'name': UE_NAMES.get(link[0]) if link else None}
+        for direction, s in dirs.items():
+            out[rnti][direction] = {**s, 'prb_avg': s['prb']/s['slots'] if s['slots'] else 0,
+                                    'grid_pct': 100*s['prb']/(prb*available[direction]),
+                                    'kbps': s['bits']/1000}
+    pattern = [('DL' if i in tdd_slots('DL') else 'UL') for i in range(10)] if tdd_slots('DL') else None
+    first_slot = (reference-window_slots+1) % modulo
+    return {'fresh': fresh, 'grid': grid, 'window': window_slots, 'first_slot': first_slot, 'slots_per_frame': spf,
+            'pattern': pattern, 'prb': prb, 'ues': out, 'available': available}
+
+
 def log_line(source, line, replay=False):
     line = ANSI.sub('', line)
     log_buffers[source].append(private_text(line[:16384]))
@@ -236,6 +312,8 @@ def log_line(source, line, replay=False):
             rt['total'] += 1
             rt_total[kind] += 1
             rt_total['total'] += 1
+        if 'Slot decisions' in line and stamp is not None:
+            parse_sched(line, stamp)
         if re.search(r'UE created|RLF detected|rrcRelease|PRACH.*detect|detect.*PRACH', line, re.I):
             event(source, line)
         if 'gNB started' in line:
@@ -749,6 +827,7 @@ def read_cell():
     try:
         cfg = yaml.safe_load(Path('/config/gnb.yml').read_text()) or {}
         c, rf = cfg.get('cell_cfg', {}), cfg.get('ru_sdr', {})
+        srate = number(rf.get('srate'))
         n = number(c.get('dl_arfcn'))
         bw, scs = number(c.get('channel_bandwidth_MHz')), number(c.get('common_scs'))
         band = c.get('band')
@@ -759,9 +838,20 @@ def read_cell():
                 'dlFreq': round(.005*n if n < 600000 else 3000+.015*(n-600000), 3) if n is not None and 0 <= n < 2016667 else None,
                 'bw': bw, 'scs': scs, 'prb': {(10, 15): 52, (10, 30): 24, (20, 15): 106, (20, 30): 51}.get((bw, scs)),
                 'pci': c.get('pci'), 'plmn': c.get('plmn'), 'tac': c.get('tac'),
+                'srate': srate, **fft_details(srate, scs, {(10, 15): 52, (10, 30): 24, (20, 15): 106, (20, 30): 51}.get((bw, scs))),
                 'txGain': rf.get('tx_gain'), 'rxGain': rf.get('rx_gain'), 'clockPpm': rf.get('clock_ppm')}
     except (OSError, ValueError, AttributeError, yaml.YAMLError):
         return {}
+
+
+def fft_details(srate, scs, prb):
+    # N_FFT = fs/Δf; CP normal = 144·N_FFT/2048 muestras (+16·N_FFT/2048 en el primer símbolo de cada 0,5 ms), TS 38.211 §5.3.1.
+    if not srate or not scs:
+        return {}
+    n = round(srate*1e6/(scs*1e3))
+    used = prb*12 if prb else None
+    return {'fft': n, 'fftUsed': used, 'fftGuard': n-used if used else None,
+            'cp': 144*n//2048, 'cpLong': 144*n//2048+16*n//2048, 'cpUs': 144*n/2048/srate}
 
 
 def host_details():
@@ -830,6 +920,7 @@ async def panel_metrics():
             'ues': rows, 'thr': [{'dl': h['ogstun'].get('tx_bytes_per_s', 0)*8/1e6 if 'tx_bytes_per_s' in h['ogstun'] else None,
                                    'ul': h['ogstun'].get('rx_bytes_per_s', 0)*8/1e6 if 'rx_bytes_per_s' in h['ogstun'] else None} for h in list(history)[-60:]],
             'rt': {'rates': rates, 'total': dict(rt_total), 'series': [p.get('total', 0)*60 for p in rt_window], 'alarm': state['alarm']},
+            'sched': sched_snapshot(),
             'events': list(events), 'running': state['gnb_connected'], 'mode': 'métricas reales' if fresh else 'sin datos de radio',
             'pings': {k: {**v, 'samples': list(v['samples']), 'lines': list(v.get('lines', []))} for k, v in pings.items()},
             'iperf': {**iperf, 'results': list(iperf['results']), 'lines': list(iperf['lines'])}, 'errors': state['errors']}
