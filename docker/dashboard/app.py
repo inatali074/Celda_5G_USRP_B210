@@ -845,13 +845,15 @@ def read_cell():
 
 
 def fft_details(srate, scs, prb):
-    # N_FFT = fs/Δf; CP normal = 144·N_FFT/2048 muestras (+16·N_FFT/2048 en el primer símbolo de cada 0,5 ms), TS 38.211 §5.3.1.
+    # N_FFT = fs/Δf; CP normal = 144·N_FFT/2048 muestras. El primer símbolo de cada 0,5 ms suma 16κ·Tc, que no
+    # escala con 2^-μ: 16·N_FFT·2^μ/2048 muestras (TS 38.211 §5.3.1).
     if not srate or not scs:
         return {}
     n = round(srate*1e6/(scs*1e3))
     used = prb*12 if prb else None
     return {'fft': n, 'fftUsed': used, 'fftGuard': n-used if used else None,
-            'cp': 144*n//2048, 'cpLong': 144*n//2048+16*n//2048, 'cpUs': 144*n/2048/srate}
+            'cp': 144*n//2048, 'cpLong': 144*n//2048+16*n*(scs//15)//2048, 'cpUs': 144*n/2048/srate,
+            'cpLongUs': (144*n//2048+16*n*(scs//15)//2048)/srate}
 
 
 def host_details():
