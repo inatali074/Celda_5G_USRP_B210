@@ -16,6 +16,9 @@ Etapa & Evidencia & Qué muestra \\
 4. Sesión PDU & \texttt{evidencia/04\_sesion\_pdu} & Sesiones PDU, cortes de 60~s, logcat del módem y corridas con ``NR only'' \\
 5. Tráfico IP & (en los logs de la etapa 4) & Primera navegación por NAT \\
 6. Mediciones & \texttt{evidencia/06\_mediciones} & Prueba A/B/A, iperf3 y ping. Los JSON de iperf3 y la salida del ping no se conservaron: los valores son una transcripción hecha durante la sesión \\
+7. Voz SIP & \texttt{evidencia/07\_voz\_sip} & Registro SIP y llamadas entre los dos teléfonos \\
+8. Registro IMS & \texttt{evidencia/08\_ims\_registro} & Sesión PDU \texttt{ims} y registro IMS del Motorola \\
+9. ``UL processor is busy'' & \texttt{evidencia/09\_ul\_busy} & Fallas por slot y por minuto de una corrida de 3~h, y su causa en el código del gNB \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -100,9 +103,9 @@ En frecuencia, la corrección configurada de 1,87~ppm desplazaba la portadora $1
   \item Cae en los slots de subida (7, 8, 9, 17, 18 y 19), sobre todo en el 19, que es el del PRACH (\cref{fig:tdd}).
   \item Ocurrió en 2 de 3 corridas y degrada la celda.
 \end{itemize}
-Que se concentre en el slot~19 tiene una posible explicación teórica, que el grupo deja como \textbf{hipótesis a verificar}. Con $N_\text{CS}=0$ (\cref{sec:rach}), los 64 preámbulos salen de 64 raíces ZC distintas. Un detector que correlaciona en frecuencia obtiene \emph{todos} los desplazamientos cíclicos de una raíz con una sola correlación, pero necesita una por raíz. Además, en el formato B4 el preámbulo se repite 12 veces. El procesamiento del slot del PRACH sería, entonces, el más pesado de la trama, y el primero en atrasarse después de una perturbación.
+En ese momento el grupo pensó que la concentración en el slot~19 se debía a que el slot del PRACH era el más pesado de procesar ($N_\text{CS}=0$, \cref{sec:rach}: 64 raíces ZC distintas). El 17/11 el código del gNB mostró otra causa (párrafo~26): el slot~19 solo es el que más pedidos de subida recibe.
 
-La mitigación adoptada fue medir con la celda recién arrancada, poner el governor de la CPU en \texttt{performance} y no ejecutar aplicaciones pesadas durante las mediciones. La causa de fondo quedó abierta.
+La mitigación adoptada fue medir con la celda recién arrancada, poner el governor de la CPU en \texttt{performance} y no ejecutar aplicaciones pesadas durante las mediciones.
 
 \paragraph{18. Prueba A/B/A de la forma de onda de subida.} Se comparó CP-OFDM con DFT-s-OFDM en la subida, con el Redmi y subidas TCP de 10~s, alternando la configuración A, B, A para detectar derivas (\cref{tab:aba}).
 
@@ -131,3 +134,35 @@ A2 & CP-OFDM & 14,84 & 1,18 & 4 & $\approx 27$~dB \\
 \paragraph{19. Bajada TCP de 10~s (tramo A2).} Se midió con iperf3 en modo inverso: el servidor, en el panel, transmitía hacia el teléfono, y el valor informado es la tasa del emisor, no el goodput recibido. Se obtuvieron 55,2, 52,7 y 42,2~Mbit/s. La tercera coincidió con la aparición de ``UL processor is busy''. Con la celda limpia, la bajada fue de $\approx 54$~Mbit/s.
 
 \paragraph{20. Ping al teléfono, con la celda ya degradada.} El RTT mínimo fue de 16,7~ms, el mediano de 27,7~ms, el percentil 90 de 44,9~ms y el máximo de 1052~ms, con un 21,7~\% de pérdida (60 paquetes enviados cada 0,5~s, 47 recibidos) y un jitter de 52,3~ms, calculado como la media de las diferencias entre RTT sucesivos (no es jitter unidireccional). Como la celda ya presentaba ``UL processor is busy'', es el resultado de una sola corrida degradada y hay que repetirlo con la celda limpia.
+
+\subsection{05/11 y 06/11: central SIP, constelaciones y menú de configuraciones}
+\paragraph{21. Central SIP.} Se agregó una central Asterisk en un contenedor, conectada a la red de datos del núcleo (N6), con dos internos y un servicio de eco, y códec G.711. Como el UPF traduce las direcciones de los teléfonos (NAT), la central se configuró para responder a la dirección y el puerto desde los que llega cada paquete (RTP simétrico).
+
+\paragraph{22. Monitor de constelaciones y EVM de subida.} El gNB puede volcar a un archivo la grilla recibida de cada slot de subida. Con ese volcado, el panel estima el canal con el DM-RS, ecualiza y calcula el EVM por modulación; para DFT-s-OFDM usa el DM-RS de baja PAPR y deshace la DFT de la \cref{eq:235}. Con 64 slots reales, el EVM propio fue de 5,5--5,9~\% en 256QAM, coherente con la SINR de $\approx 23{,}5$~dB que informaba el gNB ($\mathrm{EVM}\approx 10^{-\mathrm{SINR}/20}\approx 6{,}7~\%$). El grupo no cambió el método con que el gNB calcula la SINR del PUSCH, porque en el código esa SINR también fija el MCS y la potencia de subida: cambiarla habría alterado la radio que se quería medir.
+
+\paragraph{23. Menú de configuraciones.} El script de arranque ofrece cuatro configuraciones: n78 TDD y n3 FDD, cada una con CP-OFDM o DFT-s-OFDM en la subida. Dentro de cada banda difieren solo en el transform precoding (\cref{eq:235}). Se probó en el aire solo la n78 con CP-OFDM; las otras tres quedaron sin probar por falta de tiempo.
+
+\subsection{12/11: dos teléfonos, voz sobre IP e IMS}
+\paragraph{24. Segundo teléfono y llamadas SIP.} El Motorola Edge~30 se registró con el PLMN 001/01 (con 722/999 no había generado PRACH, párrafo~6) y obtuvo IP después de configurarle el APN. Con Linphone en los dos teléfonos se hicieron llamadas en los dos sentidos y al eco: registro con autenticación Digest, \texttt{INVITE}, respuesta con SDP (G.711) y audio RTP de ambos lados. Con los dos teléfonos conectados, el EVM de subida fue de 4--6~\% con una SINR del PUSCH de 24--30~dB.
+
+Esta voz \textbf{no es VoNR}: viaja como datos comunes en la sesión PDU por defecto (5QI~9, sin garantía de tasa), compartiendo el flujo con el resto del tráfico. VoNR usa IMS, con la señalización en un flujo de 5QI~5 y la voz en uno con tasa garantizada de 5QI~1 \verif. G.711 necesita 64~kbit/s por sentido más los encabezados, muy por debajo de la capacidad de la celda.
+
+\paragraph{25. IMS, etapa~1: registro.} Para la voz nativa se agregaron contenedores IMS: los tres CSCF (P, I y S), un HSS y un DNS. El núcleo ofrece la DNN \texttt{ims}. El Motorola abrió una segunda sesión PDU hacia esa DNN, recibió la dirección del P-CSCF y \textbf{se registró en el IMS}: se autenticó con IMS-AKA usando las mismas claves de la USIM y estableció IPsec con el P-CSCF \verif. Quedó registrado con su número (1004).
+\begin{itemize}
+  \item El Redmi no pide la DNN \texttt{ims}: la configuración de operadora de Android para 001/01 tiene la voz sobre IMS deshabilitada, y sin permisos de administrador no se pudo cambiar.
+  \item La llamada VoNR (etapa~2: flujo de voz de 5QI~1 pedido por el IMS al núcleo) necesitaba un segundo teléfono que active IMS, y no se consiguió. Quedó fuera del alcance.
+\end{itemize}
+
+\subsection{13/11 y 17/11: la causa de ``UL processor is busy''}
+\paragraph{26. Pérdida de procesadores de subida.} En una corrida de 3~h hubo 329\,440 fallas. Empezaron 0,2~s después del primer acceso del teléfono, sin otra falla de tiempo real antes, y no se fueron más; la tasa creció por escalones, de $\approx 700$ a $\approx 5800$ por minuto. Hubo minutos con apenas 10 PUSCH y aun así $\approx 740$ fallas, lo que descarta una sobrecarga sostenida. Al principio aparecían a intervalos regulares de 80 a 100~ms.
+
+El grupo leyó el código del gNB y encontró el mecanismo:
+\begin{itemize}
+  \item Hay 20 procesadores de subida, uno por slot de la trama, que se asignan \textbf{por turno} a cada pedido de subida con PDU (PUSCH, PUCCH o PRACH). Si el que toca no está libre, se descarta el pedido entero de ese slot y aparece la falla.
+  \item Un procesador vuelve a quedar libre solo si recibe los 14 símbolos de su slot y termina sus PDU, o si se lo descarta antes de recibir el primero. \textbf{No hay tiempo límite.}
+  \item Cuando la radio pierde muestras, la PHY inferior se realinea a la subtrama siguiente sin avisarle a la PHY superior. Los símbolos que faltaban de ese slot no llegan nunca, y su procesador queda ocupado para siempre. Que esa haya sido la perturbación concreta es una inferencia: el log no la muestra.
+\end{itemize}
+Cada procesador trabado descarta 1 de cada 20 pedidos. Al principio había $\approx 2$ pedidos por trama (el PRACH del slot~19 y el PUCCH), así que una falla cada 10 tramas, que es lo observado. Cada nueva perturbación traba otro procesador y la tasa sube un escalón; la concentración en el slot~19 se explica porque es el que tiene más pedidos. Con muchos procesadores trabados se pierden también los HARQ-ACK y el CSI, y la conexión se degrada hasta perder el plano de datos. Solo se recupera reiniciando el gNB.
+
+En la PC de cuatro hilos, el gNB procesa la capa física superior con un único hilo (su cálculo da cinco, pero reserva tres CPU), lo que hace más probable que una perturbación atrase la recepción. La mitigación adoptada fue reiniciar el gNB antes de medir si aparece la falla.
+

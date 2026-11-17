@@ -13,15 +13,17 @@
   \item \textbf{Las señales piloto de NR son específicas.} Deshabilitar los CSI-RS eliminó también el TRS y empeoró el enlace, lo que es coherente con que, sin la CRS de LTE, el UE dependa del TRS para el seguimiento fino.
   \item \textbf{El rendimiento es compatible con la referencia teórica.} La bajada alcanzó el 75~\% de la referencia aproximada derivada de TS~38.306. La asimetría con la subida se explica con el patrón TDD, el acceso planificado y el control de potencia.
   \item \textbf{DFT-s-OFDM no es mejor en todos los casos.} Funcionó, pero con SINR alta no mejoró el throughput. Esto es coherente con el análisis probabilístico de la PAPR (su ventaja, de 2,5 a 3,7~dB en la simulación, importa cuando el UE está limitado en potencia), aunque que el Redmi no lo estuviera sigue siendo una hipótesis sin PHR.
+  \item \textbf{La falla de tiempo real que degradaba la celda se explicó en el código del gNB:} los procesadores de subida que pierden símbolos quedan trabados sin recuperación. No es falta de capacidad sostenida, sino una perturbación de tiempo real que deja un efecto permanente; con una radio definida por software en una PC común, conviene reiniciar el gNB antes de medir.
+  \item \textbf{Se probaron dos caminos para la voz.} La VoIP por SIP funcionó entre los dos teléfonos sobre la sesión PDU por defecto. La voz nativa por IMS llegó al registro de un teléfono, pero la llamada VoNR quedó fuera de alcance por no tener un segundo teléfono que active IMS.
   \item \textbf{Parte de los problemas no fueron de radio,} sino de la interacción del teléfono con la red: el PLMN no aceptado y el corte cada 60~s, que se mitigó con ``NR only'' y cuya relación con la voz IMS sigue siendo una hipótesis. Para un despliegue de laboratorio, la configuración del núcleo y de la SIM es tan importante como la de la capa física.
 \end{enumerate}
 
 \subsection{Trabajo futuro}\label{sec:trabajo_futuro}
 \begin{itemize}
   \item Repetir el ping y la bajada con la celda recién arrancada, para obtener latencia, jitter y pérdida representativos.
-  \item Identificar la causa de ``UL processor is busy''. Una prueba concreta, derivada de la \cref{sec:crono}: subir \texttt{zeroCorrelationZoneConfig} para que los 64 preámbulos salgan de pocas raíces ZC, y ver si la falla deja de concentrarse en el slot del PRACH.
-  \item Confirmar la hipótesis de voz cambiando solo el anuncio de IMS en el núcleo, o montar un IMS.
-  \item Forzar ``NR only'' en el OnePlus (por ejemplo, con los menús de prueba del módem).
+  \item Evitar que ``UL processor is busy'' deje la celda degradada: un tiempo límite que libere el procesador de subida (cambio en el gNB) o más hilos de procesamiento en una PC con más núcleos.
+  \item Confirmar la hipótesis del corte de 60~s cambiando solo el anuncio de IMS en el núcleo, ahora que el IMS está montado.
+  \item Completar VoNR (etapa~2) con un segundo teléfono que active IMS, y medir la calidad de la voz (retardo y pérdida de RTP).
+  \item Probar en el aire las configuraciones n3 y DFT-s-OFDM del menú.
   \item Repetir la comparación de DFT-s-OFDM en bloques alternados (ABAB/BABA), con más corridas y registrando el PHR, y en una condición de UE limitado en potencia (más atenuación o menos ganancia de recepción).
-  \item Completar la tabla comparativa con EDGE y LTE.
 \end{itemize}

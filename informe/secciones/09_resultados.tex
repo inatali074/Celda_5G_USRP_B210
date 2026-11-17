@@ -59,24 +59,7 @@ El RTT mínimo de 16,7~ms es coherente con la estructura de la celda. Un ping re
 Sumando el procesamiento del gNB, el UPF y el teléfono, una decena de milisegundos de RTT solo por la interfaz radio es plausible, y el mínimo medido está en ese orden. Si el teléfono entra en DRX entre pings, a esto se suma la espera hasta el próximo \emph{on duration} (\cref{sec:callado}). La mediana (27,7~ms), el jitter (52,3~ms), el máximo de 1052~ms y la pérdida del 21,7~\% no son representativos de la tecnología: se midieron con el procesador de subida del gNB saturado (``UL processor is busy''), que descarta subidas enteras. Por eso deben repetirse con la celda limpia.
 
 \subsection{Comparación con 2G y 4G}
-La \cref{tab:comparacion} queda preparada para la comparación con las mediciones de EDGE y LTE del mismo grupo. La columna de NR tiene los valores de este trabajo.
+La consigna pide comparar con EDGE y LTE. Esas tecnologías las midió el curso el año anterior; este trabajo se centra en 5G y no repitió esas mediciones, por lo que la comparación cuantitativa queda fuera de su alcance.
 
-\begin{table}[htbp]
-\centering
-\caption{Comparación entre tecnologías. Las columnas de EDGE y LTE se completan con las mediciones correspondientes.}
-\label{tab:comparacion}
-\begin{tabular}{lccc}
-\toprule
-Magnitud & EDGE (2G) & LTE (4G) & NR SA (este trabajo) \\
-\midrule
-Ancho de banda de canal & & & 20~MHz (n78, TDD) \\
-Bajada TCP & & & $\approx 54$~Mbit/s (emisor) \\
-Subida TCP & & & 14,8~Mbit/s \\
-Referencia teórica DL / UL & & & 71,7 / 35~Mbit/s \\
-RTT mínimo / mediano & & & 16,7 / 27,7~ms$^\dagger$ \\
-Jitter & & & 52,3~ms$^\dagger$ \\
-Pérdida de paquetes & & & 21,7~\%$^\dagger$ \\
-\bottomrule
-\multicolumn{4}{l}{\footnotesize $^\dagger$ Con la celda degradada; hay que repetirlo con la celda limpia.}
-\end{tabular}
-\end{table}
+\subsection{Voz}
+La voz se probó como VoIP (SIP con G.711) sobre la sesión PDU por defecto: hubo llamadas en los dos sentidos entre los dos teléfonos (\cref{sec:crono}, párrafo~24). No se midieron el retardo ni la pérdida de RTP. La voz nativa por IMS llegó al registro (párrafo~25), pero no a la llamada.
