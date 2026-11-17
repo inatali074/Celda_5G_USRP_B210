@@ -1,0 +1,8 @@
+# Fallas 'UL processor is busy' por slot dentro de la trama (corrida 2026-11-13 13:04-16:09 UTC, n78 TDD, tachoPC)
+# cantidad slot
+  21136 7
+  85295 8
+  14316 9
+  38526 17
+   9867 18
+ 160300 19

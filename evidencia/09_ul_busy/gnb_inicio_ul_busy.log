@@ -1,0 +1,44 @@
+2026-11-13T13:04:22.955454 [GNB     ] [I] Built in Release mode using commit e0db566 on branch HEAD
+2026-11-13T13:04:22.956427 [CONFIG  ] [I] gNB input configuration (only non-default values): 
+...
+2026-11-13T13:04:58.457170 [FAPI    ] [W] [  950.19] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 950.19
+...
+2026-11-13T13:04:58.557196 [FAPI    ] [W] [  960.19] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 960.19
+2026-11-13T13:04:58.657180 [FAPI    ] [W] [  970.19] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 970.19
+2026-11-13T13:04:58.751100 [FAPI    ] [W] [   980.7] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 980.7
+2026-11-13T13:04:58.846114 [FAPI    ] [W] [  989.17] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 989.17
+2026-11-13T13:04:58.921126 [FAPI    ] [W] [   997.7] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 997.7
+2026-11-13T13:04:59.011235 [FAPI    ] [W] [  1006.7] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 1006.7
+2026-11-13T13:04:59.097105 [FAPI    ] [W] [ 1014.19] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 1014.19
+2026-11-13T13:04:59.271610 [FAPI    ] [W] [     8.8] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 8.8
+2026-11-13T13:04:59.367100 [FAPI    ] [W] [   17.19] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 17.19
+2026-11-13T13:04:59.447121 [FAPI    ] [W] [   25.19] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 25.19
+2026-11-13T13:04:59.511591 [FAPI    ] [W] [    32.8] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 32.8
+2026-11-13T13:04:59.651211 [FAPI    ] [W] [    46.7] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 46.7
+2026-11-13T13:04:59.721225 [FAPI    ] [W] [    53.7] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 53.7
+2026-11-13T13:04:59.797161 [FAPI    ] [W] [   60.19] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 60.19
+2026-11-13T13:05:00.691725 [FAPI    ] [W] [   150.8] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 150.8
+2026-11-13T13:05:00.791727 [FAPI    ] [W] [   160.8] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 160.8
+2026-11-13T13:05:00.891644 [FAPI    ] [W] [   170.8] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 170.8
+2026-11-13T13:05:42.251998 [FAPI    ] [W] [   210.9] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 210.9
+2026-11-13T13:05:42.332053 [FAPI    ] [W] [   218.9] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 218.9
+2026-11-13T13:05:42.412087 [FAPI    ] [W] [   226.9] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 226.9
+2026-11-13T13:05:42.511386 [FAPI    ] [W] [   236.8] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 236.8
+2026-11-13T13:05:42.591468 [FAPI    ] [W] [   244.8] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 244.8
+2026-11-13T13:05:42.671444 [FAPI    ] [W] [   252.8] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 252.8
+2026-11-13T13:05:42.751410 [FAPI    ] [W] [   260.8] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 260.8
+2026-11-13T13:05:42.831463 [FAPI    ] [W] [   268.8] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 268.8
+2026-11-13T13:05:42.911398 [FAPI    ] [W] [   276.8] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 276.8
+2026-11-13T13:05:42.991139 [FAPI    ] [W] [   284.7] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 284.7
+2026-11-13T13:05:43.066877 [FAPI    ] [W] [  291.19] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 291.19
+2026-11-13T13:05:43.136865 [FAPI    ] [W] [  298.19] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 298.19
+2026-11-13T13:05:43.211397 [FAPI    ] [W] [   306.8] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 306.8
+2026-11-13T13:05:43.291440 [FAPI    ] [W] [   314.8] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 314.8
+2026-11-13T13:05:43.371533 [FAPI    ] [W] [   322.8] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 322.8
+2026-11-13T13:05:43.451417 [FAPI    ] [W] [   330.8] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 330.8
+2026-11-13T13:05:43.531533 [FAPI    ] [W] [   338.8] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 338.8
+2026-11-13T13:05:43.611437 [FAPI    ] [W] [   346.8] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 346.8
+2026-11-13T13:05:43.691364 [FAPI    ] [W] [   354.8] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 354.8
+2026-11-13T13:05:43.771466 [FAPI    ] [W] [   362.8] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 362.8
+2026-11-13T13:05:43.847009 [FAPI    ] [W] [  369.19] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 369.19
+2026-11-13T13:05:43.926926 [FAPI    ] [W] [  377.19] Sector#0: Real-time failure in FAPI: UL processor is busy for slot 377.19
