@@ -20,7 +20,7 @@ Celda en tachoPC con la opción 1 del menú (`gnb_b210_00101_n78_cpofdm.yml`). E
   - n78: 54 muestras (2,34 µs) y 66 en el primer símbolo.
   - n3: 108 muestras (4,69 µs).
   - Los valores son chicos porque el CP es ~7 % del símbolo, no 1/4.
-- **Norma:** se bajó la **TS 38.211 V15.10.0 (Rel-15)**, que es la que fija la consigna, y se guardó en `referencias/` (excluida de git por `*.docx`). Se borró la Rel-18 que se había bajado antes. Las fórmulas de §4.1 y §5.3.1 son iguales en las dos versiones.
+- **Norma:** se bajó la **TS 38.211 V15.10.0 (Rel-15)**, que es la que fija la consigna, y se guardó en `referencias/`. No se sube a git, por decisión del usuario: se baja de https://www.3gpp.org/ftp/Specs/2026-09/Rel-15/38_series/38211-fa0.zip. Se borró la Rel-18 que se había bajado antes. Las fórmulas de §4.1 y §5.3.1 son iguales en las dos versiones.
 
 ## Revisión del diagrama de un compañero (commit `cd9a584`)
 - Original: `Diagrama_Visual_DFT_Mapeo_IFFT1536.html`, que no se modificó.

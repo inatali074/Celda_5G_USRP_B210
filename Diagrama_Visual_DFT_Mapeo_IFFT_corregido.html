@@ -82,8 +82,8 @@
     <div class="table-wrap"><table>
       <thead><tr><th>Versión anterior</th><th>Corrección</th><th>Fuente</th></tr></thead>
       <tbody>
-        <tr><td class="bad">CP = 1/4 del símbolo (512 de 2048 muestras), con "τ = 1/(4·SCS)"</td>
-            <td>En NR el CP normal es 144κ·2<sup>−μ</sup>·T<sub>c</sub>: 4,69 µs con 15 kHz y 2,34 µs con 30 kHz (≈7 % del símbolo útil). 512κ·2<sup>−μ</sup> es el CP <b>extendido</b>, que solo existe con μ = 2 (60 kHz).</td>
+        <tr><td class="bad">CP de 512 muestras restado de la parte útil (512 + 1536 = 2048), con "τ = 1/(4·SCS)"</td>
+            <td>En NR el CP normal es 144κ·2<sup>−μ</sup>·T<sub>c</sub>: 4,69 µs con 15 kHz y 2,34 µs con 30 kHz (≈7 % del símbolo útil). El CP se <b>suma</b> a la parte útil; restarlo da una estructura que no existe en NR. 1/(4·SCS) coincide en tiempo con el CP <b>extendido</b> (512κ·2<sup>−μ</sup>), que solo existe con μ = 2 (60 kHz).</td>
             <td>TS 38.211 §5.3.1 y tabla 4.2-1</td></tr>
         <tr><td class="bad">El delay spread se calcula a partir de la SCS</td>
             <td>La dispersión de retardo es una propiedad del canal. El CP se elige para que sea más largo que ella.</td>
@@ -104,8 +104,8 @@
             <td>Con DFT-s-OFDM, M<sub>RB</sub><sup>PUSCH</sup> = 2<sup>α2</sup>·3<sup>α3</sup>·5<sup>α5</sup>. 106 = 2·53 no cumple: el máximo es <b>100 PRB</b> en n3 y <b>50 PRB</b> en n78 (51 = 3·17 tampoco cumple).</td>
             <td>TS 38.211 §6.3.1.4</td></tr>
         <tr><td class="bad">PAPR: "duplica el alcance", "banda media usa μ=1"</td>
-            <td>La ventaja de PAPR de DFT-s-OFDM es de unos 2 a 3 dB, y eso no duplica el alcance. n78 admite varias SCS para datos; μ = 1 es una elección habitual, no una regla.</td>
-            <td>Literatura técnica (valores típicos, no normativos)</td></tr>
+            <td>La ventaja de PAPR existe, pero su valor depende de cómo se mida (modulación, asignación, probabilidad de excedencia). Unos pocos dB no duplican el alcance: 3 dB lo multiplican por 1,41 en espacio libre y por menos en entornos reales. n78 admite varias SCS para datos; μ = 1 es una elección habitual, no una regla.</td>
+            <td>Presupuesto de enlace; 3GPP no fija el PAPR</td></tr>
       </tbody>
     </table></div>
   </div>
@@ -131,10 +131,10 @@
           <text x="24" y="66" fill="#8b949e" font-size="10">Potencia media</text>
           <path d="M 20 72 Q 50 52 80 72 T 140 72 T 200 55 T 260 72 T 320 57 T 380 72" fill="none" stroke="#3fb950" stroke-width="2.5"/>
         </svg></div>
-        <p style="font-size: 14px;">La DFT previa hace que la señal se comporte como una portadora única: el PAPR baja del orden de 2 a 3 dB. Le sirve al teléfono, limitado por batería y por la potencia máxima de su clase (23 dBm en clase 3).</p>
+        <p style="font-size: 14px;">La DFT previa hace que la señal se comporte como una portadora única: el PAPR baja. Le sirve al teléfono, limitado por batería y por la potencia máxima nominal de su clase (23 dBm en clase 3).</p>
       </div>
     </div>
-    <div class="alert-info">En Rel-15 la subida puede usar las dos formas de onda: DFT-s-OFDM se habilita con <code>transformPrecoder</code> (o <code>msg3-transformPrecoder</code> para el Msg3). Las cifras de PAPR son valores típicos de la literatura; 3GPP no las fija.</div>
+    <div class="alert-info">En Rel-15 la subida puede usar las dos formas de onda: DFT-s-OFDM se habilita con <code>transformPrecoder</code> (o <code>msg3-transformPrecoder</code> para el Msg3). La reducción de PAPR depende de la modulación y de cómo se mida; 3GPP no la fija.</div>
   </div>
 
   <!-- PIPELINE -->
@@ -171,26 +171,26 @@
   <!-- MAPEO -->
   <h2>3. Mapeo de subportadoras en la entrada de la IFFT <span class="tag">Zero padding</span></h2>
   <div class="card">
-    <p>Las <b>M</b> salidas de la DFT ocupan subportadoras contiguas. Las demás entradas de la IFFT valen cero: forman las bandas de guarda que mantienen la señal dentro del canal de 20 MHz.</p>
+    <p>Las <b>M</b> salidas de la DFT ocupan subportadoras contiguas. Los puntos de la IFFT fuera de la grilla de PRB valen cero; las guardas de RF las fija aparte TS 38.101-1. Los PRB de la grilla que este PUSCH no usa no son guarda: pueden llevar otros canales. El dibujo muestra las frecuencias en orden centrado y supone la grilla centrada en la portadora.</p>
     <h3 style="color: var(--accent-orange);">n3 FDD, nuestro gNB: IFFT de 1536 puntos a 23,04 Msps</h3>
     <div class="grid-bar">
-      <div class="guard" style="flex: 132;">132 en cero</div>
+      <div class="guard" style="flex: 132;">132 fuera de la grilla</div>
       <div class="assigned" style="flex: 1272;">Grilla de 106 PRB = 1272 subportadoras<span style="font-size: 11px; font-weight: normal;">el PUSCH usa M de ellas, contiguas</span></div>
-      <div class="guard" style="flex: 132;">132 en cero</div>
+      <div class="guard" style="flex: 132;">132 fuera de la grilla</div>
     </div>
     <div class="ticks"><span>0</span><span>centro de la portadora</span><span>1535</span></div>
     <h3 style="color: var(--accent-purple);">n78 TDD, nuestro gNB: IFFT de 768 puntos a 23,04 Msps</h3>
     <div class="grid-bar">
-      <div class="guard" style="flex: 78;">78 en cero</div>
+      <div class="guard" style="flex: 78;">78 fuera de la grilla</div>
       <div class="assigned" style="flex: 612;">Grilla de 51 PRB = 612 subportadoras<span style="font-size: 11px; font-weight: normal;">el PUSCH usa M de ellas, contiguas</span></div>
-      <div class="guard" style="flex: 78;">78 en cero</div>
+      <div class="guard" style="flex: 78;">78 fuera de la grilla</div>
     </div>
     <div class="ticks"><span>0</span><span>centro de la portadora</span><span>767</span></div>
     <div class="alert-info">
       <b>PRB contiguos en subida con DFT-s-OFDM:</b> con transform precoding la asignación de PUSCH es de tipo 1 (un bloque contiguo de PRB). Si los PRB estuvieran dispersos, se perdería la propiedad de portadora única y el PAPR volvería a subir.<br>
-      <span class="ref">Fuente: TS 38.214, §6.1.2.2 (asignación de recursos de subida). Esta sección no se verificó en esta revisión.</span>
+      <span class="ref">Fuente: TS 38.214, §6.1.2.2 (asignación de recursos de subida). Claude no la leyó; Codex informó que la confirmó en la Rel-15.</span>
     </div>
-    <p class="ref">N<sub>FFT</sub> = f<sub>s</sub>/Δf: 23,04 MHz / 15 kHz = 1536 = 3·2⁹, y 23,04 MHz / 30 kHz = 768 = 3·2⁸ (FFT de base mixta). Con 30,72 Msps serían 2048 y 1024 puntos, con más guarda (776 y 412 subportadoras en cero).</p>
+    <p class="ref">N<sub>FFT</sub> = f<sub>s</sub>/Δf: 23,04 MHz / 15 kHz = 1536 = 3·2⁹, y 23,04 MHz / 30 kHz = 768 = 3·2⁸ (FFT de base mixta). Con 30,72 Msps serían 2048 y 1024 puntos, con más puntos fuera de la grilla (776 y 412).</p>
   </div>
 
   <!-- SÍMBOLO Y CP -->
@@ -201,18 +201,18 @@
     <div class="math">N<sub>CP,l</sub> = 144κ · 2<sup>−μ</sup> + 16κ &nbsp;(CP normal, l = 0 o l = 7·2<sup>μ</sup>)<br>
       N<sub>CP,l</sub> = 144κ · 2<sup>−μ</sup> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(CP normal, resto de los símbolos)<br>
       N<sub>CP,l</sub> = 512κ · 2<sup>−μ</sup> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(CP extendido, solo μ = 2)</div>
-    <p>El primer símbolo de cada 0,5 ms lleva 16κ·T<sub>c</sub> ≈ 0,52 µs más de CP. Ese extra <b>no</b> se divide por 2<sup>μ</sup>, y hace que un slot dure exactamente 1 ms / 2<sup>μ</sup>.</p>
+    <p>El primer símbolo de cada 0,5 ms (l = 0 y l = 7·2<sup>μ</sup>: con μ = 0, los símbolos 0 y 7 de cada slot; con μ = 1, el 0 de cada slot) lleva 16κ·T<sub>c</sub> ≈ 0,52 µs más de CP. Ese extra <b>no</b> se divide por 2<sup>μ</sup>. Con μ = 0 y μ = 1, hace que el slot dure exactamente 1 ms y 0,5 ms; con μ mayor, los slots de una misma subtrama no duran todos lo mismo.</p>
 
     <h3 style="color: var(--accent-orange);">n3 FDD (μ = 0, 15 kHz) a 23,04 Msps, como nuestro gNB</h3>
     <div class="ofdm-symbol">
       <div class="cp-seg">CP<br>108 muestras<br><span style="font-weight: normal; font-size: 10.5px;">4,69 µs</span></div>
       <div class="body-seg">Parte útil: salida de la IFFT<br>1536 muestras<br><span style="font-weight: normal; font-size: 10.5px;">1536 × 43,40 ns = 66,67 µs = 1/15 kHz</span></div>
     </div>
-    <p class="ref" style="text-align: center;">El CP es una copia de las últimas 108 muestras de la parte útil. Símbolo completo: 1644 muestras = 71,35 µs (el primero de cada 0,5 ms: 120 + 1536 = 1656 muestras = 71,88 µs).</p>
+    <p class="ref" style="text-align: center;">El CP es una copia de las últimas 108 muestras de la parte útil. Símbolo completo: 1644 muestras = 71,35 µs (los símbolos 0 y 7 de cada slot: 120 + 1536 = 1656 muestras = 71,88 µs).</p>
     <div class="calc-grid">
       <div class="calc-card"><div class="calc-title">Frecuencia de muestreo</div><div class="calc-value">23,04 Msps</div><div class="calc-sub">t<sub>s</sub> = 43,40 ns</div></div>
       <div class="calc-card"><div class="calc-title">Parte útil</div><div class="calc-value">1536 muestras</div><div class="calc-sub">66,67 µs = 1/Δf</div></div>
-      <div class="calc-card"><div class="calc-title">CP normal</div><div class="calc-value">108 (120)</div><div class="calc-sub">4,69 µs (5,21 µs en el 1.º símbolo de cada 0,5 ms)</div></div>
+      <div class="calc-card"><div class="calc-title">CP normal</div><div class="calc-value">108 (120)</div><div class="calc-sub">4,69 µs (5,21 µs en los símbolos 0 y 7)</div></div>
       <div class="calc-card"><div class="calc-title">Slot de 14 símbolos</div><div class="calc-value">1 ms</div><div class="calc-sub">12·1644 + 2·1656 = 23 040 muestras</div></div>
     </div>
 
@@ -221,7 +221,7 @@
       <div class="cp-seg">CP<br>54 muestras<br><span style="font-weight: normal; font-size: 10.5px;">2,34 µs</span></div>
       <div class="body-seg">Parte útil: salida de la IFFT<br>768 muestras<br><span style="font-weight: normal; font-size: 10.5px;">768 × 43,40 ns = 33,33 µs = 1/30 kHz</span></div>
     </div>
-    <p class="ref" style="text-align: center;">Símbolo completo: 822 muestras = 35,68 µs (el primero de cada slot: 66 + 768 = 834 muestras = 36,20 µs).</p>
+    <p class="ref" style="text-align: center;">Símbolo completo: 822 muestras = 35,68 µs (el símbolo 0 de cada slot: 66 + 768 = 834 muestras = 36,20 µs).</p>
     <div class="calc-grid">
       <div class="calc-card"><div class="calc-title">Parte útil</div><div class="calc-value">768 muestras</div><div class="calc-sub">33,33 µs = 1/Δf</div></div>
       <div class="calc-card"><div class="calc-title">CP normal</div><div class="calc-value">54 (66)</div><div class="calc-sub">2,34 µs (2,86 µs en el 1.º símbolo del slot)</div></div>
@@ -242,16 +242,16 @@
         <tr><td><b>Máximo PRB de PUSCH con DFT-s-OFDM</b></td><td>100</td><td>50</td><td>2<sup>α2</sup>·3<sup>α3</sup>·5<sup>α5</sup> (§6.3.1.4)</td></tr>
         <tr><td><b>Muestreo de nuestro gNB</b></td><td>23,04 Msps</td><td>23,04 Msps</td><td><code>srate</code> de la configuración</td></tr>
         <tr><td><b>N<sub>FFT</sub> (parte útil)</b></td><td>1536</td><td>768</td><td>f<sub>s</sub>/Δf</td></tr>
-        <tr><td><b>Subportadoras en cero</b></td><td>264</td><td>156</td><td>N<sub>FFT</sub> − 12·N<sub>RB</sub></td></tr>
-        <tr><td><b>CP normal (muestras)</b></td><td>108 (120 en el 1.º símbolo)</td><td>54 (66 en el 1.º símbolo)</td><td>144κ·2<sup>−μ</sup> (+16κ), §5.3.1</td></tr>
+        <tr><td><b>Puntos fuera de la grilla</b></td><td>264</td><td>156</td><td>N<sub>FFT</sub> − 12·N<sub>RB</sub></td></tr>
+        <tr><td><b>CP normal (muestras)</b></td><td>108 (120 en los símbolos 0 y 7)</td><td>54 (66 en el símbolo 0)</td><td>144κ·2<sup>−μ</sup> (+16κ), §5.3.1</td></tr>
         <tr><td><b>CP normal (tiempo)</b></td><td>4,69 µs (5,21 µs)</td><td>2,34 µs (2,86 µs)</td><td>Independiente de f<sub>s</sub></td></tr>
         <tr><td><b>Parte útil del símbolo</b></td><td>66,67 µs</td><td>33,33 µs</td><td>1/Δf</td></tr>
-        <tr><td><b>Símbolo con CP</b></td><td>71,35 µs</td><td>35,68 µs</td><td>(N<sub>u</sub> + N<sub>CP</sub>)·T<sub>c</sub></td></tr>
+        <tr><td><b>Símbolo con CP corto (largo)</b></td><td>71,35 µs (71,88)</td><td>35,68 µs (36,20)</td><td>(N<sub>u</sub> + N<sub>CP</sub>)·T<sub>c</sub></td></tr>
         <tr style="font-weight: bold; background: rgba(63,185,80,.12);"><td>Slot de 14 símbolos</td><td class="good">1 ms</td><td class="good">0,5 ms</td><td>§4.3.2</td></tr>
         <tr><td><b>Mismo cálculo a 30,72 Msps</b></td><td>FFT 2048, CP 144 (160)</td><td>FFT 1024, CP 72 (88)</td><td>Escala lineal con f<sub>s</sub></td></tr>
       </tbody>
     </table></div>
-    <div class="alert-success"><b>Idea central:</b> al duplicar la SCS, el símbolo útil y el CP se reducen a la mitad, y entran el doble de slots por segundo. A la misma frecuencia de muestreo, la FFT tiene la mitad de puntos. La cantidad de recursos por milisegundo casi no cambia: 106·12·14 = 17 808 RE/ms con 15 kHz contra 51·12·28 = 17 136 RE/ms con 30 kHz.</div>
+    <div class="alert-success"><b>Idea central:</b> al duplicar la SCS, la parte útil y el CP corto se reducen a la mitad (el extra de 0,52 µs del CP largo no cambia), y entran el doble de slots por segundo. A la misma frecuencia de muestreo, la FFT tiene la mitad de puntos. La cantidad de recursos por milisegundo casi no cambia: 106·12·14 = 17 808 RE/ms con 15 kHz contra 51·12·28 = 17 136 RE/ms con 30 kHz.</div>
   </div>
 
   <!-- GLOSARIO -->
@@ -265,17 +265,17 @@
         <tr><td><b>T<sub>c</sub></b></td><td>Unidad básica de tiempo de NR: 1/(Δf<sub>max</sub>·N<sub>f</sub>), con Δf<sub>max</sub> = 480 kHz y N<sub>f</sub> = 4096.</td><td>≈ 0,509 ns</td></tr>
         <tr><td><b>T<sub>s</sub></b></td><td>Unidad básica de tiempo de LTE: 1/(15 kHz · 2048).</td><td>≈ 32,55 ns</td></tr>
         <tr><td><b>κ</b></td><td>Relación T<sub>s</sub>/T<sub>c</sub>.</td><td>64</td></tr>
-        <tr><td><b>l</b></td><td>Índice del símbolo OFDM dentro de la subtrama. l = 0 y l = 7·2<sup>μ</sup> llevan CP más largo.</td><td>0…13 / 0…27</td></tr>
-        <tr><td><b>N<sub>u</sub></b></td><td>Largo de la parte útil del símbolo, en T<sub>c</sub>: 2048κ·2<sup>−μ</sup>.</td><td>66,67 / 33,33 µs</td></tr>
-        <tr><td><b>N<sub>CP,l</sub></b></td><td>Largo del prefijo cíclico del símbolo l, en T<sub>c</sub>.</td><td>4,69 / 2,34 µs</td></tr>
-        <tr><td><b>T<sub>symb,l</sub></b></td><td>Duración total del símbolo: (N<sub>u</sub> + N<sub>CP,l</sub>)·T<sub>c</sub>.</td><td>71,35 / 35,68 µs</td></tr>
+        <tr><td><b>l</b></td><td>Índice del símbolo OFDM dentro de la subtrama. l = 0 y l = 7·2<sup>μ</sup> llevan CP largo.</td><td>0…13 / 0…27</td></tr>
+        <tr><td><b>N<sub>u</sub></b></td><td>Largo de la parte útil del símbolo, en T<sub>c</sub>: 2048κ·2<sup>−μ</sup>.</td><td>131 072 / 65 536 (× T<sub>c</sub> = 66,67 / 33,33 µs)</td></tr>
+        <tr><td><b>N<sub>CP,l</sub></b></td><td>Largo del prefijo cíclico del símbolo l, en T<sub>c</sub>.</td><td>corto 9216 / 4608 (× T<sub>c</sub> = 4,69 / 2,34 µs)</td></tr>
+        <tr><td><b>T<sub>symb,l</sub></b></td><td>Duración total del símbolo: (N<sub>u</sub> + N<sub>CP,l</sub>)·T<sub>c</sub>.</td><td>71,35 / 35,68 µs (CP corto)</td></tr>
         <tr><td><b>f<sub>s</sub></b>, <b>t<sub>s</sub></b></td><td>Frecuencia de muestreo de la radio y duración de una muestra (t<sub>s</sub> = 1/f<sub>s</sub>).</td><td>23,04 Msps, 43,40 ns</td></tr>
         <tr><td><b>N<sub>FFT</sub></b></td><td>Puntos de la FFT/IFFT: f<sub>s</sub>/Δf.</td><td>1536 / 768</td></tr>
         <tr><td><b>N<sub>RB</sub></b></td><td>PRB (bloques de 12 subportadoras) del canal de 20 MHz.</td><td>106 / 51</td></tr>
         <tr><td><b>M<sub>RB</sub><sup>PUSCH</sup></b></td><td>PRB asignados al teléfono para transmitir. Con DFT-s-OFDM: 2<sup>α2</sup>·3<sup>α3</sup>·5<sup>α5</sup> (α enteros ≥ 0).</td><td>máx. 100 / 50</td></tr>
         <tr><td><b>M</b></td><td>Tamaño de la DFT: 12·M<sub>RB</sub><sup>PUSCH</sup> subportadoras asignadas.</td><td>ej. 10 PRB → 120</td></tr>
         <tr><td><b>x(i)</b>, <b>y(k)</b></td><td>Símbolos modulados antes de la DFT, y su salida en frecuencia (lo que va a las subportadoras).</td><td>—</td></tr>
-        <tr><td><b>CP</b></td><td>Prefijo cíclico: copia del final del símbolo al principio, para absorber los ecos del canal.</td><td>—</td></tr>
+        <tr><td><b>CP</b></td><td>Prefijo cíclico: copia del final del símbolo al principio. Si los ecos llegan dentro del CP, no hay interferencia entre símbolos.</td><td>—</td></tr>
         <tr><td><b>PRB</b>, <b>RE</b></td><td>Bloque de 12 subportadoras; elemento de recurso (una subportadora durante un símbolo).</td><td>—</td></tr>
         <tr><td><b>PAPR</b></td><td>Relación entre potencia pico y potencia media de la señal.</td><td>—</td></tr>
         <tr><td><b>PUSCH</b></td><td>Canal físico compartido de subida: donde el teléfono manda sus datos.</td><td>—</td></tr>
@@ -283,7 +283,7 @@
     </table></div>
   </div>
 
-  <p class="ref">Fuentes: 3GPP TS 38.211 V15.10.0 (2021-12), "NR; Physical channels and modulation (Release 15)", §4.1, §4.2 (tabla 4.2-1), §4.3, §5.3.1 y §6.3.1.4. Valores de muestreo y frecuencias: configuraciones <code>gnb_b210_00101_n3_*.yml</code> y <code>gnb_b210_00101_n78_*.yml</code> del proyecto. TS 38.214 §6.1.2.2 y TS 38.101-1 tabla 5.3.2-1 se citan sin verificar en esta revisión.</p>
+  <p class="ref">Fuentes: 3GPP TS 38.211 V15.10.0 (2021-12), "NR; Physical channels and modulation (Release 15)" (<a href="https://www.3gpp.org/ftp/Specs/2026-09/Rel-15/38_series/38211-fa0.zip" style="color:inherit">descargar de 3GPP</a>), §4.1, §4.2 (tabla 4.2-1), §4.3, §5.3.1 y §6.3.1.4. Valores de muestreo y frecuencias: configuraciones <code>gnb_b210_00101_n3_*.yml</code> y <code>gnb_b210_00101_n78_*.yml</code> del proyecto. TS 38.214 §6.1.2.2 y TS 38.101-1 tabla 5.3.2-1 se citan sin verificar en esta revisión.</p>
 </div>
 </body>
 </html>
