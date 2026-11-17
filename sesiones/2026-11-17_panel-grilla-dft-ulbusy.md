@@ -50,7 +50,7 @@ Celda en tachoPC con la opción 1 del menú (`gnb_b210_00101_n78_cpofdm.yml`). E
 
 ## Para retomar
 - **Descartado por el usuario:** una configuración del gNB sin volcado IQ y con el log en `warning`. Se sigue usando la opción 1 del menú tal como está.
-- **Prueba A/B/A en tachoPC con `expert_execution: threads: main_pool: nof_threads: 2`.**
+- **Descartado por falta de tiempo (usuario):** prueba A/B/A en tachoPC con `expert_execution: threads: main_pool: nof_threads: 2`.
 - **Si aparece "UL processor is busy", reiniciar el gNB antes de medir:** no se recupera solo.
 - **Descartado por el usuario:** informarle la falla a OCUDU.
 - Revisión de Codex de `Correcciones_Diagrama_DFT_IFFT.md` y del HTML corregido.
