@@ -61,7 +61,7 @@
 | **n3 / n78** | Bandas de NR: n3 en 1800 MHz (FDD) y n78 en 3,5 GHz (TDD). |
 | **ARFCN** | Número de canal que codifica la frecuencia de la portadora. |
 | **Msps** | Millones de muestras por segundo. |
-| **Clase 3** | Clase de potencia del teléfono: potencia máxima nominal de 23 dBm (≈ 200 mW), con las tolerancias y reducciones que fija TS 38.101-1 §6.2. |
+| **Clase 3** | Clase de potencia del teléfono: potencia máxima nominal de 23 dBm (≈ 200 mW). Tolerancia de ±2 dB en n3 y +2/−3 dB en n78 (TS 38.101-1, tabla 6.2.1-1), más las reducciones de §6.2. |
 | **Rel-15** | Release 15 de 3GPP: la primera versión de 5G NR, la que fija la consigna. |
 
 ## 1. Qué hacía el HTML original
@@ -175,7 +175,7 @@ Las constantes vienen de TS 38.211 §4.1 (**verificado**):
 | --- | --- | --- |
 | PAPR de "8 a 12 dB" contra "4 a 6 dB", "ahorro de 3–4 dB" | La ventaja de DFT-s-OFDM existe, pero las cifras dependen de la modulación, la asignación, el sobremuestreo y la probabilidad de excedencia con que se mida el PAPR. Sin esas condiciones, ningún intervalo (ni el original ni otro) está justificado. | 3GPP no fija el PAPR. **Sin fuente concreta.** |
 | "Duplica el alcance en borde de celda" | Con pérdida ∝ d<sup>n</sup>, G dB de mejora multiplican el alcance por 10<sup>G/(10n)</sup>. Con 3 dB: × 1,41 en espacio libre (n = 2) y menos en entornos reales (n > 2). No lo duplica. | Presupuesto de enlace. |
-| "Banda media (> 3 GHz) usa μ = 1" | No es una regla. n78 admite varias SCS para datos, y μ = 1 es la elección habitual. | TS 38.101-1. **No verificado.** |
+| "Banda media (> 3 GHz) usa μ = 1" | No es una regla. n78 admite 15, 30 y 60 kHz (en 20 MHz, las tres), y μ = 1 es la elección habitual. | TS 38.101-1 V15.17.0, tabla 5.3.5-1. **Verificado** (2026-11-17). |
 | "En la gNodeB no es crítico porque está enchufada a la red eléctrica trifásica" | Se quitó. No aporta a la explicación técnica. | — |
 
 ## 3. Tabla corregida (CP normal; entre paréntesis, el CP largo)
@@ -202,8 +202,8 @@ Las constantes vienen de TS 38.211 §4.1 (**verificado**):
 | 3GPP TS 38.211 V15.10.0 §4.3.1 y §4.3.2 | Subtrama de 1 ms, 14 símbolos por slot | Sí |
 | 3GPP TS 38.211 V15.10.0 §5.3.1 | N<sub>u</sub>, N<sub>CP,l</sub>, T<sub>symb,l</sub> | Sí |
 | 3GPP TS 38.211 V15.10.0 §6.3.1.4 | M<sub>RB</sub><sup>PUSCH</sup> = 2<sup>α2</sup>·3<sup>α3</sup>·5<sup>α5</sup> | Sí |
-| 3GPP TS 38.214 §6.1.2.2 | Asignación contigua (tipo 1) del PUSCH con transform precoding | No por Claude. Codex informó que lo confirmó en la versión Rel-15 de ETSI; falta verificarlo |
-| 3GPP TS 38.101-1, tabla 5.3.2-1 | 106 y 51 PRB en 20 MHz | No por Claude. Codex informó que lo confirmó en la Rel-15; falta verificarlo. Los YAML solo fijan el ancho de banda y la SCS |
+| 3GPP TS 38.214 V15.16.0 §6.1.2.2 y §6.1.2.2.2 | Con transform precoding solo se admite la asignación tipo 1, que son VRB contiguos | Sí (2026-11-17, PDF de ETSI) |
+| 3GPP TS 38.101-1 V15.17.0, tabla 5.3.2-1 y tabla 6.2.1-1 | 106 PRB (15 kHz) y 51 PRB (30 kHz) en 20 MHz; clase 3 = 23 dBm (n3 ±2 dB, n78 +2/−3 dB) | Sí (2026-11-17, PDF de ETSI) |
 | `config/gnb/gnb_b210_00101_n3_*.yml` y `..._n78_*.yml` | `srate` 23,04, ARFCN, SCS y ancho de banda | Sí |
 
 La norma Rel-15 se bajó del archivo oficial de 3GPP ([https://www.3gpp.org/ftp/Specs/2026-09/Rel-15/38_series/38211-fa0.zip](https://www.3gpp.org/ftp/Specs/2026-09/Rel-15/38_series/38211-fa0.zip)). Claude la comparó el 2026-11-13 con la Rel-18 (V18.10.0), ya borrada: las fórmulas de §4.1 y §5.3.1 eran idénticas (no quedó registro aparte de esta nota).

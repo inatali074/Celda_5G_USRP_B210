@@ -188,7 +188,7 @@
     <div class="ticks"><span>0</span><span>centro de la portadora</span><span>767</span></div>
     <div class="alert-info">
       <b>PRB contiguos en subida con DFT-s-OFDM:</b> con transform precoding la asignación de PUSCH es de tipo 1 (un bloque contiguo de PRB). Si los PRB estuvieran dispersos, se perdería la propiedad de portadora única y el PAPR volvería a subir.<br>
-      <span class="ref">Fuente: TS 38.214, §6.1.2.2 (asignación de recursos de subida). Claude no la leyó; Codex informó que la confirmó en la Rel-15.</span>
+      <span class="ref">Fuente: TS 38.214 V15.16.0, §6.1.2.2: el tipo 0 solo se admite sin transform precoding; el tipo 1 asigna VRB contiguos (§6.1.2.2.2).</span>
     </div>
     <p class="ref">N<sub>FFT</sub> = f<sub>s</sub>/Δf: 23,04 MHz / 15 kHz = 1536 = 3·2⁹, y 23,04 MHz / 30 kHz = 768 = 3·2⁸ (FFT de base mixta). Con 30,72 Msps serían 2048 y 1024 puntos, con más puntos fuera de la grilla (776 y 412).</p>
   </div>
@@ -283,7 +283,7 @@
     </table></div>
   </div>
 
-  <p class="ref">Fuentes: 3GPP TS 38.211 V15.10.0 (2021-12), "NR; Physical channels and modulation (Release 15)" (<a href="https://www.3gpp.org/ftp/Specs/2026-09/Rel-15/38_series/38211-fa0.zip" style="color:inherit">descargar de 3GPP</a>), §4.1, §4.2 (tabla 4.2-1), §4.3, §5.3.1 y §6.3.1.4. Valores de muestreo y frecuencias: configuraciones <code>gnb_b210_00101_n3_*.yml</code> y <code>gnb_b210_00101_n78_*.yml</code> del proyecto. TS 38.214 §6.1.2.2 y TS 38.101-1 tabla 5.3.2-1 se citan sin verificar en esta revisión.</p>
+  <p class="ref">Fuentes: 3GPP TS 38.211 V15.10.0 (2021-12), "NR; Physical channels and modulation (Release 15)" (<a href="https://www.3gpp.org/ftp/Specs/2026-09/Rel-15/38_series/38211-fa0.zip" style="color:inherit">descargar de 3GPP</a>), §4.1, §4.2 (tabla 4.2-1), §4.3, §5.3.1 y §6.3.1.4. Valores de muestreo y frecuencias: configuraciones <code>gnb_b210_00101_n3_*.yml</code> y <code>gnb_b210_00101_n78_*.yml</code> del proyecto. También: TS 38.214 V15.16.0 §6.1.2.2 y TS 38.101-1 V15.17.0 (tablas 5.3.2-1, 5.3.5-1 y 6.2.1-1), verificadas el 2026-11-17 sobre los PDF de ETSI.</p>
 </div>
 </body>
 </html>
