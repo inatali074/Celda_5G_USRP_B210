@@ -14,11 +14,11 @@ Magnitud & Medido & Teórico (TS~38.306) & Medido/teórico \\
 Bajada TCP (celda limpia, tasa del emisor) & $\approx 54$~Mbit/s & 71,7~Mbit/s & 75~\% \\
 Subida TCP (CP-OFDM, A2) & 14,8~Mbit/s & 35~Mbit/s (26 con 64QAM) & 42~\% (57~\%) \\
 Subida TCP (DFT-s-OFDM, B) & 12,7~Mbit/s & 34,3~Mbit/s (50~PRB) & 37~\% \\
-RTT mín. / mediano$^\dagger$ & 16,7 / 27,7~ms & --- & --- \\
-RTT p90 / máx.$^\dagger$ & 44,9 / 1052~ms & --- & --- \\
-Jitter$^\ddagger$ / pérdida$^\dagger$ & 52,3~ms / 21,7~\% & --- & --- \\
+RTT mín. / mediano$^\dagger$ & 7,7--10,0 / 21,6--27,9~ms & --- & --- \\
+RTT p90 / máx.$^\dagger$ & 34,8--131 / 121--1297~ms & --- & --- \\
+Jitter$^\ddagger$ / pérdida$^\dagger$ & 13,9--62,3~ms / 0--25~\% & --- & --- \\
 \bottomrule
-\multicolumn{4}{l}{\footnotesize $^\dagger$ Con la celda ya degradada por ``UL processor is busy''; una sola corrida.}\\
+\multicolumn{4}{l}{\footnotesize $^\dagger$ Rango de tres corridas del 17/11, con un procesador de subida trabado (párrafo~27 de la \cref{sec:crono}).}\\
 \multicolumn{4}{l}{\footnotesize $^\ddagger$ Media de las diferencias entre RTT sucesivos.}
 \end{tabular}
 \end{table}
@@ -51,12 +51,12 @@ Los 14,8~Mbit/s son el 42~\% del máximo de 35~Mbit/s (57~\% si se toma como ref
 \end{itemize}
 
 \subsection{Latencia y TDD}\label{sec:latencia}
-El RTT mínimo de 16,7~ms es coherente con la estructura de la celda. Un ping recorre la bajada y la subida, y cada sentido tiene sus esperas. Las siguientes son estimaciones de orden de magnitud para un UE sin grant vigente; dependen del período y el desfase de las ocasiones de SR, que no se relevaron:
+El RTT mínimo de 8--10~ms es coherente con la estructura de la celda. Un ping recorre la bajada y la subida, y cada sentido tiene sus esperas. Las siguientes son estimaciones de orden de magnitud para un UE sin grant vigente; dependen del período y el desfase de las ocasiones de SR, que no se relevaron:
 \begin{itemize}
   \item \textbf{Bajada:} el paquete espera un slot de bajada (en promedio, poco, porque son el 65,7~\% del tiempo). Después, el PDSCH y el HARQ-ACK, que espera un slot de subida.
   \item \textbf{Subida (la respuesta):} el UE tiene que esperar una ocasión de SR en un slot de subida. Los slots de subida están agrupados al final de cada período de 5~ms, así que la espera hasta el próximo es del orden de algunos milisegundos. Después, el grant en un slot de bajada y el PUSCH $k_2\ge 4$ slots más tarde, que en la práctica cae en el período de subida siguiente: $\approx 5$~ms más.
 \end{itemize}
-Sumando el procesamiento del gNB, el UPF y el teléfono, una decena de milisegundos de RTT solo por la interfaz radio es plausible, y el mínimo medido está en ese orden. Si el teléfono entra en DRX entre pings, a esto se suma la espera hasta el próximo \emph{on duration} (\cref{sec:callado}). La mediana (27,7~ms), el jitter (52,3~ms), el máximo de 1052~ms y la pérdida del 21,7~\% no son representativos de la tecnología: se midieron con el procesador de subida del gNB saturado (``UL processor is busy''), que descarta subidas enteras. Por eso deben repetirse con la celda limpia.
+Sumando el procesamiento del gNB, el UPF y el teléfono, una decena de milisegundos de RTT solo por la interfaz radio es plausible, y el mínimo medido está en ese orden. Si el teléfono entra en DRX entre pings, a esto se suma la espera hasta el próximo \emph{on duration} (\cref{sec:callado}). La mediana, de 22 a 28~ms, agrega las esperas de los slots de subida y del SR que se describieron arriba. El máximo, el jitter y la pérdida dependen sobre todo de eventos aislados: un pico de 1,3~s en una corrida y un corte de $\approx 7$~s en otra. No hay que atribuirlos a la tecnología: se midieron con un procesador de subida del gNB trabado, que descarta 1 de cada 20 pedidos de subida, y el corte no tiene una causa identificada. La corrida sin eventos (mediana de 25,1~ms, p90 de 34,8~ms, jitter de 13,9~ms, sin pérdida) es la más representativa de la celda.
 
 \subsection{Comparación con 2G y 4G}
 La consigna pide comparar con EDGE y LTE. Esas tecnologías las midió el curso el año anterior; este trabajo se centra en 5G y no repitió esas mediciones, por lo que la comparación cuantitativa queda fuera de su alcance.

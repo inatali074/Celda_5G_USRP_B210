@@ -15,7 +15,7 @@ Etapa & Evidencia & Qué muestra \\
 3. Registro & \texttt{evidencia/03\_registro} & NG Setup, registro y RLF por CSI \\
 4. Sesión PDU & \texttt{evidencia/04\_sesion\_pdu} & Sesiones PDU, cortes de 60~s, logcat del módem y corridas con ``NR only'' \\
 5. Tráfico IP & (en los logs de la etapa 4) & Primera navegación por NAT \\
-6. Mediciones & \texttt{evidencia/06\_mediciones} & Prueba A/B/A, iperf3 y ping. Los JSON de iperf3 y la salida del ping no se conservaron: los valores son una transcripción hecha durante la sesión \\
+6. Mediciones & \texttt{evidencia/06\_mediciones} & Prueba A/B/A, iperf3 y ping del 03/11 (los JSON de iperf3 y la salida del ping no se conservaron: los valores son una transcripción hecha durante la sesión) y salida original de los tres pings del 17/11 \\
 7. Voz SIP & \texttt{evidencia/07\_voz\_sip} & Registro SIP y llamadas entre los dos teléfonos \\
 8. Registro IMS & \texttt{evidencia/08\_ims\_registro} & Sesión PDU \texttt{ims} y registro IMS del Motorola \\
 9. ``UL processor is busy'' & \texttt{evidencia/09\_ul\_busy} & Fallas por slot y por minuto de una corrida de 3~h, y su causa en el código del gNB \\
@@ -133,7 +133,7 @@ A2 & CP-OFDM & 14,84 & 1,18 & 4 & $\approx 27$~dB \\
 
 \paragraph{19. Bajada TCP de 10~s (tramo A2).} Se midió con iperf3 en modo inverso: el servidor, en el panel, transmitía hacia el teléfono, y el valor informado es la tasa del emisor, no el goodput recibido. Se obtuvieron 55,2, 52,7 y 42,2~Mbit/s. La tercera coincidió con la aparición de ``UL processor is busy''. Con la celda limpia, la bajada fue de $\approx 54$~Mbit/s.
 
-\paragraph{20. Ping al teléfono, con la celda ya degradada.} El RTT mínimo fue de 16,7~ms, el mediano de 27,7~ms, el percentil 90 de 44,9~ms y el máximo de 1052~ms, con un 21,7~\% de pérdida (60 paquetes enviados cada 0,5~s, 47 recibidos) y un jitter de 52,3~ms, calculado como la media de las diferencias entre RTT sucesivos (no es jitter unidireccional). Como la celda ya presentaba ``UL processor is busy'', es el resultado de una sola corrida degradada y hay que repetirlo con la celda limpia.
+\paragraph{20. Ping al teléfono, con la celda ya degradada.} El RTT mínimo fue de 16,7~ms, el mediano de 27,7~ms, el percentil 90 de 44,9~ms y el máximo de 1052~ms, con un 21,7~\% de pérdida (60 paquetes enviados cada 0,5~s, 47 recibidos) y un jitter de 52,3~ms, calculado como la media de las diferencias entre RTT sucesivos (no es jitter unidireccional). Como la celda ya presentaba ``UL processor is busy'', es el resultado de una sola corrida degradada. Se repitió el 17/11 (párrafo~27).
 
 \subsection{05/11 y 06/11: central SIP, constelaciones y menú de configuraciones}
 \paragraph{21. Central SIP.} Se agregó una central Asterisk en un contenedor, conectada a la red de datos del núcleo (N6), con dos internos y un servicio de eco, y códec G.711. Como el UPF traduce las direcciones de los teléfonos (NAT), la central se configuró para responder a la dirección y el puerto desde los que llega cada paquete (RTP simétrico).
@@ -160,9 +160,20 @@ El grupo leyó el código del gNB y encontró el mecanismo:
 \begin{itemize}
   \item Hay 20 procesadores de subida, uno por slot de la trama, que se asignan \textbf{por turno} a cada pedido de subida con PDU (PUSCH, PUCCH o PRACH). Si el que toca no está libre, se descarta el pedido entero de ese slot y aparece la falla.
   \item Un procesador vuelve a quedar libre solo si recibe los 14 símbolos de su slot y termina sus PDU, o si se lo descarta antes de recibir el primero. \textbf{No hay tiempo límite.}
-  \item Cuando la radio pierde muestras, la PHY inferior se realinea a la subtrama siguiente sin avisarle a la PHY superior. Los símbolos que faltaban de ese slot no llegan nunca, y su procesador queda ocupado para siempre. Que esa haya sido la perturbación concreta es una inferencia: el log no la muestra.
+  \item Un camino posible para que un slot no reciba todos sus símbolos: cuando la radio pierde muestras, la PHY inferior se realinea a la subtrama siguiente sin avisarle a la PHY superior, y su procesador queda ocupado para siempre.
 \end{itemize}
+\textbf{Qué traba el primer procesador.} En las tres corridas con un acceso nuevo (13/11 y dos el 17/11), la primera falla apareció entre 0,19 y 0,27~s después del primer PRACH del teléfono, con una falla cada 100~ms desde ahí. Es decir, el primer procesador se traba durante el acceso del teléfono de forma reproducible, y no por una perturbación al azar; qué parte del acceso lo provoca no se identificó. Los escalones posteriores sí podrían deberse a perturbaciones de tiempo real.
+
 Cada procesador trabado descarta 1 de cada 20 pedidos. Al principio había $\approx 2$ pedidos por trama (el PRACH del slot~19 y el PUCCH), así que una falla cada 10 tramas, que es lo observado. Cada nueva perturbación traba otro procesador y la tasa sube un escalón; la concentración en el slot~19 se explica porque es el que tiene más pedidos. Con muchos procesadores trabados se pierden también los HARQ-ACK y el CSI, y la conexión se degrada hasta perder el plano de datos. Solo se recupera reiniciando el gNB.
 
-En la PC de cuatro hilos, el gNB procesa la capa física superior con un único hilo (su cálculo da cinco, pero reserva tres CPU), lo que hace más probable que una perturbación atrase la recepción. La mitigación adoptada fue reiniciar el gNB antes de medir si aparece la falla.
+En la PC de cuatro hilos, el gNB procesa la capa física superior con un único hilo (su cálculo da cinco, pero reserva tres CPU), lo que hace más probable que una perturbación atrase la recepción. Como la falla aparece en el primer acceso, en esta PC no hubo forma de medir sin ella: reiniciar el gNB solo la vuelve al nivel mínimo de un procesador trabado (párrafo~27).
+
+\subsection{17/11: latencia con un solo procesador trabado}
+\paragraph{27. Ping al teléfono.} Se repitió el ping con la celda recién arrancada (n78 TDD, CP-OFDM, el Redmi en ``NR only''): tres corridas de 60 paquetes cada 0,5~s, desde la red del núcleo hacia el teléfono. Esta vez se guardó la salida original (\cref{tab:evidencia}). Durante las tres hubo un procesador de subida trabado: $\approx 7$ fallas por segundo, constantes, sin escalones.
+\begin{itemize}
+  \item \textbf{Corrida~1:} sin pérdida; RTT mínimo de 9,7~ms, mediano de 25,1~ms, percentil 90 de 34,8~ms y máximo de 121~ms; jitter de 13,9~ms.
+  \item \textbf{Corrida~2:} sin pérdida; mínimo de 7,7~ms y mediano de 21,6~ms, pero con un pico aislado de 1,3~s que lleva el jitter a 62,3~ms.
+  \item \textbf{Corrida~3:} 25~\% de pérdida, toda concentrada en un corte de $\approx 7$~s seguidos (15 paquetes). En esos segundos el gNB casi no programó bajada y el teléfono no pidió subida, sin RLF ni otros avisos; la causa no se identificó. Fuera del corte, el RTT fue como en las otras: mínimo de 10,0~ms y mediano de 27,9~ms.
+\end{itemize}
+Con un solo procesador trabado se pierde 1 de cada 20 pedidos de subida, lo que no alcanza para explicar el corte de la corrida~3.
 

@@ -58,3 +58,6 @@ Leído el 2026-11-17, de un clon parcial de `gitlab.com/ocudu/ocudu`.
    - mantener el governor en `performance` y cerrar los otros programas.
 2. ~~Probar `expert_execution: threads: main_pool: nof_threads: 2` en tachoPC, en una prueba A/B/A.~~ Descartado por falta de tiempo (decisión del usuario, 2026-11-17).
 3. **Mientras tanto:** si aparece "UL processor is busy", reiniciar el gNB antes de medir.
+
+## Actualización del 2026-11-17: la falla empieza en el primer acceso
+En las dos corridas del 17/11, la primera falla también apareció 0,27 s después del primer PRACH del Redmi (18:47:20 UTC), con una falla cada 100 ms en el slot 19, igual que el 13/11 (0,19 s). **El primer procesador se traba durante el acceso del teléfono de forma reproducible**, no por una perturbación al azar. No se identificó qué parte del acceso lo provoca. Reiniciar el gNB no evita la falla: solo la deja en el nivel mínimo de un procesador trabado (~7 fallas por segundo).
