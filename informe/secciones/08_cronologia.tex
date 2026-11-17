@@ -15,7 +15,7 @@ Etapa & Evidencia & Qué muestra \\
 3. Registro & \texttt{evidencia/03\_registro} & NG Setup, registro y RLF por CSI \\
 4. Sesión PDU & \texttt{evidencia/04\_sesion\_pdu} & Sesiones PDU, cortes de 60~s, logcat del módem y corridas con ``NR only'' \\
 5. Tráfico IP & (en los logs de la etapa 4) & Primera navegación por NAT \\
-6. Mediciones & \texttt{evidencia/06\_mediciones} & Prueba A/B/A, iperf3 y ping del 03/11 (los JSON de iperf3 y la salida del ping no se conservaron: los valores son una transcripción hecha durante la sesión) y salida original de los tres pings del 17/11 \\
+6. Mediciones & \texttt{evidencia/06\_mediciones} & Prueba A/B/A, iperf3 y ping del 03/11 (los JSON de iperf3 y la salida del ping no se conservaron: los valores son una transcripción hecha durante la sesión) salida original de los tres pings del 17/11 y métricas de consola (PHR) durante un iperf3 de subida del 17/11 \\
 7. Voz SIP & \texttt{evidencia/07\_voz\_sip} & Registro SIP y llamadas entre los dos teléfonos \\
 8. Registro IMS & \texttt{evidencia/08\_ims\_registro} & Sesión PDU \texttt{ims} y registro IMS del Motorola \\
 9. ``UL processor is busy'' & \texttt{evidencia/09\_ul\_busy} & Fallas por slot y por minuto de una corrida de 3~h, y su causa en el código del gNB \\
@@ -127,7 +127,7 @@ A2 & CP-OFDM & 14,84 & 1,18 & 4 & $\approx 27$~dB \\
 \begin{itemize}
   \item \textbf{DFT-s-OFDM funciona:} los dos teléfonos entraron a la celda, y se usó 256QAM con transform precoding. La asignación máxima fue de 50~PRB, como exige la \cref{eq:235}.
   \item \textbf{No mejoró el rendimiento.} B quedó entre A1 y A2. Con la misma SINR ($\approx 27$~dB), A2 superó a B en $\approx 2{,}1$~Mbit/s. Parte de la diferencia puede deberse a la asignación (50 contra 51~PRB: un 2~\%). El resto no se puede separar de la variabilidad entre corridas, de la implementación del receptor ni de las condiciones no controladas: la prueba no permite atribuirlo a la forma de onda.
-  \item \textbf{Interpretación.} Con SINR alta y un UE sin limitación de potencia (\cref{sec:potencia_ul}), la menor PAPR de DFT-s-OFDM no aporta nada: su beneficio aparece en el borde de la celda, cuando el amplificador del UE trabaja cerca de la saturación. Es una \textbf{hipótesis}, porque no se registró el PHR que la confirmaría. Por eso se mantuvo CP-OFDM.
+  \item \textbf{Interpretación.} En ese momento se supuso que, con SINR alta, el UE no estaba limitado en potencia (\cref{sec:potencia_ul}) y que por eso la menor PAPR de DFT-s-OFDM no aportaba nada. No se registró el PHR. \textbf{La medición del 17/11 (párrafo~28) contradice ese supuesto:} con tráfico de subida, el Redmi transmite cerca de su potencia máxima. La falta de mejora queda sin una explicación demostrada (\cref{sec:phr_medido}). Se mantuvo CP-OFDM.
   \item A1 tuvo peor enlace (SINR $\approx 19$~dB) por una causa no identificada. Hubo una sola corrida por tramo, así que la prueba no permite separar el efecto de la forma de onda de la variabilidad entre corridas.
 \end{itemize}
 
@@ -176,4 +176,6 @@ En la PC de cuatro hilos, el gNB procesa la capa física superior con un único 
   \item \textbf{Corrida~3:} 25~\% de pérdida, toda concentrada en un corte de $\approx 7$~s seguidos (15 paquetes). En esos segundos el gNB casi no programó bajada y el teléfono no pidió subida, sin RLF ni otros avisos; la causa no se identificó. Fuera del corte, el RTT fue como en las otras: mínimo de 10,0~ms y mediano de 27,9~ms.
 \end{itemize}
 Con un solo procesador trabado se pierde 1 de cada 20 pedidos de subida, lo que no alcanza para explicar el corte de la corrida~3.
+
+\paragraph{28. Power headroom con tráfico de subida.} La consola de métricas del gNB muestra, por segundo y por teléfono, el último PHR reportado por el UE (columna \texttt{phr}, en dB). Con el Redmi en CP-OFDM se corrió un iperf3 TCP de subida de $\approx 16$~s y se guardaron las filas de la consola (\cref{tab:evidencia}). En reposo, el PHR era de 9 a 12~dB y la SINR del PUSCH de 33 a 36~dB. Durante la prueba, el PHR bajó a valores de $-9$ a $+4$~dB, casi siempre de 0 a 2~dB; la SINR bajó a 17--25~dB (media 21,5~dB); la tasa fue de 10 a 17,5~Mbit/s, y la BLER de subida, de 21 a 43~\%. En esos 16~s hubo solo 36 fallas de ``UL processor is busy'', contra $\approx 170$ bloques de subida perdidos por segundo, así que la BLER no se debe a esa falla. El análisis está en la \cref{sec:phr_medido}.
 

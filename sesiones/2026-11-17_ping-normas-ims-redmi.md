@@ -66,6 +66,20 @@ Continúa `sesiones/2026-11-17_panel-grilla-dft-ulbusy.md`. Celda en tachoPC con
 - **Para hacer "NR only" sin cortes de ~60 s** hay que activarlo cada vez que se cambia la SIM: se vio el corte cuando faltaba.
 - **Al cierre:** la red quedó apagada y se borró el volcado IQ (382 MB).
 
+## Consola del gNB y PHR (red levantada de nuevo, ~19:20 UTC)
+- **Comandos de la consola:** se escriben en el panel `metricas` aunque la tabla no se frene. Otra opción es `docker attach --detach-keys=ctrl-c 5g-gnb-radio-1` en otra pestaña, con todo el ancho. Comandos útiles: `tx_gain`, `rx_gain`, `release`, `log` y `t`.
+  - Se probó `tx_gain 0 70` y se volvió a `tx_gain 0 80`.
+  - Con la línea vacía, la consola imprime la ayuda.
+- **Sin teléfonos conectados, la tabla no imprime filas.**
+- **iperf3 de subida, 19:54:42 a 19:54:58 UTC** (Redmi con SIM 3, CP-OFDM; `evidencia/06_mediciones/2026-11-17_iperf_ul_phr.txt`):
+  - el PHR baja de 9–12 a 0–2 dB y la SINR de ~34 a ~21 dB;
+  - la tasa es de 10–17,5 Mbit/s y la BLER de 21–43 %;
+  - hubo solo 36 fallas de "UL processor is busy".
+- **Se corrigió el informe:**
+  - el resumen, las secciones 5.5 y 5.6, el párrafo 28 nuevo de la cronología, la sección 9.5 nueva y las conclusiones;
+  - la MPR verificada en TS 38.101-1 V15.17.0, tabla 6.2.2-1;
+  - la bibliografía citaba v15.31.0 y ahora dice V15.17.0, la versión leída.
+
 ## Para retomar
 - **El Redmi tiene la SIM 4.** Hay que volver a ponerle la SIM 3 y la 4 al Motorola antes de la próxima prueba de IMS o SIP.
 - **Opciones para el IMS del Redmi, sin elegir todavía:**

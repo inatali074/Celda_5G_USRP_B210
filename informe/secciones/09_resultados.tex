@@ -47,8 +47,39 @@ Los 14,8~Mbit/s son el 42~\% del máximo de 35~Mbit/s (57~\% si se toma como ref
   \item \textbf{Errores de PUSCH y BLER:} el PUSCH tuvo más fallas en la primera transmisión. Cada fallo exige una retransmisión, que en TDD solo puede ir en un slot de subida, a menudo del período siguiente.
   \item \textbf{Planificación por SR/BSR:} el gNB solo asigna lo que el BSR le informa, y con un retardo de varios slots. Si el buffer del UE se vacía entre grants, quedan slots de subida sin usar.
   \item \textbf{Dinámica de TCP:} la ventana de congestión crece según los ACK, que llegan con el RTT del enlace. Con un RTT de decenas de milisegundos y pérdidas por errores de radio, TCP no llega a llenar el canal en 10~s.
+  \item \textbf{Potencia del UE:} con tráfico de subida, el Redmi transmite a su potencia máxima (PHR de 0--2~dB) y la SINR del PUSCH baja de $\approx 34$ a $\approx 21$~dB (\cref{sec:phr_medido}).
   \item \textbf{Recursos compartidos en los slots de subida:} el PUCCH, el PRACH del slot~19 y la carga del procesador de subida reducen los PRB y los slots útiles para el PUSCH.
 \end{itemize}
+
+\subsection{Potencia del UE en la subida (PHR)}\label{sec:phr_medido}
+El 17/11 se registró el PHR del Redmi durante un iperf3 de subida con CP-OFDM (párrafo~28 de la \cref{sec:crono}):
+\begin{itemize}
+  \item \textbf{El UE quedó en su potencia máxima.} El PHR bajó de 9--12~dB en reposo a 0--2~dB con tráfico, con valores negativos aislados. Según la \cref{eq:phr}, un PH cercano a 0 significa que la potencia que pide el control de potencia ya alcanza $P_\text{CMAX}$.
+  \item \textbf{Eso explica la caída de la SINR,} de $\approx 34$ a $\approx 21$~dB. Con tráfico, el gNB asigna casi todos los PRB. En la \cref{eq:ppusch}, el término $10\log_{10}(2^\mu M_\text{RB})$ crece con la asignación, pero la potencia total queda limitada a $P_\text{CMAX}$, así que baja la potencia por PRB y con ella la SINR. La celda usa \texttt{rx\_gain} de 40~dB, y el lazo cerrado lleva al UE hacia el tope para alcanzar la densidad objetivo.
+  \item \textbf{Consecuencia para la subida medida:} la tasa ($\approx 15$~Mbit/s en los mejores segundos, igual que los 14,8~Mbit/s del 03/11) está limitada por la potencia del UE. A eso se suma una BLER alta, de 21 a 43~\%, que indica un MCS (23--26) demasiado alto para la SINR que efectivamente llega.
+\end{itemize}
+
+\paragraph{Qué significa para DFT-s-OFDM.} Si el UE está limitado en potencia, la teoría dice que DFT-s-OFDM debería ayudar (\cref{sec:potencia_ul}). Sin embargo, en la prueba A/B/A del 03/11 no mejoró el throughput. El PHR de esa prueba no se registró, pero con la misma celda y el mismo teléfono es probable que también estuviera cerca del tope. Hay dos razones para que la mejora sea chica:
+\begin{itemize}
+  \item \textbf{La norma da poca ventaja en la potencia máxima.} TS~38.101-1 §6.2.2, tabla~6.2.2-1 \cite{ts38101}, le permite al UE de clase~3 reducir su potencia máxima (MPR) hasta:
+
+  \begin{center}
+  \begin{tabular}{lcc}
+  \toprule
+  Modulación & DFT-s-OFDM & CP-OFDM \\
+  \midrule
+  QPSK (borde y externa / interna) & $\le 1$ / 0~dB & $\le 3$ / $\le 1{,}5$~dB \\
+  16QAM (borde y externa / interna) & $\le 2$ / $\le 1$~dB & $\le 3$ / $\le 2$~dB \\
+  64QAM & $\le 2{,}5$~dB & $\le 3{,}5$~dB \\
+  256QAM & $\le 4{,}5$~dB & $\le 6{,}5$~dB \\
+  \bottomrule
+  \end{tabular}
+  \end{center}
+
+  La diferencia es de 1 a 2~dB, menor que los 2,5 a 3,7~dB de PAPR de la simulación. Además, son máximos permitidos: cuánta reducción aplica realmente el Redmi depende de su implementación, y no se midió.
+  \item \textbf{Una sola corrida por tramo,} con diferencias entre tramos ($\approx 2$~Mbit/s) del orden de la variabilidad entre corridas.
+\end{itemize}
+Con estos datos no se puede afirmar por qué DFT-s-OFDM no mejoró. Para saberlo habría que registrar el PHR también con DFT-s-OFDM y comparar en bloques alternados.
 
 \subsection{Latencia y TDD}\label{sec:latencia}
 El RTT mínimo de 8--10~ms es coherente con la estructura de la celda. Un ping recorre la bajada y la subida, y cada sentido tiene sus esperas. Las siguientes son estimaciones de orden de magnitud para un UE sin grant vigente; dependen del período y el desfase de las ocasiones de SR, que no se relevaron:

@@ -252,7 +252,7 @@ En esa simulación, la ventaja es de 2,5 a 3,7~dB, mayor cuanto más simple es l
   \item \textbf{DFT-s-OFDM:} conviene cuando el UE está \textbf{limitado en potencia}, en el borde de la celda, donde el amplificador ya trabaja cerca de saturación y cada dB de back-off se traduce en alcance o en SINR. En ese régimen se usan modulaciones bajas (incluida $\pi/2$-BPSK, que solo existe con transform precoding), justo donde la ventaja de PAPR es mayor.
   \item \textbf{CP-OFDM:} conviene con \textbf{SINR alta} y potencia sobrante. Admite MIMO de varias capas, asignaciones de PRB no contiguas y cualquier cantidad de PRB, y cada subportadora conserva su propia SINR después de ecualizar. En canales selectivos en frecuencia y con MCS altos, suele rendir más.
 \end{itemize}
-Por eso el gNB puede cambiar de forma de onda según las condiciones del UE (la conmutación dinámica llegó en releases posteriores). En la prueba de la \cref{sec:crono}, con una SINR media de $\approx 27$~dB y el UE muy cerca de la antena, DFT-s-OFDM no mejoró el throughput, lo que es coherente con este análisis si el UE no estaba limitado en potencia.
+Por eso el gNB puede cambiar de forma de onda según las condiciones del UE (la conmutación dinámica llegó en releases posteriores). En la prueba de la \cref{sec:crono}, con una SINR media de $\approx 27$~dB y el UE muy cerca de la antena, DFT-s-OFDM no mejoró el throughput. Al principio se atribuyó a que el UE no estaba limitado en potencia, pero una medición posterior del PHR mostró que, con tráfico de subida, el Redmi transmite cerca de su potencia máxima (\cref{sec:phr_medido}).
 
 \subsubsection{Dónde se ecualiza en DFT-s-OFDM}\label{sec:ecualizacion}
 En el receptor (\cref{fig:dfts}), la ecualización se hace \textbf{en frecuencia, después de la FFT de $N$ puntos y del demapeo de las $M$ subportadoras, y antes de la IDFT de $M$ puntos} que deshace la precodificación. La justificación es la siguiente:
@@ -294,11 +294,11 @@ donde:
 \begin{equation}
 P_\text{PUSCH} = -76 + 10\log_{10}(2\cdot 51) + 60 = -76 + 20{,}1 + 60 = 4{,}1~\text{dBm} < 23~\text{dBm}.
 \end{equation}
-En este ejemplo hipotético, el UE tendría casi 19~dB de margen: estaría lejos de la saturación y la menor PAPR de DFT-s-OFDM no le aportaría nada. Que el Redmi estuviera en una situación así durante la prueba es una hipótesis, que solo el PHR puede confirmar.
+En este ejemplo hipotético, el UE tendría casi 19~dB de margen: estaría lejos de la saturación y la menor PAPR de DFT-s-OFDM no le aportaría nada. El Redmi no estaba en esa situación: con tráfico de subida reportó un PHR de 0 a 2~dB (\cref{sec:phr_medido}). El ejemplo no incluye el término de lazo cerrado $f$, que en la celda lleva al UE hacia $P_\text{CMAX}$ para compensar la baja ganancia de recepción de la B210.
 
 \paragraph{Power headroom report (PHR).} El margen se informa al gNB en un MAC~CE \cite[§5.4.6]{ts38321}, \cite[§7.7]{ts38213}:
 \begin{equation}
 PH(i) = P_\text{CMAX}(i) - \left\{P_\text{O\_PUSCH} + 10\log_{10}(2^\mu M_\text{RB}) + \alpha\,PL + \Delta_\text{TF} + f\right\}~[\text{dB}].
 \label{eq:phr}
 \end{equation}
-Un PH positivo indica que el UE puede recibir más PRB o un MCS más alto; uno negativo, que está limitado en potencia y que el gNB debería reducir la asignación o, si está configurado, pasar a DFT-s-OFDM. Registrar el PHR es justamente lo que faltó para confirmar la interpretación de la prueba de DFT-s-OFDM (\cref{sec:trabajo_futuro}).
+Un PH positivo indica que el UE puede recibir más PRB o un MCS más alto; uno negativo, que está limitado en potencia y que el gNB debería reducir la asignación o, si está configurado, pasar a DFT-s-OFDM. El gNB muestra el último PHR de cada UE en su consola de métricas; se registró el 17/11 con CP-OFDM (\cref{sec:phr_medido}). Con DFT-s-OFDM no se registró.
