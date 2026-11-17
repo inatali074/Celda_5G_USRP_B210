@@ -54,8 +54,7 @@ Leído el 2026-11-17, de un clon parcial de `gitlab.com/ocudu/ocudu`.
 
 ## Qué hacer
 1. **Reducir lo que provoca pérdida de muestras o pedidos tardíos.** En tachoPC:
-   - correr sin volcado IQ y con el log en `warning`, no en `info` (el log de esta corrida pesa 715 MB);
+   - el volcado IQ y el log en `info` suman carga (el log de esta corrida pesa 715 MB), pero por decisión del usuario (2026-11-17) se mantiene la opción 1 del menú como está;
    - mantener el governor en `performance` y cerrar los otros programas.
 2. **Probar `expert_execution: threads: main_pool: nof_threads: 2`** en tachoPC, en una prueba A/B/A.
 3. **Mientras tanto:** si aparece "UL processor is busy", reiniciar el gNB antes de medir.
-4. Opcional: informarlo a OCUDU como falla, porque el procesador no tiene recuperación.
