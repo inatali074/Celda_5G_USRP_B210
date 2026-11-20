@@ -57,6 +57,7 @@ tasks = set()
 rt = Counter()
 rt_total = Counter()
 rt_window = deque(maxlen=60)
+RT_KINDS = ('ul_busy', 'underflow', 'overflow', 'late', 'other')
 log_buffers = {s: deque(maxlen=400) for s in ('gnb', 'core')}
 creations = deque(maxlen=256)
 registrations = deque(maxlen=256)
@@ -445,6 +446,7 @@ async def tail(source, path):
                         creations.clear()
                         ue_indexes.clear()
                         associations.clear()
+                        rt_total.clear()  # el gNB arrancó de nuevo: los acumulados empiezan de cero
                         state['gnb_since'] = None
                         state['config'] = None
                     else:
@@ -921,7 +923,9 @@ async def panel_metrics():
                                                'points': list(points)} for rnti, points in evm_history.items()}},
             'ues': rows, 'thr': [{'dl': h['ogstun'].get('tx_bytes_per_s', 0)*8/1e6 if 'tx_bytes_per_s' in h['ogstun'] else None,
                                    'ul': h['ogstun'].get('rx_bytes_per_s', 0)*8/1e6 if 'rx_bytes_per_s' in h['ogstun'] else None} for h in list(history)[-60:]],
-            'rt': {'rates': rates, 'total': dict(rt_total), 'series': [p.get('total', 0)*60 for p in rt_window], 'alarm': state['alarm']},
+            'rt': {'rates': rates, 'total': dict(rt_total), 'series': [p.get('total', 0)*60 for p in rt_window],
+                   'by_kind': {k: [p.get(k, 0)*60 for p in rt_window] for k in RT_KINDS},
+                   'alarm': state['alarm']},
             'sched': sched_snapshot(),
             'events': list(events), 'running': state['gnb_connected'], 'mode': 'métricas reales' if fresh else 'sin datos de radio',
             'pings': {k: {**v, 'samples': list(v['samples']), 'lines': list(v.get('lines', []))} for k, v in pings.items()},
