@@ -79,7 +79,29 @@ El 17/11 se registró el PHR del Redmi durante un iperf3 de subida con CP-OFDM (
   La diferencia es de 1 a 2~dB, menor que los 2,5 a 3,7~dB de PAPR de la simulación. Además, son máximos permitidos: cuánta reducción aplica realmente el Redmi depende de su implementación, y no se midió.
   \item \textbf{Una sola corrida por tramo,} con diferencias entre tramos ($\approx 2$~Mbit/s) del orden de la variabilidad entre corridas.
 \end{itemize}
-Con estos datos no se puede afirmar por qué DFT-s-OFDM no mejoró. Para saberlo habría que registrar el PHR también con DFT-s-OFDM y comparar en bloques alternados.
+\paragraph{PHR medido con DFT-s-OFDM.} El 20/11 se repitió la prueba con DFT-s-OFDM, el mismo teléfono, la misma celda y el mismo tráfico (párrafo~28 de la \cref{sec:crono}). Se comparan los segundos con más de 5~Mbit/s de subida, con el teléfono con el buffer lleno en los dos casos:
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+ & CP-OFDM (17/11, 14~s) & DFT-s-OFDM (20/11, 23~s) \\
+\midrule
+SINR del PUSCH (media) & 21,9~dB & 24,3~dB \\
+MCS de subida (media) & 21,4 & 23,0 \\
+Tasa de subida (media) & 13,1~Mbit/s & 11,8~Mbit/s \\
+BLER de subida & 32~\% & 40~\% \\
+PHR (mediana) & 1~dB & $-7$~dB \\
+``UL processor is busy'' & $\approx 2$ por segundo & $\approx 21$ por segundo \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{itemize}
+  \item \textbf{Con las dos formas de onda el UE transmite a $P_\text{CMAX}$.} Con DFT-s-OFDM el PHR fue negativo en todas las filas: la potencia que pide el lazo de control supera la máxima. El valor exacto depende de cuántos comandos TPC acumuló el gNB, así que no sirve para comparar las formas de onda entre sí; lo que muestra es que en los dos casos el UE está limitado en potencia.
+  \item \textbf{La SINR fue 2,4~dB mayor con DFT-s-OFDM,} en la dirección que predice la tabla de MPR (1 a 2~dB más de potencia disponible). Pero la SINR varió entre 19 y 27~dB de un segundo a otro dentro de la misma corrida, así que con una corrida por forma de onda la diferencia no es concluyente.
+  \item \textbf{La tasa no mejoró.} Fue algo menor y con más BLER, en una corrida con diez veces más fallas de procesador de subida, que descartan pedidos de subida aunque el canal esté mejor.
+\end{itemize}
+En la jaula, con el teléfono cerca de la antena, la ventaja de DFT-s-OFDM no es medible con este montaje: su beneficio se espera en el borde de la celda, donde la cobertura depende de cada decibel de potencia del UE, y no cuando la tasa la limitan también las fallas del gNB.
 
 \subsection{Latencia y TDD}\label{sec:latencia}
 El RTT mínimo de 8--10~ms es coherente con la estructura de la celda. Un ping recorre la bajada y la subida, y cada sentido tiene sus esperas. Las siguientes son estimaciones de orden de magnitud para un UE sin grant vigente; dependen del período y el desfase de las ocasiones de SR, que no se relevaron:
