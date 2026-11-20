@@ -93,6 +93,12 @@ cd ~/red5g-docker
 ./stop.sh     # Corta la transmisión, guarda los logs y apaga todo
 ```
 
+### Desde el panel (ícono "Celda 5G")
+```bash
+scripts/instalar_lanzador.sh   # una sola vez: crea el ícono en el escritorio y en el menú
+```
+Al abrir el ícono se abre una terminal que pide pasar la CPU a `performance` (con sudo), levanta el núcleo y el panel **sin radio** y abre `http://localhost:8080`. En el panel, arriba, se elige la configuración (y si se quiere SIP o IMS) y se aprieta **Iniciar**; con la celda andando, elegir otra opción la reinicia. **No cerrar esa terminal mientras se usa la celda: al cerrarla se apaga todo** (`./stop.sh`). La consola de 4 paneles queda en segundo plano: `screen -r red5g`.
+
 ## Comprobar que anda
 1. Consola con 4 paneles, y el gNB conectado al AMF.
 2. Panel de eventos sin líneas `~ tiempo real` todos los segundos.

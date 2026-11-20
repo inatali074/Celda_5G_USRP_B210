@@ -3,6 +3,9 @@
 # Sin configuración muestra un menú; elegir una opción o pasar un archivo TRANSMITE.
 #
 # Uso: ./start.sh [ARCHIVO_GNB.yml]. --confirmado se acepta por compatibilidad y no hace nada.
+# Modo sin preguntas (lo usa scripts/control_red.py, el inicio desde el panel):
+#   ./start.sh ARCHIVO_GNB.yml --sin-preguntas [--sip] [--ims]
+#   No pregunta nada y deja la consola de 4 paneles en segundo plano (screen -r red5g).
 # Acepta también config/gnb/ARCHIVO_GNB.yml. Prioridad: argumento > GNB_CONFIG > menú.
 # Otra configuración del núcleo: OPEN5GS_CONFIG=open5gs-5gc.yml ./start.sh gnb_b210.yml
 set -eu
@@ -10,15 +13,21 @@ set -eu
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
 
 uso() {
-    echo "Uso: ./start.sh [ARCHIVO_GNB.yml] [--confirmado] (en cualquier orden)" >&2
+    echo "Uso: ./start.sh [ARCHIVO_GNB.yml] [--confirmado] [--sin-preguntas [--sip] [--ims]] (en cualquier orden)" >&2
 }
 
 parsear_argumentos() {
     local argumento archivo_argumento=''
     confirmado=no
+    sin_preguntas=no
+    pedir_sip=no
+    pedir_ims=no
     for argumento in "$@"; do
         case "$argumento" in
             --confirmado) confirmado=si ;;
+            --sin-preguntas) sin_preguntas=si ;;
+            --sip) pedir_sip=si ;;
+            --ims) pedir_ims=si ;;
             *.yml)
                 if [[ -n $archivo_argumento ]]; then
                     echo "Indicá un solo archivo de configuración del gNB." >&2
@@ -51,6 +60,14 @@ parsear_argumentos() {
         GNB_CONFIG=''
     fi
     export GNB_CONFIG
+    if [[ $sin_preguntas == si && -z $GNB_CONFIG ]]; then
+        echo "Con --sin-preguntas hay que indicar el archivo de configuración del gNB." >&2
+        return 1
+    fi
+    if [[ $sin_preguntas == no && ( $pedir_sip == si || $pedir_ims == si ) ]]; then
+        echo "--sip y --ims solo se usan junto con --sin-preguntas." >&2
+        return 1
+    fi
 }
 
 parsear_argumentos "$@"
@@ -61,7 +78,9 @@ fi
 export OPEN5GS_CONFIG="${OPEN5GS_CONFIG:-open5gs-5gc-zmq.yml}"
 SESION=red5g
 
-[[ -t 0 && -t 1 ]] || { echo "Correlo desde una terminal: abre una consola interactiva."; exit 1; }
+if [[ $sin_preguntas == no ]]; then
+    [[ -t 0 && -t 1 ]] || { echo "Correlo desde una terminal: abre una consola interactiva."; exit 1; }
+fi
 if [[ -z $GNB_CONFIG ]]; then
     while true; do
         printf '\n=== TDD (n78, 3525 MHz) ===\n1) CP-OFDM\n2) DFT-s-OFDM\n=== FDD (n3, 1842,5 MHz) ===\n3) CP-OFDM\n4) DFT-s-OFDM (nunca probada)\n0) Salir sin transmitir\n'
@@ -104,7 +123,9 @@ echo "ESTO TRANSMITE por la B210. La antena tiene que estar dentro de la jaula."
 # Sin confirmación: quien ejecuta el script ya decidió transmitir (pedido del usuario, 2026-11-03).
 
 gobernador=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo desconocido)
-if [[ $gobernador != performance ]]; then
+if [[ $gobernador != performance && $sin_preguntas == si ]]; then
+    echo "Aviso: la CPU está en '$gobernador', no en 'performance' (lo pide el lanzador al abrir)."
+elif [[ $gobernador != performance ]]; then
     echo
     echo "La CPU está en '$gobernador'. El comando para pasarla a 'performance' (pide tu contraseña):"
     echo "  echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor"
@@ -116,7 +137,11 @@ if [[ $gobernador != performance ]]; then
 fi
 
 echo
-read -r -p "¿Levantar también la central SIP para llamadas entre teléfonos? [s/N]: " respuesta
+if [[ $sin_preguntas == si ]]; then
+    respuesta=$([[ $pedir_sip == si ]] && echo s || echo n)
+else
+    read -r -p "¿Levantar también la central SIP para llamadas entre teléfonos? [s/N]: " respuesta
+fi
 levantar_sip=no
 if [[ $respuesta == [sS] ]]; then
     if [[ ! -f config/secretos/sip_credenciales.conf ]]; then
@@ -126,7 +151,11 @@ if [[ $respuesta == [sS] ]]; then
     fi
 fi
 
-read -r -p '¿Levantar IMS (VoNR, etapa 1)? [s/N]: ' respuesta
+if [[ $sin_preguntas == si ]]; then
+    respuesta=$([[ $pedir_ims == si ]] && echo s || echo n)
+else
+    read -r -p '¿Levantar IMS (VoNR, etapa 1)? [s/N]: ' respuesta
+fi
 levantar_ims=no
 if [[ $respuesta == [sS] ]]; then
  [[ -f config/secretos/ims_mysql.env ]] || { echo 'Falta config/secretos/ims_mysql.env; ver docker/ims/README.md'; exit 1; }
@@ -201,7 +230,26 @@ echo
 if [[ $conectado != si ]]; then
     echo "El gNB no arrancó. Últimas líneas:"
     docker logs --tail 15 5g-gnb-radio-1 2>&1
+    if [[ $sin_preguntas == si ]]; then
+        # Desde el panel nadie mira la terminal: se frena para que no quede transmitiendo.
+        echo "Se detiene el gNB."
+        docker compose --profile radio stop -t 15 gnb-radio
+    fi
     exit 1
+fi
+
+# Desde el panel: la consola queda en segundo plano y se abre con "screen -r red5g".
+if [[ $sin_preguntas == si ]]; then
+    if ! screen -ls 2>/dev/null | grep -q "\.$SESION"; then
+        if screen -dmS "$SESION" -c scripts/red5g.screenrc; then
+            # Sin heredar la salida: así el panel no espera estos 4 s para dar el inicio por terminado.
+            (sleep 4; screen -S "$SESION" -p metricas -X stuff $'t\n') >/dev/null 2>&1 &
+        else
+            echo "Aviso: no se pudo abrir la consola de 4 paneles; la celda sigue andando."
+        fi
+    fi
+    echo "gNB en el aire con config/gnb/$GNB_CONFIG. Consola: screen -r red5g"
+    exit 0
 fi
 
 # Si la consola ya estaba abierta, se la reutiliza.

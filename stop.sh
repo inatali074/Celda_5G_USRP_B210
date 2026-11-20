@@ -1,7 +1,15 @@
 #!/bin/bash
 # Deja de transmitir, guarda los logs y detiene la red 5G y la consola de control.
-# Uso: ./stop.sh
+# Uso: ./stop.sh            apaga todo (radio, SIP, IMS, núcleo, panel y consola).
+#      ./stop.sh --solo-radio  apaga el gNB, la central SIP, el IMS y la consola, y deja
+#                              el núcleo y el panel andando (lo usa el inicio desde el panel).
 set -u
+solo_radio=no
+case "${1:-}" in
+    '') ;;
+    --solo-radio) solo_radio=si ;;
+    *) echo "Uso: ./stop.sh [--solo-radio]" >&2; exit 2 ;;
+esac
 
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
 SESION=red5g
@@ -10,10 +18,17 @@ marca=$(date +%Y-%m-%d_%H%M%S)
 echo "--- gNB (deja de transmitir) ---"
 docker compose --profile radio stop -t 15 gnb-radio
 estado_gnb() {
-    if ! docker inspect 5g-gnb-radio-1 >/dev/null 2>&1; then
-        echo ausente  # El contenedor no existe: no hay gNB.
+    # true / false según el contenedor; ausente solo si Docker confirma que no existe;
+    # desconocido si Docker no responde (no se puede asegurar que no transmita).
+    local estado
+    if ! estado=$(timeout 15 docker ps -a --filter 'name=^5g-gnb-radio-1$' --format '{{.State}}' 2>/dev/null); then
+        echo desconocido
+    elif [[ -z $estado ]]; then
+        echo ausente
+    elif [[ $estado == running || $estado == restarting ]]; then
+        echo true
     else
-        docker inspect -f '{{.State.Running}}' 5g-gnb-radio-1 2>/dev/null || echo desconocido
+        echo false
     fi
 }
 if [[ $(estado_gnb) == true ]]; then
@@ -51,8 +66,14 @@ docker compose --profile voz stop sip
 echo "--- IMS (si estaba levantado) ---"
 docker compose --profile ims stop ims-pcscf ims-scscf ims-icscf ims-pyhss ims-dns ims-mysql
 
-echo "--- Núcleo y MongoDB ---"
-docker compose stop dashboard open5gs mongodb
+if [[ $solo_radio == no ]]; then
+    echo "--- Núcleo y MongoDB ---"
+    # Uno por uno: Open5GS sale con código 139 al apagarse (aborto conocido de un hilo) y
+    # Compose lo informa como error; en un solo comando eso dejaba MongoDB andando.
+    for servicio in dashboard open5gs mongodb; do
+        docker compose stop "$servicio"
+    done
+fi
 
 echo "--- Consola ---"
 screen -S "$SESION" -X quit >/dev/null 2>&1 && echo "  Consola cerrada." || echo "  No estaba abierta."

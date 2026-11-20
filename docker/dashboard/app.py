@@ -714,7 +714,11 @@ async def local_ui(request: Request, call_next):
         origin = request.headers.get('origin')
         if origin != 'http://'+request.headers.get('host', ''):
             return JSONResponse({'detail': 'Origen no permitido'}, status_code=403)
-    return await call_next(request)
+    response = await call_next(request)
+    # Que ninguna otra página pueda embeber el panel (clickjacking sobre "Iniciar").
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['Content-Security-Policy'] = "frame-ancestors 'none'"
+    return response
 
 
 @app.get('/')

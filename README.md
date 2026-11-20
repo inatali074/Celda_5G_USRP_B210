@@ -50,6 +50,8 @@ Trabajo práctico de **Comunicaciones Móviles (UNRC)**: implementación desde c
 ./stop.sh
 ```
 
+**Desde el panel:** `scripts/instalar_lanzador.sh` crea el ícono **Celda 5G** en el escritorio. Al abrirlo levanta el núcleo y el panel sin radio; la configuración se elige y se inicia (o se cambia) desde el menú de arriba del panel. Lo hace `scripts/control_red.py`, un servicio que corre en la PC (no en Docker), escucha solo en `127.0.0.1:8090` y acepta solo las 4 opciones del menú o frenar. Cerrar la ventana del lanzador apaga todo.
+
 Antes de transmitir hacen falta algunos ajustes del host (governor de CPU y buffers de red), que requieren `sudo`. Están descritos en [`docs/LEVANTAR_EN_OTRA_PC.md`](docs/LEVANTAR_EN_OTRA_PC.md), junto con cómo funciona y cómo se comprueba la salida a Internet por NAT.
 
 Para recompilar el informe:
@@ -59,6 +61,26 @@ cd informe
 python3 figuras/generar_figuras.py
 pdflatex informe_final.tex && pdflatex informe_final.tex
 ```
+
+## Consola del gNB
+
+Con la celda andando, la consola de 4 paneles se abre con `screen -r red5g` (Ctrl-a d la deja en segundo plano sin apagar nada). Los comandos del gNB se escriben en el panel **métricas** (clic sobre la tabla) aunque la tabla no se frene, y se confirman con Enter. Otra opción, con todo el ancho de la ventana:
+
+```bash
+docker attach --detach-keys=ctrl-c 5g-gnb-radio-1   # Ctrl-C desconecta, no apaga el gNB
+```
+
+| Comando | Qué hace | Para qué sirve |
+| --- | --- | --- |
+| `t` | Prende o apaga la tabla por teléfono (una fila por segundo) | Ver CQI, MCS, tasa, BLER (`ok`/`nok`), SINR del PUSCH, RSRP, BSR, TA y PHR |
+| `t ru` | Prende o apaga las métricas de la radio (B210) | Ver muestras perdidas, `late` y `underflow` |
+| `tx_gain 0 <dB>` | Cambia la ganancia de transmisión (la configuración usa 80) | Bajarla (por ejemplo a 70) y ver caer el CQI y el MCS de bajada |
+| `rx_gain 0 <dB>` | Cambia la ganancia de recepción (la configuración usa 40) | Bajarla y ver caer la SINR del PUSCH y el PHR (control de potencia) |
+| `release 1 <rnti>` | Pasa el teléfono a RRC_IDLE (el RNTI es la 2.ª columna de la tabla) | Ver la liberación y un nuevo acceso aleatorio en el panel de eventos |
+| `log PHY <nivel>` | Cambia el nivel del log de la capa física (`error`, `warning`, `info`, `debug`) | Más o menos detalle; `debug` solo unos segundos, porque llena el disco |
+| Enter con la línea vacía | Muestra la ayuda | — |
+
+**No usar:** `q` (apaga el gNB; para apagar se usa `./stop.sh` o el botón Frenar), `cfo` y `tx_time_offset` (rompen la sincronización), `ho` y `cho` (fuerzan un handover y no hay otra celda). La tabla solo imprime filas si hay al menos un teléfono conectado. En el Redmi, `cqi` y `ri` suelen salir `n/a` porque casi no reporta CSI.
 
 ## Datos sensibles
 

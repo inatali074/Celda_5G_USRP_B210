@@ -100,8 +100,16 @@
     <span class="tag" id="srcTag">—</span>
 
     <a class="btn ghost" href="/evm" target="_blank" rel="noopener">Monitor EVM ↗</a>
-    <button class="btn go" id="startBtn">▶ Levantar</button>
-    <button class="btn stop" id="stopBtn">■ Frenar</button>
+    <select id="cfgSel" title="Configuración de la celda">
+      <option value="1">n78 TDD · CP-OFDM</option>
+      <option value="2">n78 TDD · DFT-s-OFDM</option>
+      <option value="3">n3 FDD · CP-OFDM</option>
+      <option value="4">n3 FDD · DFT-s-OFDM</option>
+    </select>
+    <label class="note" style="margin:0;display:flex;gap:4px;align-items:center"><input type="checkbox" id="cfgSip">SIP</label>
+    <label class="note" style="margin:0;display:flex;gap:4px;align-items:center"><input type="checkbox" id="cfgIms">IMS</label>
+    <button class="btn go" id="startBtn" disabled>▶ Iniciar</button>
+    <button class="btn stop" id="stopBtn" disabled>■ Frenar</button>
     <button class="btn ghost" id="themeBtn">◐</button>
   </div>
   <div class="hmeta">
@@ -109,6 +117,7 @@
     <span>Modo <b id="modeTxt">—</b></span>
     <span>Actualizado <b class="mono" id="clock">--:--:--</b></span>
     <span id="offHint" style="color:var(--warn)"></span>
+    <span>Celda <b id="ctlState">—</b></span>
   </div>
 </header>
 
@@ -232,8 +241,13 @@
 </div>
 
 <div id="toast"></div>
+<div class="modal" id="txModal"><div class="box" role="dialog" aria-modal="true" aria-labelledby="txTitle">
+  <h3 id="txTitle">¿Transmitir con la B210?</h3>
+  <p id="txText"></p>
+  <div class="acts"><button class="btn ghost" id="txNo">Cancelar</button><button class="btn go" id="txYes">Sí, transmitir</button></div>
+</div></div>
 
-<p class="note" style="margin-top:18px">Diseño: Panel5G_SA de un compañero. Adaptado a FastAPI en Docker, puerto 8080. Asociación RNTI ↔ IMSI por índice NGAP; si falta, por hora de registro (ventana 5 s). No controla la red.</p>
+<p class="note" style="margin-top:18px">Diseño: Panel5G_SA de un compañero. Adaptado a FastAPI en Docker, puerto 8080. Asociación RNTI ↔ IMSI por índice NGAP; si falta, por hora de registro (ventana 5 s). La celda se inicia y se frena desde el menú de arriba solo en esta PC (servicio scripts/control_red.py, que abre el lanzador "Celda 5G"); desde los teléfonos el panel es solo de lectura.</p>
 <script>
 'use strict';
 const $=s=>document.querySelector(s);
@@ -403,7 +417,47 @@ async function pollLog(){try{const r=await api('/api/logs?svc='+conSvc+'&tail=16
  document.querySelectorAll('#conTabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#conTabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');conSvc=b.dataset.svc;pollLog();});
 async function tick(){try{render(await api('/api/metrics'));}catch(e){render({mode:'sin datos'});text('#offHint','Sin servidor: '+e.message);}finally{setTimeout(tick,2000);}}
 async function logsLoop(){await pollLog();setTimeout(logsLoop,2000);}
-$('#startBtn').onclick=()=>toast('Ejecutá en una terminal: ./start.sh <config.yml>');$('#stopBtn').onclick=()=>toast('Ejecutá en una terminal: ./stop.sh');
+// Inicio de la celda: lo hace scripts/control_red.py en el host (127.0.0.1:8090), que abre el lanzador.
+// Solo en esta PC: desde un teléfono (10.45.0.1:8080), 127.0.0.1 sería el propio teléfono.
+const CTL='http://127.0.0.1:8090',LOCAL=['localhost','127.0.0.1'].includes(location.hostname);
+let ctl=null,cfgTocado=false,ctlSeq=0,ctlVisto=0,pendiente=null;
+async function ctlApi(path,body){const r=await fetch(CTL+path,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{cache:'no-store'});const d=await r.json();if(!r.ok)throw Error(d.error||r.status);return d;}
+function cfgActual(){const o=$('#cfgSel');return {opcion:Number(o.value),nombre:o.options[o.selectedIndex].text,sip:$('#cfgSip').checked,ims:$('#cfgIms').checked};}
+function renderCtl(){
+ if(!LOCAL)return;
+ if(ctl?.opcion&&!cfgTocado)$('#cfgSel').value=ctl.opcion;
+ const busy=!!ctl?.accion,on=ctl?.gnb===true,unk=ctl&&ctl.gnb===null;
+ if(!ctl){text('#ctlState','sin control (abrí la red con el ícono "Celda 5G")');$('#startBtn').disabled=$('#stopBtn').disabled=true;return;}
+ const nombre=ctl.opcion?ctl.opciones[ctl.opcion]:(ctl.config||'');
+ const extra=ctl.ultimo?(ctl.ultimo.sip?' + SIP':'')+(ctl.ultimo.ims?' + IMS':''):'';
+ const res=ctl.resultado&&ctl.resultado!=='ok'?' · último: '+ctl.resultado:'';
+ text('#ctlState',(busy?(ctl.accion==='iniciar'?'iniciando…':'frenando…'):unk?'estado desconocido (Docker no responde)':on?'al aire: '+nombre+extra:'apagada')+res);
+ $('#startBtn').disabled=busy||unk;
+ $('#startBtn').textContent=on?'↻ Reiniciar con esta opción':'▶ Iniciar';
+ $('#stopBtn').disabled=!(on||unk||ctl.accion==='iniciar');  // frenar siempre posible si puede haber radio
+}
+async function leerCtl(){const n=++ctlSeq;let d=null;try{d=await ctlApi('/estado');}catch(e){}if(n<ctlVisto)return;ctlVisto=n;ctl=d;renderCtl();}
+async function pollCtl(){await leerCtl();setTimeout(pollCtl,2000);}
+function cerrarModal(){$('#txModal').classList.remove('show');pendiente=null;$('#startBtn').focus();}
+if(LOCAL){
+ $('#cfgSel').onchange=()=>{cfgTocado=true;renderCtl();};
+ $('#startBtn').onclick=()=>{
+  cfgTocado=true;pendiente={...cfgActual(),gnbAntes:ctl?.gnb===true};
+  text('#txText',`Se inicia la celda con "${pendiente.nombre}"${pendiente.sip?' + SIP':''}${pendiente.ims?' + IMS':''}${pendiente.gnbAntes?', después de frenar la actual':''}. La antena tiene que estar dentro de la jaula.`);
+  $('#txModal').classList.add('show');$('#txNo').focus();};
+ $('#txNo').onclick=cerrarModal;
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&pendiente)cerrarModal();});
+ $('#txYes').onclick=async()=>{
+  const p=pendiente;cerrarModal();if(!p)return;
+  if((ctl?.gnb===true)!==p.gnbAntes||ctl?.accion){toast('El estado de la celda cambió mientras confirmabas: volvé a apretar Iniciar.');return;}
+  try{await ctlApi('/iniciar',{opcion:p.opcion,sip:p.sip,ims:p.ims});toast('Iniciando la celda…');leerCtl();}catch(e){toast(e.message);}};
+ $('#stopBtn').onclick=async()=>{try{const r=await ctlApi('/frenar',{});toast(r.aceptado.includes('cortando')?'Cortando el inicio y frenando…':'Frenando la radio…');leerCtl();}catch(e){toast(e.message);}};
+ pollCtl();
+}else{
+ ['#cfgSel','#startBtn','#stopBtn'].forEach(q=>$(q).style.display='none');
+ document.querySelectorAll('#cfgSip,#cfgIms').forEach(x=>x.parentElement.style.display='none');
+ text('#ctlState','se controla desde la PC del laboratorio');
+}
 $('#themeBtn').onclick=()=>{document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';};
 async function action(path,body,out){try{await api(path,'POST',body);toast('Solicitud aceptada');}catch(e){text(out,e.message);toast(e.message);}}
 // Ping como en la consola: una línea por paquete y el resumen al terminar (últimas 2 pruebas).

@@ -72,6 +72,15 @@ El navegador refresca cada 2 s sin solapar el ciclo de métricas. Los gráficos 
 rellenan datos ausentes con muestras ficticias. Texto externo usa `textContent`
 o escape HTML antes de insertarse en la página.
 
+## Inicio de la celda desde el panel (D-022)
+
+Arriba, solo cuando el panel se abre en esta PC (`localhost` o `127.0.0.1`), hay un menú
+con las 4 configuraciones de `start.sh`, casillas SIP e IMS y los botones Iniciar /
+Reiniciar con esta opción y Frenar. Iniciar pide confirmación porque transmite. Las
+órdenes las ejecuta `scripts/control_red.py`, un servicio que corre en el host (no en
+este contenedor), escucha en `127.0.0.1:8090` y lo abre el lanzador "Celda 5G". Sin ese
+servicio, el panel muestra "sin control". Desde los teléfonos, los controles no aparecen.
+
 ## Herramientas y API
 
 Ping permite elegir IP conocida, 10.45.0.1, 8.8.8.8 o destino libre. Usa la validación
