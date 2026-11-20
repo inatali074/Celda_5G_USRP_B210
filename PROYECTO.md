@@ -187,6 +187,8 @@ Según `Prueba_configuracion_Drive_5G.docx` (29/10): ZMQ + srsUE funcionó de pu
 
 **2026-11-20:**
 - **Inicio de la celda desde el panel (D-022):** ícono "Celda 5G", menú de configuración, Iniciar/Reiniciar/Frenar. Probado en la radio: reinicio de opción 1 a 2, frenar y cierre del lanzador. `stop.sh` ahora detiene núcleo y MongoDB de a uno (Open5GS sale con 139 y dejaba MongoDB andando).
+- **Cierre del lanzador con la X:** Konsole manda SIGHUP; `docker compose` (Go) lo atiende aunque el lanzador lo ignore, cancela la espera y marca "Error while Stopping" mientras Docker termina solo (MongoDB llegó a parar antes que Open5GS). Arreglo: `setsid -w ./stop.sh </dev/null`. Probado sin radio: panel, Open5GS y MongoDB en orden y sin errores.
+- **El gNB no cierra dentro de 15 s al frenar** (sale con 137, dos veces el 20/11): la espera pasa a 30 s en `stop.sh` y `start.sh`. Falta verlo con la celda al aire.
 - **Guía de la consola del gNB** en el `README`.
 - **PHR con DFT-s-OFDM:** un primer intento con el gNB degradado (~93 UL busy/s) no llenó el buffer y se descartó; repetido con el gNB recién reiniciado (ver D-017 e informe §9.5).
 
