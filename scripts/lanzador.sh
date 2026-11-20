@@ -52,7 +52,9 @@ apagar() {
             kill -TERM "$control_pid" 2>/dev/null
             wait "$control_pid" 2>/dev/null  # corta un inicio en curso y espera
         fi
-        ./stop.sh
+        # En otra sesión y sin la terminal: al cerrar la ventana llega SIGHUP, y docker compose
+        # (Go) lo atiende aunque esté ignorado, cancela la espera y deja las detenciones a medias.
+        setsid -w ./stop.sh </dev/null
         codigo=$?
         estado=$(docker ps -a --filter 'name=^5g-gnb-radio-1$' --format '{{.State}}' 2>/dev/null) || estado=desconocido
         echo "stop.sh terminó con código $codigo; gNB: ${estado:-sin contenedor}"

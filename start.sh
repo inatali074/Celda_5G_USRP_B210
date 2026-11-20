@@ -233,7 +233,7 @@ if [[ $conectado != si ]]; then
     if [[ $sin_preguntas == si ]]; then
         # Desde el panel nadie mira la terminal: se frena para que no quede transmitiendo.
         echo "Se detiene el gNB."
-        docker compose --profile radio stop -t 15 gnb-radio
+        docker compose --profile radio stop -t 30 gnb-radio
     fi
     exit 1
 fi

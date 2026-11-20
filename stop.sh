@@ -16,7 +16,7 @@ SESION=red5g
 marca=$(date +%Y-%m-%d_%H%M%S)
 
 echo "--- gNB (deja de transmitir) ---"
-docker compose --profile radio stop -t 15 gnb-radio
+docker compose --profile radio stop -t 30 gnb-radio
 estado_gnb() {
     # true / false según el contenedor; ausente solo si Docker confirma que no existe;
     # desconocido si Docker no responde (no se puede asegurar que no transmita).
