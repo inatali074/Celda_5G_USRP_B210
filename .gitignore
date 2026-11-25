@@ -25,3 +25,6 @@ revisiones/.codex*.err
 # Excepción: el informe final y sus figuras sí se versionan
 !informe/*.pdf
 !informe/figuras/*.pdf
+
+# Escenario iperf: datos crudos (identificadores de la red, ~500 MB); van en el zip del Drive
+Escenario IPERF/datos/

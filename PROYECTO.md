@@ -192,8 +192,18 @@ Según `Prueba_configuracion_Drive_5G.docx` (29/10): ZMQ + srsUE funcionó de pu
 - **Guía de la consola del gNB** en el `README`.
 - **PHR con DFT-s-OFDM:** un primer intento con el gNB degradado (~93 UL busy/s) no llenó el buffer y se descartó; repetido con el gNB recién reiniciado (ver D-017 e informe §9.5).
 
+**2026-11-24 y 2026-11-25: escenario iperf de saturación** (`Escenario IPERF/`, informe en el Google Doc del Drive del escenario).
+- **Capacidad medida:**
+  - bajada: n78 ≈ 50 Mbit/s (70 % del pico) y n3 95 Mbit/s (84 %);
+  - subida: n78 ≈ 15 Mbit/s, limitada por potencia (PHR < 0), y n3 ≥ 59 Mbit/s sin saturar.
+  - Con sobrecarga, la cola RLC llega al tope de 6,2 MB y el RTT sube a 1–2 s.
+- **El eslabón débil es el PUCCH:** `csi1=2222` es un CSI descartado por el detector GLRT (umbral 14, sin CRC). Verificado en el código de OCUDU `release_26_10`; en n3 pasa con más del 99 % de los PUCCH F2. Con `-P 4` y `--bidir` hay RLF por HARQ-ACK KOs y RLC max ReTxs; después del corte, TCP queda en cero por el backoff del RTO.
+- **DFT-s-OFDM contra CP-OFDM (D-017):** mismo techo en la rampa UDP; con TCP de subida en n78, +57 % y 4–5 dB más de SINR con DFT-s-OFDM. Medido en días distintos.
+- **P-004:** el 24/11 n3 colapsó dos veces y la CPU quedó en "powersave" desde las 20:11.
+- Detalle: `sesiones/2026-11-25_escenario-iperf.md`.
+
 ## Punto de retorno TDD (2026-11-03)
 Mejor configuración n78 TDD hasta hoy: la de la etiqueta git **`tdd-ppm0-2026-11-03`**, `gnb_b210_00101_csiper_ppm0_kos.yml` (n78, ARFCN 635000, 20 MHz, μ=1, PLMN 00101, tx 80, `clock_ppm 0`, CSI periódico con `pucch.max_consecutive_kos 100000`). Desde el 2026-11-06 ese archivo no está en el árbol: su equivalente es la opción 1 del menú, `gnb_b210_00101_n78_cpofdm.yml`, que solo le suma el volcado IQ (D-018). Para volver exactamente a la de antes: `git show tdd-ppm0-2026-11-03:config/gnb/gnb_b210_00101_csiper_ppm0_kos.yml`. El corte de cada ~60 s se evita con el teléfono en `NR only` (D-015).
 
 ## Próximos pasos
-Ver la sección "Para retomar" de `sesiones/2026-11-17_ping-normas-ims-redmi.md`. **El Redmi tiene la SIM 4: volver a la SIM 3 antes de la próxima prueba.** **Antes de medir:** reiniciar el gNB si aparece "UL processor is busy" (P-004). Quedan postergadas, por decisión del usuario, las pruebas de las opciones 2–4 del menú. La llamada SIP ya se probó (`evidencia/07_voz_sip/`); falta medir su calidad (retardo y pérdida de RTP). **VoNR:** la etapa 1 está hecha con el Motorola. La etapa 2 se descarta (decisión del usuario, 2026-11-17): el Redmi no activa IMS por su configuración de operadora, aun con la SIM 4 y un APN `ims`. Antes de una corrida larga con volcado IQ, conviene limitar su tamaño: crece ~8 GB por hora.
+Ver "Para retomar" en `sesiones/2026-11-25_escenario-iperf.md` (escenario iperf) y en `sesiones/2026-11-17_ping-normas-ims-redmi.md`. **El Redmi tiene la SIM 4: volver a la SIM 3 antes de la próxima prueba.** **Antes de medir:** reiniciar el gNB si aparece "UL processor is busy" (P-004). Quedan postergadas, por decisión del usuario, las pruebas de las opciones 2–4 del menú. La llamada SIP ya se probó (`evidencia/07_voz_sip/`); falta medir su calidad (retardo y pérdida de RTP). **VoNR:** la etapa 1 está hecha con el Motorola. La etapa 2 se descarta (decisión del usuario, 2026-11-17): el Redmi no activa IMS por su configuración de operadora, aun con la SIM 4 y un APN `ims`. Antes de una corrida larga con volcado IQ, conviene limitar su tamaño: crece ~8 GB por hora.
