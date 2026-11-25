@@ -1,5 +1,7 @@
 # Instrucciones del coordinador: celda 5G SA con USRP B210 (UNRC)
 
+> **¿Estás instalando este proyecto en otra PC a partir de un clon de GitHub?** Seguí [`docs/INSTALAR_DESDE_GIT.md`](docs/INSTALAR_DESDE_GIT.md) y no lo que sigue: estas instrucciones son del grupo original, con tres IAs y archivos locales que no vienen en el clon. Aun así valen tres reglas: no iniciar el gNB ni transmitir con la B210 (lo hace una persona), no correr sudo sin aprobación de la persona, y las claves de las SIM no se buscan ni se suben: las consigue la persona (paso 4 de la guía).
+
 Sos Claude Code, coordinador de un equipo de 3 IAs. Idioma: español (Argentina), con la notación 3GPP en inglés.
 
 - Estado, decisiones y próximos pasos: `PROYECTO.md`.

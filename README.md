@@ -34,11 +34,14 @@ Trabajo práctico de **Comunicaciones Móviles (UNRC)**: implementación desde c
 | `start.sh`, `stop.sh` | Levantan y detienen la red, con una consola de control en GNU screen |
 | `scripts/` | Lectura y grabación de SIM por APDU, carga de abonados, prueba de autenticación Milenage, barrido de RX y empaquetado para otra PC |
 | `evidencia/` | Evidencia de cada etapa: sincronización, acceso, registro, sesión PDU y mediciones |
-| `docs/LEVANTAR_EN_OTRA_PC.md` | Cómo instalar el proyecto en otra PC |
+| `docs/INSTALAR_DESDE_GIT.md` | Cómo instalar todo en otra PC desde un clon de GitHub (para personas y para IAs) |
+| `docs/LEVANTAR_EN_OTRA_PC.md` | Cómo instalarlo desde un paquete en pendrive, y la salida a Internet por NAT |
 | `PROYECTO.md`, `sesiones/` | Estado del proyecto, decisiones y resúmenes de cada sesión |
 | `revisiones/`, `investigacion/` | Revisiones técnicas y consultas de especificaciones hechas durante el trabajo |
 
 ## Uso
+
+**Instalación en una PC nueva:** seguí [`docs/INSTALAR_DESDE_GIT.md`](docs/INSTALAR_DESDE_GIT.md).
 
 > ⚠️ **`./start.sh` muestra un menú; elegir 1–4 inicia la transmisión. Con archivo o `GNB_CONFIG`, arranca directamente.** Usarlo solo dentro de la jaula de Faraday o en un entorno de RF autorizado, y con la B210 conectada por USB 3.0.
 

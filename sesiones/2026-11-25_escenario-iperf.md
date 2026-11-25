@@ -52,3 +52,12 @@ Escenario pedido por los docentes: cargar la celda con iperf3 desde el Redmi (SI
 - Alternar CP-OFDM y DFT-s-OFDM en la misma sesión para cuantificar la diferencia.
 - El gNB tarda en frenar ("Could not stop application after 5 seconds. Forcing exit."): investigarlo.
 - Pasarle a Santi seis observaciones sobre su guía (RLC max ReTxs, fuente de t310, picos con 51/106 PRB para CP-OFDM, entre otras).
+
+## Instalación en otra PC desde GitHub (tarde)
+- El escenario iperf salió del repo público (commit `9715c41`); queda local y en el Drive.
+- La celda también corre en la PC de otro integrante (Ubuntu 26.04, Ryzen 5, B210 en USB 3). Su clon no tenía el ícono: hay que correr `scripts/instalar_lanzador.sh`.
+- Nueva guía `docs/INSTALAR_DESDE_GIT.md`, para que una persona o una IA instale todo desde un clon. Incluye la plantilla `config/usim.ejemplo.env` y un aviso al principio de `CLAUDE.md`, `AGENTS.md` y `GEMINI.md`. Codex la revisó (`revisiones/2026-11-25_codex-instalar-desde-git.md`) y se integraron sus hallazgos sobre la guía.
+- Quedan sin hacer dos hallazgos de Codex que son de scripts, no de la guía:
+  - el paquete por pendrive no incluye la imagen `5g-dashboard`;
+  - los Dockerfile clonan por etiqueta y fallan si la etiqueta se mueve.
+- La guía no se probó todavía en una PC limpia.

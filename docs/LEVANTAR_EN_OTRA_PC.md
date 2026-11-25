@@ -65,7 +65,7 @@ Con la red levantada (los nombres de contenedor empiezan con `5g-`):
 docker exec 5g-open5gs-1 iptables -t nat -S POSTROUTING
 
 # El contenedor llega a Internet (si esto falla, el problema está en la etapa 2 o en el host)
-docker exec 5g-open5gs-1 ping -c 3 8.8.8.8
+docker compose exec -T dashboard ping -c 3 8.8.8.8   # el panel comparte la red de Open5GS y trae ping
 
 # Reenvío de IP en el host: tiene que dar 1
 sysctl net.ipv4.ip_forward
