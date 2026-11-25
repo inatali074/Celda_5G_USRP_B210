@@ -56,7 +56,7 @@ if [[ -f $paquete/imagenes.tar.gz ]]; then
 else
     echo "El paquete no trae imágenes: se construyen ahora, y puede llevar horas."
     docker pull mongo:6.0
-    docker compose build open5gs
+    docker compose build open5gs dashboard
     docker compose --profile radio build gnb-radio
 fi
 

@@ -28,6 +28,15 @@ for s in config/secretos/usim.env config/secretos/sim_adm.env; do
     [[ -r $s ]] || { echo "Falta $s"; exit 1; }
 done
 
+# Las imágenes se comprueban antes de escribir en el destino, para poder reintentar con la misma carpeta.
+if [[ $imagenes == si ]]; then
+    faltan=0
+    for i in 5g-gnb-radio:latest 5g-open5gs:latest 5g-dashboard:latest mongo:6.0; do
+        docker image inspect "$i" >/dev/null 2>&1 || { echo "Falta la imagen $i"; faltan=1; }
+    done
+    [[ $faltan == 0 ]] || exit 1
+fi
+
 # Destino vacío: así no quedan sumas viejas ni se hereda el permiso de un secretos.tar anterior.
 if [[ -e $destino && -n $(ls -A -- "$destino") ]]; then
     echo "$destino no está vacía: elegí una carpeta nueva."
@@ -48,13 +57,8 @@ tar -C "$raiz" -cf "$destino/secretos.tar" config/secretos/usim.env config/secre
 cp -- scripts/instalar_en_otra_pc.sh docs/LEVANTAR_EN_OTRA_PC.md "$destino/"
 
 if [[ $imagenes == si ]]; then
-    faltan=0
-    for i in 5g-gnb-radio:latest 5g-open5gs:latest mongo:6.0; do
-        docker image inspect "$i" >/dev/null 2>&1 || { echo "Falta la imagen $i"; faltan=1; }
-    done
-    [[ $faltan == 0 ]] || exit 1
     echo "--- Imágenes de Docker (puede tardar varios minutos) ---"
-    docker save 5g-gnb-radio:latest 5g-open5gs:latest mongo:6.0 | gzip -1 > "$destino/imagenes.tar.gz"
+    docker save 5g-gnb-radio:latest 5g-open5gs:latest 5g-dashboard:latest mongo:6.0 | gzip -1 > "$destino/imagenes.tar.gz"
 fi
 
 (cd -- "$destino" && sha256sum -- * > SHA256SUMS.txt)

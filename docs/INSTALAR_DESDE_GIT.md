@@ -2,7 +2,7 @@
 
 Esta guía deja una PC recién clonada igual que las PC donde ya funciona la celda: OCUDU (gNB) con USRP B210, Open5GS, MongoDB y el panel web, todo en Docker. La puede seguir una persona o una IA. Los pasos están en orden y cada uno termina con un chequeo.
 
-Si tenés un pendrive armado con `scripts/empaquetar_para_otra_pc.sh`, usá en cambio [`LEVANTAR_EN_OTRA_PC.md`](LEVANTAR_EN_OTRA_PC.md): ese paquete ya trae las imágenes y las claves. Ese paquete no incluye la imagen del panel: construila con `docker compose build dashboard`.
+Si tenés un pendrive armado con `scripts/empaquetar_para_otra_pc.sh`, usá en cambio [`LEVANTAR_EN_OTRA_PC.md`](LEVANTAR_EN_OTRA_PC.md): ese paquete ya trae las imágenes y las claves. Después de instalar desde un paquete, comprobá `docker image inspect 5g-dashboard:latest`. Si falta, porque el paquete es de una versión anterior del empaquetador, corré `docker compose build dashboard`.
 
 ## Para una IA que siga esta guía
 - **Lo que decide y hace la persona, no la IA:**
@@ -70,7 +70,7 @@ docker pull mongo:6.0
 docker compose build open5gs dashboard
 docker compose --profile radio build gnb-radio
 ```
-- `gnb-radio` compila OCUDU `release_26_10` en un commit fijado, con UHD 4.9.0.1, y baja el firmware de la B210 dentro de la imagen. Si el build falla porque la etiqueta remota ya no apunta a ese commit, avisá al grupo: no cambies el commit por tu cuenta.
+- `gnb-radio` compila OCUDU `release_26_10` en un commit fijado, con UHD 4.9.0.1, y baja el firmware de la B210 dentro de la imagen. Los Dockerfile bajan el commit exacto, no la etiqueta, así que el código fuente no cambia aunque la etiqueta se mueva (el build sigue necesitando que GitLab y GitHub sirvan ese commit). No cambies los commits por tu cuenta.
 - Con poca RAM el compilador se puede quedar sin memoria. Ya usa `NUM_JOBS: "2"` en `docker-compose.yml`.
 
 Chequeo: `docker images` muestra `5g-open5gs`, `5g-dashboard`, `5g-gnb-radio` y `mongo:6.0`. El lanzador y `start.sh` usan `--no-build`, así que si falta una imagen, no arrancan.

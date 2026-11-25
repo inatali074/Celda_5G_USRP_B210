@@ -10,8 +10,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends git ca-certific
     && rm -rf /var/lib/apt/lists/*
 RUN test "${MARCH}" != native && test -n "${MARCH}" \
     && test "${NUM_JOBS}" -gt 0 \
-    && git clone --depth 1 --branch "${OCUDU_TAG}" https://gitlab.com/ocudu/ocudu.git /src \
-    && test "$(git -C /src rev-parse HEAD)" = "${OCUDU_COMMIT}"
+    && git init -q /src && cd /src \
+    && git remote add origin https://gitlab.com/ocudu/ocudu.git \
+    && git fetch -q --depth 1 origin "${OCUDU_COMMIT}" && git checkout -q FETCH_HEAD \
+    && test "$(git rev-parse HEAD)" = "${OCUDU_COMMIT}"
+# Se baja el commit exacto (OCUDU_TAG queda como referencia): si la etiqueta se mueve, el build no cambia.
 WORKDIR /src
 # Se reutilizan los instaladores del commit fijado, sin dependencias de DPDK.
 RUN docker/scripts/install_dependencies.sh build \

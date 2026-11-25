@@ -19,6 +19,8 @@ bash instalar_en_otra_pc.sh ~/red5g-docker
 ```
 Comprueba los requisitos, instala el proyecto y las imágenes, y carga los abonados. No usa sudo y **no transmite**. Elegí una carpeta que no sea `~/red5g`, que es el antecedente de solo lectura.
 
+**Después de instalar, comprobá que esté la imagen del panel:** `docker image inspect 5g-dashboard:latest`. Si falta, porque el paquete se armó con una versión anterior del empaquetador, corré `docker compose build dashboard` desde la carpeta instalada.
+
 ## Antes de transmitir
 Estos comandos cambian el sistema: revisalos antes de correrlos.
 
