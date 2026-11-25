@@ -27,4 +27,5 @@ revisiones/.codex*.err
 !informe/figuras/*.pdf
 
 # Escenario iperf: datos crudos (identificadores de la red, ~500 MB); van en el zip del Drive
-Escenario IPERF/datos/
+
+Escenario IPERF/
